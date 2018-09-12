@@ -16,6 +16,9 @@ $tron = new Tron('address', 'private_key');
 //alternative way to enter a private key
 $tron->setPrivateKey('private_key');
 
+//Change node address
+$tron->setFullNodeServer('url new node');
+
 
 //Example 1
 var_dump($tron->getBalance());
