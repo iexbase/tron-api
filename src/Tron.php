@@ -382,6 +382,23 @@ class Tron
     }
 
     /**
+     * Создаем и отправляем транзакцию с использованием приватного ключа
+     *
+     * @param $to
+     * @param $amount
+     * @param $privateKey
+     * @return array
+     */
+    public function sendTransactionByPrivateKey($to, $amount, $privateKey)
+    {
+        return $this->call('/wallet/easytransferbyprivate', [
+            'privateKey'    =>  $this->stringUtf8toHex($privateKey),
+            'toAddress'     =>  $this->toHex($to),
+            'amount'        =>  $this->trxToSun($amount)
+        ]);
+    }
+
+    /**
      * Создание нового адрес с паролем
      *
      * @param $password
