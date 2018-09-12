@@ -15,10 +15,10 @@
     ],
     "keywords": [
         "iexbase",
-        "ripple-lib",
-        "ripple-php",
-        "ripple-api",
-        "ripple-rest-api"
+        "tron-lib",
+        "tron-php",
+        "tron-api",
+        "tron-rest-api"
     ],
 
     "require": {
