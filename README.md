@@ -28,7 +28,6 @@ var_dump($transfer);
 //Generate Address
 var_dump($tron->generateAddress());
 
-
 //Get Last Blocks
 var_dump($tron->getLatestBlocks(2));
 
