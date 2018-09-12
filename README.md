@@ -13,6 +13,7 @@ A PHP API for interacting with the Tron (TRX)
 use IEXBase\TronAPI\Tron;
 
 $tron = new Tron('address', 'private_key');
+//alternative way to enter a private key
 $tron->setPrivateKey('private_key');
 
 
