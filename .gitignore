@@ -1,4 +1,7 @@
 .idea/*
+.idea/php.xml
+
+
 examples/index.php
 composer.lock
 examples/index2.php
