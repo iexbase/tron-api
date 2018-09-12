@@ -1,4 +1,4 @@
-.idea/
+.idea/*
 examples/index.php
 composer.lock
 examples/index2.php
