@@ -1,5 +1,10 @@
-# TronAPI
-A PHP API for interacting with the Tron (TRX)
+<h1 align="center">
+  Tron API
+  <br>
+</h1>
+<h4 align="center">
+  A PHP API for interacting with the Tron (TRX)
+</h4>
 
 ## Install
 
