@@ -43,4 +43,4 @@ var_dump($tron->changeAccountName('address', 'NewName'));
 ```
 
 ## Donations
-Tron: TRWBqiqoFZysoAeyR1J35ibuyc8EvhUAoY
+Tron(TRX): TRWBqiqoFZysoAeyR1J35ibuyc8EvhUAoY
