@@ -1,4 +1,5 @@
-# TronAPI PHP
+# TronAPI
+A PHP API for interacting with the Tron (TRX)
 
 ## Install
 
