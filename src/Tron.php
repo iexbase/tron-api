@@ -21,14 +21,7 @@ class Tron
      *
      * @var string
     */
-    protected $address;
-
-    /**
-     * Адрес в формате Hex
-     *
-     * @var string
-    */
-    protected $hexAddress;
+    protected $accountAddress;
 
     /**
      * Приватный ключ
@@ -43,10 +36,13 @@ class Tron
      * @param $address
      * @param null $privateKey
      */
-    public function __construct($address, $privateKey = null)
+    public function __construct($address = null, $privateKey = null)
     {
-        $this->address = $address;
-        $this->hexAddress = $this->toHex($address);
+        if(!$this->urlFullNode) {
+            die('Warning: No Fullnode API provided. Functionality may be limited');
+        }
+
+        $this->accountAddress = $address;
         $this->privateKey = $privateKey;
     }
 
@@ -54,7 +50,7 @@ class Tron
      * Укажите ссылку на полную ноду
      * @param $url
      */
-    public function setFullNodeServer($url)
+    public function setFullNodeServer($url) : void
     {
         $this->urlFullNode = $url;
     }
@@ -74,9 +70,9 @@ class Tron
      *
      * @param string $address
      */
-    public function setBaseAddress(string $address) : void
+    public function setAccount(string $address) : void
     {
-        $this->address = $address;
+        $this->accountAddress = $address;
     }
 
     /**
@@ -87,10 +83,10 @@ class Tron
      */
     public function getBalance($address = null)
     {
-        $address = (isset($address) ? $this->toHex($address) : $this->hexAddress);
+        $address = (isset($address) ? $address : $this->accountAddress);
 
         return $this->call('/wallet/getaccount', [
-            'address'   =>  $address
+            'address'   =>  $this->toHex($address)
         ]);
     }
 
@@ -267,11 +263,11 @@ class Tron
      */
     public function changeAccountName($address = null, $newName)
     {
-        $address = (isset($address) ? $this->toHex($address) : $this->hexAddress);
+        $address = (isset($address) ? $address : $this->accountAddress);
 
         $transaction = $this->call('/wallet/updateaccount', [
             'account_name'  =>  $this->stringUtf8toHex($newName),
-            'owner_address' =>  $address
+            'owner_address' =>  $this->toHex($address)
         ]);
 
         $signedTransaction = $this->signTransaction($transaction);
