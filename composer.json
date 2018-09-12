@@ -1,6 +1,6 @@
 {
     "name": "iexbase/tron-api",
-    "description": "A PHP API for interacting with Ripple",
+    "description": "A PHP API for interacting with Tron (Trx)",
     "license": "MIT",
     "type":   "library",
     "support": {
