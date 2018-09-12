@@ -25,20 +25,20 @@ $tron->setPrivateKey('private_key');
 $tron->setFullNodeServer('url new node');
 
 
-//Example 1
+//Balance
 var_dump($tron->getBalance());
-//Example 2
-var_dump($tron->getBalance('address'))
 
 // Transfer Trx
-$transfer = $tron->sendTransaction('from', 'to', 'amount');
-var_dump($transfer);
+var_dump($tron->sendTransaction('from', 'to', 'amount'));
 
 //Generate Address
 var_dump($tron->generateAddress());
 
 //Get Last Blocks
 var_dump($tron->getLatestBlocks(2));
+
+//Change account name (only once)
+var_dump($tron->changeAccountName('address', 'NewName'));
 
 ```
 
