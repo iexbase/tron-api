@@ -1,5 +1,5 @@
 <h1 align="center">
-  Tron API
+  TRON API
   <br>
 </h1>
 <h4 align="center">
