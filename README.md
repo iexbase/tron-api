@@ -21,6 +21,17 @@ var_dump($tron->getBalance());
 //Example 2
 var_dump($tron->getBalance('address'))
 
+// Transfer Trx
+$transfer = $tron->sendTransaction('from', 'to', 'amount');
+var_dump($transfer);
+
+//Generate Address
+var_dump($tron->generateAddress());
+
+
+//Get Last Blocks
+var_dump($tron->getLatestBlocks(2));
+
 ```
 
 ## Donations
