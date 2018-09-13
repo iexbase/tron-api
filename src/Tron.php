@@ -735,7 +735,7 @@ class Tron implements TronContract
      *
      * @return array
      */
-    public function call($path, $options = [])
+    protected function call($path, $options = [])
     {
         $client = new Client(['base_uri' => $this->urlFullNode]);
 
