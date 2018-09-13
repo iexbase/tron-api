@@ -37,12 +37,11 @@ class TronResponse
     /**
      * Создаем объект TronResponse
      *
-     * @param Client $client
      * @param null $body
      * @param $httpStatusCode
      * @throws TronException
      */
-    public function __construct(Client $client, $body = null, $httpStatusCode)
+    public function __construct($body = null, $httpStatusCode)
     {
         $this->body = $body;
         $this->httpStatusCode = $httpStatusCode;

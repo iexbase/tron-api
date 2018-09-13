@@ -1,14 +1,26 @@
 <?php
 namespace IEXBase\TronAPI;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use IEXBase\TronAPI\Contracts\TronContract;
 use IEXBase\TronAPI\Exceptions\TronException;
 
 class Tron implements TronContract
 {
     use Support\Traits\CryptoTrait;
+
+    /**
+     * Версия Tron API библиотеки
+     *
+     * @const string
+     */
+    const VERSION = 'v1.2';
+
+    /**
+     * Экземпляр приложения TronClient.
+     *
+     * @var TronClient
+    */
+    protected $client;
 
     /**
      * URL полной ноды
@@ -45,6 +57,8 @@ class Tron implements TronContract
 
         $this->accountAddress = $address;
         $this->privateKey = $privateKey;
+
+        $this->client = new TronClient();
     }
 
     /**
@@ -737,27 +751,9 @@ class Tron implements TronContract
      */
     protected function call($path, $options = [])
     {
-        $client = new Client(['base_uri' => $this->urlFullNode]);
+        $response = $this->client->sendRequest('POST',
+            sprintf('%s%s', $this->urlFullNode, $path), $options);
 
-        try
-        {
-            $response = $client->request('POST', $path, [
-                'body'  =>  json_encode($options)
-            ]);
-
-            $returnResponse = new TronResponse(
-                $client,
-                $response->getBody(),
-                $response->getStatusCode()
-            );
-
-        } catch (GuzzleException $e) {
-            die('Error GuzzleException: '. $e->getMessage());
-
-        } catch (Exceptions\TronException $e) {
-            die('Error TronResponse: '. $e->getMessage());
-        }
-
-        return $returnResponse->getDecodedBody();
+       return $response;
     }
 }
