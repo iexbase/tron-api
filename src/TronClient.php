@@ -56,6 +56,7 @@ class TronClient
      */
     public function sendRequest($method, $url, $body)
     {
+        $this->requestCount++;
         $options = [
             'headers'   =>  $this->getDefaultHeaders(),
             'body'      =>  json_encode($body),
