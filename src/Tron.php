@@ -3,9 +3,10 @@ namespace IEXBase\TronAPI;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use IEXBase\TronAPI\Contracts\TronContract;
 use IEXBase\TronAPI\Exceptions\TronException;
 
-class Tron
+class Tron implements TronContract
 {
     use Support\Traits\CryptoTrait;
 
@@ -448,7 +449,7 @@ class Tron
     }
 
     /**
-     * Создаем транзакцию баланса заморозки размораживания
+     * Создаем транзакцию баланса заморозки и размораживания
      *
      * @param $address
      * @return array
