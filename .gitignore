@@ -64,7 +64,6 @@ fabric.properties
 examples/index.php
 composer.lock
 examples/index2.php
-src/Contracts/
 vendor/
 .idea/inspectionProfiles/
 .idea/misc.xml
