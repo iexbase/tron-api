@@ -4,8 +4,8 @@
     "license": "MIT",
     "type":   "library",
     "support": {
-        "issues": "https://github.com/iexbase/ripple-api/issues",
-        "source": "https://github.com/iexbase/ripple-api"
+        "issues": "https://github.com/iexbase/tron-api/issues",
+        "source": "https://github.com/iexbase/tron-api"
     },
     "authors": [
         {
