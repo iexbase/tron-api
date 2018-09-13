@@ -722,7 +722,7 @@ class Tron implements TronContract
      *
      * @return array
     */
-    public function generateAddress()
+    public function generateAddress() : array
     {
         return $this->call('/wallet/generateaddress');
     }
