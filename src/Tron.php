@@ -758,7 +758,12 @@ class Tron implements TronContract
         return $this->call('/wallet/generateaddress');
     }
 
-    public function getBalanceInfo()
+    /**
+     * Статистика учетных записей (с крупными балансами)
+     *
+     * @return array
+    */
+    public function getBalanceInfo() : array
     {
         return $this->call('/balance_info', [
             'http_provider'  =>  'server'
