@@ -13,7 +13,7 @@ class Base58
      */
     public static function encode($num, $length = 58): string
     {
-        return Utils::dec2base($num, $length, '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
+        return Crypto::dec2base($num, $length, '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
     }
 
     /**
@@ -26,6 +26,6 @@ class Base58
      */
     public static function decode(string $addr, int $length = 58): string
     {
-        return Utils::base2dec($addr, $length, '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
+        return Crypto::base2dec($addr, $length, '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
     }
 }

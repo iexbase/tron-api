@@ -1,10 +1,8 @@
 <?php
 namespace IEXBase\TronAPI\Support\Traits;
 
-use IEXBase\TronAPI\Support\Base58;
+use IEXBase\TronAPI\Support\Base58Check;
 use IEXBase\TronAPI\Support\BigInteger;
-use IEXBase\TronAPI\Support\Hash;
-use IEXBase\TronAPI\Support\Utils;
 
 trait CryptoTrait
 {
@@ -49,7 +47,7 @@ trait CryptoTrait
         if(strlen($sHexAddress) == 42 && mb_strpos($sHexAddress, '41') == 0) {
             return $sHexAddress;
         }
-        return $this->base58ToHexString($sHexAddress,0,3);
+        return Base58Check::decode($sHexAddress,0,3);
     }
 
     /**
@@ -64,61 +62,7 @@ trait CryptoTrait
             return '';
         }
 
-        return $this->getBase58CheckAddress($sHexString);
-    }
-
-    /**
-     * Преобразовываем HexString в Base58
-     *
-     * @param $string
-     * @return string
-     */
-    public function getBase58CheckAddress($string)
-    {
-        $string = hex2bin($string);
-        $string = $string . substr(Hash::SHA256(Hash::SHA256($string)), 0, 4);
-
-        $base58 =  Base58::encode(Utils::bin2bc($string));
-        for ($i = 0; $i < strlen($string); $i++) {
-            if ($string[$i] != "\x00") {
-                break;
-            }
-
-            $base58 = '1' . $base58;
-        }
-        return $base58;
-    }
-
-
-    /**
-     * Преобразовываем Base58 в HexString
-     *
-     * @param $string
-     * @param int $removeLeadingBytes
-     * @param int $removeTrailingBytes
-     * @param bool $removeCompression
-     * @return string
-     */
-    public function base58ToHexString($string, $removeLeadingBytes = 1, $removeTrailingBytes = 4, $removeCompression = true)
-    {
-        $string = bin2hex(Utils::bc2bin(Base58::decode($string)));
-
-        //Если конечные байты: Network type
-        if ($removeLeadingBytes) {
-            $string = substr($string, $removeLeadingBytes * 2);
-        }
-
-        //Если конечные байты: Checksum
-        if ($removeTrailingBytes) {
-            $string = substr($string, 0, -($removeTrailingBytes * 2));
-        }
-
-        //Если конечные байты: compressed byte
-        if ($removeCompression) {
-            $string = substr($string, 0, -2);
-        }
-
-        return $string;
+        return Base58Check::encode($sHexString,0,false);
     }
 
     /**
