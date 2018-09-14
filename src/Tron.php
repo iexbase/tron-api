@@ -762,10 +762,22 @@ class Tron implements TronContract
      * Статистика учетных записей (с крупными балансами)
      *
      * @return array
-    */
+     */
     public function getBalanceInfo() : array
     {
         return $this->call('/balance_info', [
+            'http_provider'  =>  'server'
+        ]);
+    }
+
+    /**
+     * Получаем карту узлов
+     *
+     * @return array
+     */
+    public function getNodeMap() : array
+    {
+        return $this->call('/nodemap', [
             'http_provider'  =>  'server'
         ]);
     }
