@@ -3,11 +3,28 @@ namespace IEXBase\TronAPI\Support\Traits;
 
 use IEXBase\TronAPI\Support\Base58;
 use IEXBase\TronAPI\Support\BigInteger;
+use IEXBase\TronAPI\Support\Hash;
+use IEXBase\TronAPI\Support\Utils;
 
 trait CryptoTrait
 {
     /**
-     * Конвертируем Tron адрес в Hex
+     * Преобразовывание из Hex
+     *
+     * @param $string
+     * @return string
+     */
+    public function fromHex($string)
+    {
+        if(strlen($string) == 42 && mb_substr($string,0,2) === '41') {
+            return $this->hexString2Address($string);
+        }
+
+        return $this->hexString2Utf8($string);
+    }
+
+    /**
+     * Преобразование в Hex
      *
      * @param $str
      * @return string
@@ -32,22 +49,76 @@ trait CryptoTrait
         if(strlen($sHexAddress) == 42 && mb_strpos($sHexAddress, '41') == 0) {
             return $sHexAddress;
         }
-        return $this->base58ToHexString($sHexAddress);
+        return $this->base58ToHexString($sHexAddress,0,3);
     }
+
+    /**
+     * Проверяем Hex адрес перед преобразованием в Base58
+     *
+     * @param $sHexString
+     * @return string
+     */
+    public function hexString2Address($sHexString)
+    {
+        if(strlen($sHexString) < 2 || (strlen($sHexString) & 1) != 0) {
+            return '';
+        }
+
+        return $this->getBase58CheckAddress($sHexString);
+    }
+
+    /**
+     * Преобразовываем HexString в Base58
+     *
+     * @param $string
+     * @return string
+     */
+    public function getBase58CheckAddress($string)
+    {
+        $string = hex2bin($string);
+        $string = $string . substr(Hash::SHA256(Hash::SHA256($string)), 0, 4);
+
+        $base58 =  Base58::encode(Utils::bin2bc($string));
+        for ($i = 0; $i < strlen($string); $i++) {
+            if ($string[$i] != "\x00") {
+                break;
+            }
+
+            $base58 = '1' . $base58;
+        }
+        return $base58;
+    }
+
 
     /**
      * Преобразовываем Base58 в HexString
      *
-     * @param $base58
+     * @param $string
+     * @param int $removeLeadingBytes
+     * @param int $removeTrailingBytes
+     * @param bool $removeCompression
      * @return string
      */
-    public function base58ToHexString($base58)
+    public function base58ToHexString($string, $removeLeadingBytes = 1, $removeTrailingBytes = 4, $removeCompression = true)
     {
-        $decode = Base58::decode($base58);
-        $len = strlen($decode) - 4;
-        $string = substr($decode, 0, $len);
+        $string = bin2hex(Utils::bc2bin(Base58::decode($string)));
 
-        return $this->stringUtf8toHex($string);
+        //Если конечные байты: Network type
+        if ($removeLeadingBytes) {
+            $string = substr($string, $removeLeadingBytes * 2);
+        }
+
+        //Если конечные байты: Checksum
+        if ($removeTrailingBytes) {
+            $string = substr($string, 0, -($removeTrailingBytes * 2));
+        }
+
+        //Если конечные байты: compressed byte
+        if ($removeCompression) {
+            $string = substr($string, 0, -2);
+        }
+
+        return $string;
     }
 
     /**
@@ -59,6 +130,17 @@ trait CryptoTrait
     public function stringUtf8toHex($sUtf8)
     {
         return bin2hex($sUtf8);
+    }
+
+    /**
+     * Преобразовываем hex в строку
+     *
+     * @param $sHexString
+     * @return string
+     */
+    public function hexString2Utf8($sHexString)
+    {
+        return hex2bin($sHexString);
     }
 
     /**

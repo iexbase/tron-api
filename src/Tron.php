@@ -13,7 +13,7 @@ class Tron implements TronContract
      *
      * @const string
      */
-    const VERSION = 'v1.2';
+    const VERSION = 'v1.3';
 
     /**
      * Экземпляр приложения TronClient.
