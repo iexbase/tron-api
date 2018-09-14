@@ -47,6 +47,34 @@ class TronClient
     }
 
     /**
+     * Возвращает метод запроса
+     *
+     * @param string $method
+     * @param string $type
+     * @return string
+     */
+    protected function getMethod(string $method = 'POST', string $type = null) : string
+    {
+        if($method == 'auto' and $type == 'server') {
+            return 'GET';
+        } else {
+            return 'POST';
+        }
+    }
+
+    /**
+     * Получаем отформатированные параметры для отправки
+     *
+     * @param $body
+     * @return string
+     */
+    public function getBody($body)
+    {
+        unset($body['http_provider']); // Удаляем из массива
+        return json_encode($body);
+    }
+
+    /**
      * Отправляем запросы на активный сервер
      *
      * @param $method
@@ -56,12 +84,16 @@ class TronClient
      */
     public function sendRequest($method, $url, $body)
     {
-        $this->requestCount++;
+        $method = $this->getMethod($method, $body['http_provider']);
+
         $options = [
             'headers'   =>  $this->getDefaultHeaders(),
-            'body'      =>  json_encode($body),
+            'body'      =>  $this->getBody($body),
             'timeout'   =>  self::DEFAULT_REQUEST_TIMEOUT,
         ];
+
+        //Увеличиваем запрос на +1
+        $this->requestCount++;
 
         try {
             $request = new Request($method, $url, $options['headers'], $options['body']);

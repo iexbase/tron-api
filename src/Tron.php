@@ -30,6 +30,13 @@ class Tron implements TronContract
     protected $urlFullNode = 'http://13.125.210.234:8090';
 
     /**
+     * Серверный нод TRON
+     *
+     * @var string
+    */
+    protected $tronServer = 'https://server.tron.network/api/v2/node';
+
+    /**
      * Адрес учетной записи
      *
      * @var string
@@ -68,6 +75,16 @@ class Tron implements TronContract
     public function setFullNodeServer($url) : void
     {
         $this->urlFullNode = $url;
+    }
+
+    /**
+     * Укажите ссылку на новую серверную ноду
+     *
+     * @param $url
+     */
+    public function setTronServer($url) : void
+    {
+        $this->tronServer = $url;
     }
 
     /**
@@ -741,6 +758,27 @@ class Tron implements TronContract
         return $this->call('/wallet/generateaddress');
     }
 
+    public function getBalanceInfo()
+    {
+        return $this->call('/balance_info', [
+            'http_provider'  =>  'server'
+        ]);
+    }
+
+    /**
+     * Получаем базовую ссылку
+     *
+     * @param $type
+     * @return string
+     */
+    protected function getUrl($type = null)
+    {
+        if($type == 'server')
+            return $this->tronServer;
+
+        return $this->urlFullNode;
+    }
+
     /**
      * Отправка запросов
      *
@@ -751,8 +789,8 @@ class Tron implements TronContract
      */
     protected function call($path, $options = [])
     {
-        $response = $this->client->sendRequest('POST',
-            sprintf('%s%s', $this->urlFullNode, $path), $options);
+        $response = $this->client->sendRequest('auto',
+            sprintf('%s%s', $this->getUrl($options['http_provider']), $path), $options);
 
        return $response;
     }
