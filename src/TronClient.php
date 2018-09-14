@@ -70,7 +70,10 @@ class TronClient
      */
     public function getBody($body)
     {
-        unset($body['http_provider']); // Удаляем из массива
+        // Удаляем из массива
+        if(array_key_exists('http_provider', $body))
+            unset($body['http_provider']);
+
         return json_encode($body);
     }
 
