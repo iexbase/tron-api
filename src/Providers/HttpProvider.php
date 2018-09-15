@@ -4,11 +4,12 @@ namespace IEXBase\TronAPI\Providers;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
+use IEXBase\TronAPI\Contracts\HttpProviderContract;
 use IEXBase\TronAPI\Exceptions\TronException;
 use IEXBase\TronAPI\Support\Utils;
 use IEXBase\TronAPI\TronResponse;
 
-class HttpProvider
+class HttpProvider implements HttpProviderContract
 {
     /**
      * Обработчик HTTP-клиента
