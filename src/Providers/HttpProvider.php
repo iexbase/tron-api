@@ -102,22 +102,6 @@ class HttpProvider implements HttpProviderContract
         ]);
     }
 
-
-    /**
-     * Получаем отформатированные параметры для отправки
-     *
-     * @param $body
-     * @return string
-     */
-    public function getBody($body)
-    {
-        // Удаляем из массива
-        if(array_key_exists('http_provider', $body))
-            unset($body['http_provider']);
-
-        return json_encode($body);
-    }
-
     /**
      * Отправляем запросы на сервер
      *
@@ -131,8 +115,8 @@ class HttpProvider implements HttpProviderContract
         $method = strtoupper($method);
 
         $options = [
-            'headers' => $this->headers,
-            'body' => $this->getBody($payload)
+            'headers'   => $this->headers,
+            'body'      => json_encode($payload)
         ];
 
         $request = new Request($method, $url, $options['headers'], $options['body']);
