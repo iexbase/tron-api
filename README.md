@@ -18,14 +18,14 @@
 use IEXBase\TronAPI\Tron;
 
 $tron = new Tron();
-//alternative way to enter a private key
-$tron->setPrivateKey('private_key');
 
 //Change node address
 $fullNode = new HttpProvider('https://api.trongrid.io:8090');
 $solidityNode = new HttpProvider('https://api.trongrid.io:8091');
 $tron - new Tron($fullNode, $solidityNode);
 
+//alternative way to enter a private key
+$tron->setPrivateKey('private_key');
 
 //Balance
 var_dump($tron->getBalance());
