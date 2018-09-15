@@ -20,7 +20,7 @@ class Utils
      * @return bool
      */
     public static function isHex($str) : bool {
-        return ctype_xdigit($str);
+        return is_string($str) && !is_nan(intval($str,16));
     }
 
     /**

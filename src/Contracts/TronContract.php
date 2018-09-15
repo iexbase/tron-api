@@ -1,16 +1,15 @@
 <?php
 namespace IEXBase\TronAPI\Contracts;
 
-
 use IEXBase\TronAPI\Exceptions\TronException;
 
 interface TronContract
 {
     /**
      * Укажите ссылку на полную ноду
-     * @param $url
+     * @param $provider
      */
-    public function setFullNodeServer($url) : void;
+    public function setFullNode($provider);
 
     /**
      * Указываем приватный ключ к учетной записи
@@ -24,7 +23,7 @@ interface TronContract
      *
      * @param string $address
      */
-    public function setAccount(string $address) : void;
+    public function setAddress(string $address) : void;
 
     /**
      * Получение баланса учетной записи
@@ -146,13 +145,12 @@ interface TronContract
     public function createUnfreezeBalanceTransaction($address);
 
     /**
-     * Получаем список блоков из определенного диапазона
+     * Получаем детали блока с помощью HashString или blockNumber
      *
-     * @param $startBlock
-     * @param $endBlock
+     * @param null $block
      * @return array
      */
-    public function getBlocksInRange($startBlock, $endBlock);
+    public function getBlock($block = null);
 
     /**
      * Получаем список последних блоков

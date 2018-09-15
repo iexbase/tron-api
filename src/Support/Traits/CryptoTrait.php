@@ -97,11 +97,23 @@ trait CryptoTrait
         return new BigInteger($str);
     }
 
-    public function trxToSun($trxCount) {
-        return abs($trxCount) * pow(10,6);
+    /**
+     * Преобразовываем сумму из формата Tron
+     *
+     * @param $sun
+     * @return string
+     */
+    public function fromTron($sun) {
+        return bcdiv($sun,10000000,8);
     }
 
-    public function sunToTrx($sunCount) {
-        return abs($sunCount) / pow(10,6);
+    /**
+     * Преобразовываем сумму в формат Tron
+     *
+     * @param $double
+     * @return int
+     */
+    public function toTron($double) {
+        return (int) bcmul((string) $double, (string) 10000000, 0);
     }
 }

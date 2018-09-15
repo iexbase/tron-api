@@ -1,7 +1,6 @@
 <?php
 namespace IEXBase\TronAPI\Support;
 
-
 class Hash
 {
     /**
