@@ -28,7 +28,7 @@ $tron - new Tron($fullNode, $solidityNode);
 $tron->setPrivateKey('private_key');
 
 //Balance
-var_dump($tron->getBalance());
+$tron->fromTron($tron->getBalance());
 
 // Transfer Trx
 var_dump($tron->sendTransaction('from', 'to', 'amount'));
