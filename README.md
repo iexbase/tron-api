@@ -17,12 +17,14 @@
 ```php
 use IEXBase\TronAPI\Tron;
 
-$tron = new Tron('address', 'private_key');
+$tron = new Tron();
 //alternative way to enter a private key
 $tron->setPrivateKey('private_key');
 
 //Change node address
-$tron->setFullNodeServer('url new node');
+$fullNode = new HttpProvider('https://api.trongrid.io:8090');
+$solidityNode = new HttpProvider('https://api.trongrid.io:8091');
+$tron - new Tron($fullNode, $solidityNode);
 
 
 //Balance
