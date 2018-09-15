@@ -94,7 +94,6 @@ class HttpProvider implements HttpProviderContract
         $this->password = $password;
         $this->statusPage = $statusPage;
 
-
         $this->httpClient = new Client([
             'base_uri'  =>  $this->host,
             'timeout'   =>  $this->timeOut,
