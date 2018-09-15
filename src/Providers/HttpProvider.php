@@ -35,14 +35,14 @@ class HttpProvider implements HttpProviderContract
     /**
      * Имя пользователя
      *
-     * @var string
+     * @var string | null
      */
     protected $user = null;
 
     /**
      * Пароль пользователя
      *
-     * @var string
+     * @var string | null
      */
     protected $password = null;
 
