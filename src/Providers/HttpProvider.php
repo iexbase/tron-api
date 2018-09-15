@@ -133,6 +133,10 @@ class HttpProvider implements HttpProviderContract
     {
         $method = strtoupper($method);
 
+        if(!in_array($method, ['GET', 'POST'])) {
+            die('The method is not defined');
+        }
+
         $options = [
             'headers'   => $this->headers,
             'body'      => json_encode($payload)
