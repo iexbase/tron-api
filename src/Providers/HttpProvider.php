@@ -103,6 +103,26 @@ class HttpProvider implements HttpProviderContract
     }
 
     /**
+     * Указываем новую страницу
+     *
+     * @param string $page
+     */
+    public function setStatusPage($page = '/') {
+        $this->statusPage = $page;
+    }
+
+    /**
+     * Проверить соединение
+     *
+     * @return bool
+    */
+    public function isConnected() : bool
+    {
+        $response = $this->request($this->statusPage);
+        return (array_key_exists('blockID', $response) ? true : false);
+    }
+
+    /**
      * Отправляем запросы на сервер
      *
      * @param $url

@@ -106,6 +106,7 @@ class Tron implements TronContract
         }
 
         $this->fullNode = $provider;
+        $this->fullNode->setStatusPage('wallet/getnowblock');
     }
 
     /**
@@ -121,6 +122,7 @@ class Tron implements TronContract
         }
 
         $this->solidityNode = $provider;
+        $this->solidityNode->setStatusPage('walletsolidity/getnowblock');
     }
 
     /**
@@ -1024,5 +1026,18 @@ class Tron implements TronContract
     public function getNodeMap() : array
     {
         return $this->tronNode->request('api/v2/node/nodemap');
+    }
+
+    /**
+     * Проверка всех подключенных нодов
+     *
+     * @return array
+    */
+    public function isConnected() : array
+    {
+        return [
+            'fullNode'      =>  $this->fullNode->isConnected(),
+            'solidityNode'  =>  $this->solidityNode->isConnected()
+        ];
     }
 }
