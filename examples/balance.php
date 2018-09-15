@@ -1,8 +1,9 @@
 <?php
 include_once '../vendor/autoload.php';
 
-$tron = new \IEXBase\TronAPI\Tron('address');
+$tron = new \IEXBase\TronAPI\Tron();
+$tron->setAddress('address');
 
-$balance = $tron->getBalance(); //or $tron->getBalance('address');
+$balance = $tron->getBalance();
 
-var_dump($balance);
+echo $tron->fromTron($balance);

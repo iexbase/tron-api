@@ -1,7 +1,9 @@
 <?php
 include_once '../vendor/autoload.php';
 
-$tron = new \IEXBase\TronAPI\Tron('address','privateKey');
+$tron = new \IEXBase\TronAPI\Tron();
+$tron->setAddress('address');
+$tron->setPrivateKey('privateKey');
 
 try {
     $transfer = $tron->sendTransaction('FromAddress', 'ToAddress', 1);
