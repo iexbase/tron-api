@@ -100,11 +100,11 @@ trait CryptoTrait
     /**
      * Преобразовываем сумму из формата Tron
      *
-     * @param $sun
+     * @param $amount
      * @return string
      */
-    public function fromTron($sun) {
-        return bcdiv($sun,10000000,8);
+    public function fromTron($amount) {
+        return bcdiv((string)$amount, (string)1e6, 8);
     }
 
     /**
@@ -114,6 +114,6 @@ trait CryptoTrait
      * @return int
      */
     public function toTron($double) {
-        return (int) bcmul((string) $double, (string) 10000000, 0);
+        return (int) bcmul((string)$double, (string)1e6,0);
     }
 }

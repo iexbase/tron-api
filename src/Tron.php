@@ -63,12 +63,13 @@ class Tron implements TronContract
     public function __construct($fullNode = null, $solidityNode = null, $privateKey = null)
     {
         if(!$fullNode instanceof HttpProvider) {
-            $fullNode = new HttpProvider($fullNode);
+            $fullNode = new HttpProvider($this->fullNode);
         }
 
         if(!$solidityNode instanceof HttpProvider) {
-            $solidityNode = new HttpProvider($solidityNode);
+            $solidityNode = new HttpProvider($this->solidityNode);
         }
+
 
         $tronNode = new HttpProvider($this->tronNode);
 
@@ -349,9 +350,9 @@ class Tron implements TronContract
     {
         $address = (is_string($address) ? $address : $this->address);
 
-        return $this->solidityNode->request('walletsolidity/getaccount', [
+        return $this->fullNode->request('wallet/getaccount', [
             'address'   =>  $this->toHex($address)
-        ]);
+        ],'post');
     }
 
     /**
@@ -362,6 +363,8 @@ class Tron implements TronContract
      */
     public function getBalance($address = null)
     {
+        $address = (is_string($address) ? $address : $this->address);
+
        $balance = $this->getAccount($address)['balance'];
 
        if(!$balance) {
@@ -379,6 +382,8 @@ class Tron implements TronContract
      */
     public function getBandwidth($address = null)
     {
+        $address = (is_string($address) ? $address : $this->address);
+
         return $this->fullNode->request('wallet/getaccountnet', [
             'address'   =>  $this->toHex($address)
         ],'post');
@@ -784,6 +789,8 @@ class Tron implements TronContract
      */
     public function getTokensIssuedByAddress($address = null)
     {
+        $address = (is_string($address) ? $address : $this->address);
+
         return $this->fullNode->request('wallet/getassetissuebyaccount',[
             'address'   =>  $this->toHex($address)
         ],'post');
