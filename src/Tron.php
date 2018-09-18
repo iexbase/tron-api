@@ -54,6 +54,13 @@ class Tron implements TronContract
     protected $defaultBlock = null;
 
     /**
+     * Добавляем комментарий
+     *
+     * @var string
+    */
+    protected $comment = null;
+
+    /**
      * Создаем новый объект Tron
      *
      * @param string $fullNode
@@ -403,7 +410,7 @@ class Tron implements TronContract
     public function getTransactionsRelated($address = null, $direction = 'from', $limit = 30, $offset = 0)
     {
         if(!in_array($direction, ['to', 'from'])) {
-            die('Invalid direction provided: Expected "to", "from" or "all"');
+            die('Invalid direction provided: Expected "to", "from"');
         }
 
         if(!is_integer($limit) || $limit < 0 || ($offset && $limit) < 1) {
@@ -432,6 +439,16 @@ class Tron implements TronContract
     {
         $response = $this->fullNode->request('wallet/totaltransaction');
         return $response['num'];
+    }
+
+    /**
+     * Прикрепляем комментарий к транзакции
+     *
+     * @param string $data
+     */
+    public function addComment($data = null)
+    {
+        $this->comment = $this->stringUtf8toHex($data);
     }
 
     /**
@@ -470,8 +487,8 @@ class Tron implements TronContract
         $response = $this->fullNode->request('wallet/createtransaction', [
             'to_address'    =>  $this->toHex($to),
             'owner_address' =>  $this->toHex($from),
-            'amount'        =>  $this->toTron($amount)
-        ]);
+            'amount'        =>  $this->toTron($amount),
+        ], 'post');
 
         return $response;
     }
@@ -492,10 +509,14 @@ class Tron implements TronContract
             die('Transaction is already signed');
         }
 
+        if(is_string($this->comment)) {
+            $transaction['raw_data']['data'] = $this->comment;
+        }
+
         return $this->fullNode->request('wallet/gettransactionsign', [
             'transaction'   => $transaction,
             'privateKey'    => $this->privateKey
-        ]);
+        ],'post');
     }
 
     /**
