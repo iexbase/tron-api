@@ -47,13 +47,6 @@ class Tron implements TronContract
     protected $privateKey;
 
     /**
-     * Номер блока по умолчанию
-     *
-     * @var string | int
-    */
-    protected $defaultBlock = null;
-
-    /**
      * Добавляем комментарий
      *
      * @var string
@@ -275,10 +268,6 @@ class Tron implements TronContract
      */
     public function getTransactionFromBlock($block = null, $index = 0)
     {
-        if(is_null($block)) {
-            $block = $this->defaultBlock;
-        }
-
         if(!is_integer($index) || $index < 0) {
             die('Invalid transaction index provided');
         }
