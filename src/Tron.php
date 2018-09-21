@@ -47,13 +47,6 @@ class Tron implements TronContract
     protected $privateKey;
 
     /**
-     * Добавляем комментарий
-     *
-     * @var string
-    */
-    protected $comment = null;
-
-    /**
      * Создаем новый объект Tron
      *
      * @param string $fullNode
@@ -431,16 +424,6 @@ class Tron implements TronContract
     }
 
     /**
-     * Прикрепляем комментарий к транзакции
-     *
-     * @param string $data
-     */
-    public function addComment($data = null)
-    {
-        $this->comment = $this->stringUtf8toHex($data);
-    }
-
-    /**
      * Отправляем транзакцию в Blockchain
      *
      * @param $from
@@ -496,10 +479,6 @@ class Tron implements TronContract
 
         if($transaction['signature']) {
             die('Transaction is already signed');
-        }
-
-        if(is_string($this->comment)) {
-            $transaction['raw_data']['data'] = $this->comment;
         }
 
         return $this->fullNode->request('wallet/gettransactionsign', [
