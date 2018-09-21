@@ -63,7 +63,6 @@ class Tron implements TronContract
             $solidityNode = new HttpProvider($this->solidityNode);
         }
 
-
         $tronNode = new HttpProvider($this->tronNode);
 
         $this->setFullNode($fullNode);
