@@ -476,7 +476,7 @@ class Tron implements TronContract
             die('Invalid transaction provided');
         }
 
-        if($transaction['signature']) {
+        if(isset($transaction['signature'])) {
             die('Transaction is already signed');
         }
 
