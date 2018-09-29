@@ -987,6 +987,16 @@ class Tron implements TronContract
     }
 
     /**
+     * Получаем все предложения по изменению сети.
+     *
+     * @return array
+    */
+    public function listExchanges()
+    {
+        return $this->fullNode->request('/wallet/listexchanges', [], 'post');
+    }
+
+    /**
      * Генерация нового адреса
      *
      * @return array
