@@ -987,13 +987,28 @@ class Tron implements TronContract
     }
 
     /**
-     * Получаем все предложения по изменению сети.
+     * Получаем список бирж(обменников)
      *
      * @return array
     */
     public function listExchanges()
     {
         return $this->fullNode->request('/wallet/listexchanges', [], 'post');
+    }
+
+    /**
+     * Дополнительные ресурсы учетной записи
+     *
+     * @param null $address
+     * @return array
+     */
+    public function getAccountResources($address = null)
+    {
+        $address = (is_string($address) ? $address : $this->address);
+
+        return $this->fullNode->request('/wallet/getaccountresource', [
+           'address' =>  $this->toHex($address)
+        ], 'post');
     }
 
     /**
