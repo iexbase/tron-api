@@ -529,6 +529,28 @@ class Tron implements TronContract
     }
 
     /**
+     * Отправляем средства на счет Tron (option 2)
+     *
+     * @param array $args
+     * @return array
+     * @throws TronException
+     */
+    public function send(...$args) {
+        return $this->sendTransaction(...$args);
+    }
+
+    /**
+     * Отправляем средства на счет Tron (option 3)
+     *
+     * @param array $args
+     * @return array
+     * @throws TronException
+     */
+    public function sendTrx(...$args) {
+        return $this->sendTransaction(...$args);
+    }
+
+    /**
      * Создание нового токена на базе Tron
      *
      *   @param array token {
