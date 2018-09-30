@@ -218,6 +218,16 @@ class Tron implements TronInterface
     }
 
     /**
+     * Получаем адрес учетной записи
+     *
+     * @return string
+    */
+    public function getAddress(): string
+    {
+        return $this->address;
+    }
+
+    /**
      * Получаем настроенные данные провайдера
      *
      * @return array
