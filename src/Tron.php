@@ -587,7 +587,7 @@ class Tron implements TronInterface
             throw new TronException('Invalid transaction provided');
         }
 
-        if(!$signedTransaction['signature'] || !is_array($signedTransaction['signature'])) {
+        if(!array_key_exists('signature', $signedTransaction) || !is_array($signedTransaction['signature'])) {
             throw new TronException('Transaction is not signed');
         }
 
