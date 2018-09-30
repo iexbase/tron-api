@@ -3,10 +3,7 @@
     "description": "A PHP API for interacting with Tron (Trx)",
     "license": "MIT",
     "type":   "library",
-    "support": {
-        "issues": "https://github.com/iexbase/tron-api/issues",
-        "source": "https://github.com/iexbase/tron-api"
-    },
+    "homepage": "https://github.com/iexbase/tron-api",
     "authors": [
         {
             "name": "Shamsudin Serderov",
@@ -32,6 +29,12 @@
     "autoload": {
         "psr-4": {
             "IEXBase\\TronAPI\\": "src"
+        }
+    },
+
+    "autoload-dev": {
+        "psr-4": {
+            "IEXBase\\TronAPI\\Test\\": "tests"
         }
     },
 
