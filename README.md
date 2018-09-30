@@ -7,7 +7,7 @@
 </h4>
 
 [![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/iexbase/tron-api)
-[![Build Status](https://api.travis-ci.com/iexbase/tron-api.svg?branch=master)](https://travis-ci.org/iexbase/tron-api)
+[![Build Status](https://api.travis-ci.com/iexbase/tron-api.svg?branch=master)](https://travis-ci.com/iexbase/tron-api)
 
 ## Install
 
