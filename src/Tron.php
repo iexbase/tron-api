@@ -12,6 +12,13 @@ class Tron implements TronContract
     use Support\Traits\CryptoTrait;
 
     /**
+     * Режим отладки
+     *
+     * @var bool
+    */
+    protected $debug = true;
+
+    /**
      * URL полной ноды
      *
      * @var HttpProviderContract
@@ -59,6 +66,7 @@ class Tron implements TronContract
      * @param string $fullNode
      * @param string $solidityNode
      * @param string $privateKey
+     * @throws TronException
      */
     public function __construct($fullNode = null, $solidityNode = null, $privateKey = null)
     {
@@ -87,9 +95,13 @@ class Tron implements TronContract
      * @param $provider
      * @return bool
      */
-    public function isValidProvider($provider) : bool
+    public function isValidProvider($provider): bool
     {
         return ($provider instanceof HttpProvider);
+    }
+
+    public function setDebug(bool $debug): void {
+        $this->debug = $debug;
     }
 
     /**
@@ -97,11 +109,12 @@ class Tron implements TronContract
      * @param $provider
      *
      * @return void | string
+     * @throws TronException
      */
     public function setFullNode($provider)
     {
         if(!$this->isValidProvider($provider)) {
-            die('Invalid full node provided');
+            $this->exception('Invalid full node provided');
         }
 
         $this->fullNode = $provider;
@@ -113,11 +126,12 @@ class Tron implements TronContract
      * @param $provider
      *
      * @return void | string
+     * @throws TronException
      */
     public function setSolidityNode($provider)
     {
         if(!$this->isValidProvider($provider)) {
-            die('Invalid solidity node provided');
+            $this->exception('Invalid solidity node provided');
         }
 
         $this->solidityNode = $provider;
@@ -130,11 +144,12 @@ class Tron implements TronContract
      * @param $provider
      *
      * @return void | string
+     * @throws TronException
      */
     public function setTronNode($provider)
     {
         if(!$this->isValidProvider($provider)) {
-            die('Invalid tron node provided');
+            $this->exception('Invalid tron node provided');
         }
 
         $this->tronNode = $provider;
@@ -145,6 +160,7 @@ class Tron implements TronContract
      *
      * @param bool $blockID
      * @return bool|int
+     * @throws TronException
      */
     public function setDefaultBlock($blockID = false)
     {
@@ -153,10 +169,20 @@ class Tron implements TronContract
         }
 
         if(!is_integer($blockID)) {
-            die('Invalid block ID provided');
+            $this->exception('Invalid block ID provided');
         }
 
         $this->defaultBlock = abs($blockID);
+    }
+
+    /**
+     * Получаем блок по умолчанию
+     *
+     * @return string|integer|bool
+    */
+    public function getDefaultBlock()
+    {
+        return $this->defaultBlock;
     }
 
     /**
@@ -208,13 +234,14 @@ class Tron implements TronContract
      *
      * @param null $block
      * @return array
+     * @throws TronException
      */
     public function getBlock($block = null)
     {
         $block = ($block === null ? $this->defaultBlock : $block);
 
         if($block === false) {
-            die('No block identifier provided');
+            $this->exception('No block identifier provided');
         }
 
         if($block == 'earliest') {
@@ -250,11 +277,12 @@ class Tron implements TronContract
      *
      * @param $blockID
      * @return array
+     * @throws TronException
      */
     public function getBlockByNumber($blockID)
     {
         if(!is_integer($blockID) || $blockID < 0) {
-            die('Invalid block number provided');
+            $this->exception('Invalid block number provided');
         }
 
         return $this->fullNode->request('wallet/getblockbynum', [
@@ -267,6 +295,7 @@ class Tron implements TronContract
      *
      * @param $block
      * @return int
+     * @throws TronException
      */
     public function getBlockTransactionCount($block)
     {
@@ -285,16 +314,18 @@ class Tron implements TronContract
      * @param null $block
      * @param int $index
      * @return array | string
+     * @throws TronException
      */
     public function getTransactionFromBlock($block = null, $index = 0)
     {
         if(!is_integer($index) || $index < 0) {
-            die('Invalid transaction index provided');
+            $this->exception('Invalid transaction index provided');
+
         }
 
         $transactions = $this->getBlock($block)['transactions'];
         if(!$transactions || count($transactions) < $index) {
-            die('Transaction not found in block');
+            $this->exception('Transaction not found in block');
         }
 
         return $transactions[$index];
@@ -305,6 +336,7 @@ class Tron implements TronContract
      *
      * @param $transactionID
      * @return array
+     * @throws TronException
      */
     public function getTransaction($transactionID)
     {
@@ -313,7 +345,7 @@ class Tron implements TronContract
         ],'post');
 
         if(!$response) {
-            die('Transaction not found');
+            $this->exception('Transaction not found');
         }
 
         return $response;
@@ -339,6 +371,7 @@ class Tron implements TronContract
      * @param int $limit
      * @param int $offset
      * @return array
+     * @throws TronException
      */
     public function getTransactionsToAddress($address = null, $limit = 30, $offset = 0)
     {
@@ -352,6 +385,7 @@ class Tron implements TronContract
      * @param int $limit
      * @param int $offset
      * @return array
+     * @throws TronException
      */
     public function getTransactionsFromAddress($address = null, $limit = 30, $offset = 0)
     {
@@ -417,19 +451,20 @@ class Tron implements TronContract
      * @param int $limit
      * @param int $offset
      * @return array
+     * @throws TronException
      */
     public function getTransactionsRelated($address = null, $direction = 'from', $limit = 30, $offset = 0)
     {
         if(!in_array($direction, ['to', 'from'])) {
-            die('Invalid direction provided: Expected "to", "from"');
+            $this->exception('Invalid direction provided: Expected "to", "from"');
         }
 
         if(!is_integer($limit) || $limit < 0 || ($offset && $limit) < 1) {
-            die('Invalid limit provided');
+            $this->exception('Invalid limit provided');
         }
 
         if(!is_integer($offset) || $offset < 0) {
-            die('Invalid offset provided');
+            $this->exception('Invalid offset provided');
         }
 
         $response = $this->solidityNode->request(sprintf('walletextension/gettransactions%sthis', $direction), [
@@ -499,15 +534,16 @@ class Tron implements TronContract
      *
      * @param $transaction
      * @return array
+     * @throws TronException
      */
     public function signTransaction($transaction)
     {
         if(!is_array($transaction)) {
-            die('Invalid transaction provided');
+            $this->exception('Invalid transaction provided');
         }
 
         if(isset($transaction['signature'])) {
-            die('Transaction is already signed');
+            $this->exception('Transaction is already signed');
         }
 
         return $this->fullNode->request('wallet/gettransactionsign', [
@@ -521,15 +557,16 @@ class Tron implements TronContract
      *
      * @param $signedTransaction
      * @return array
+     * @throws TronException
      */
     public function sendRawTransaction($signedTransaction)
     {
         if(!is_array($signedTransaction)) {
-            die('Invalid transaction provided');
+            $this->exception('Invalid transaction provided');
         }
 
         if(!$signedTransaction['signature'] || !is_array($signedTransaction['signature'])) {
-            die('Transaction is not signed');
+            $this->exception('Transaction is not signed');
         }
 
         return $this->fullNode->request('wallet/broadcasttransaction',
@@ -542,6 +579,7 @@ class Tron implements TronContract
      * @param $address
      * @param $newName
      * @return array
+     * @throws TronException
      */
     public function changeAccountName($address = null, $newName)
     {
@@ -857,15 +895,16 @@ class Tron implements TronContract
      * @param $start
      * @param $end
      * @return array
+     * @throws TronException
      */
     public function getBlockRange($start = 0, $end = 30)
     {
         if(!is_integer($start) || $start < 0) {
-            die('Invalid start of range provided');
+            $this->exception('Invalid start of range provided');
         }
 
         if(!is_integer($end) || $end <= $start) {
-            die('Invalid end of range provided');
+            $this->exception('Invalid end of range provided');
         }
 
         return $this->fullNode->request('wallet/getblockbylimitnext', [
@@ -879,11 +918,12 @@ class Tron implements TronContract
      *
      * @param int $limit
      * @return array
+     * @throws TronException
      */
     public function getLatestBlocks($limit = 1)
     {
         if(!is_integer($limit) || $limit <= 0) {
-            die('Invalid limit provided');
+            $this->exception('Invalid limit provided');
         }
 
         return $this->fullNode->request('wallet/getblockbylatestnum', [
@@ -907,15 +947,16 @@ class Tron implements TronContract
      * @param int $limit
      * @param int $offset
      * @return array
+     * @throws TronException
      */
     public function listTokens($limit = 0, $offset = 0)
     {
         if(!is_integer($limit) || $limit < 0 || ($offset && $limit < 1)) {
-            die('Invalid limit provided');
+            $this->exception('Invalid limit provided');
         }
 
         if(!is_integer($offset) || $offset < 0) {
-            die('Invalid offset provided');
+            $this->exception('Invalid offset provided');
         }
 
         if(!$limit) {
@@ -932,13 +973,14 @@ class Tron implements TronContract
      * Возвращает время в миллисекундах до следующего подсчета голосов SR
      *
      * @return array
-    */
+     * @throws TronException
+     */
     public function timeUntilNextVoteCycle()
     {
         $num = $this->fullNode->request('wallet/getnextmaintenancetime')['num'];
 
         if($num == -1) {
-            die('Failed to get time until next vote cycle');
+            $this->exception('Failed to get time until next vote cycle');
         }
 
         return floor($num / 1000);
@@ -1104,5 +1146,21 @@ class Tron implements TronContract
             'fullNode'      =>  $this->fullNode->isConnected(),
             'solidityNode'  =>  $this->solidityNode->isConnected()
         ];
+    }
+
+    /**
+     * Обработчик исключений
+     *
+     * @param string $message
+     * @return string
+     * @throws TronException
+     */
+    protected function exception(string $message)
+    {
+        if($this->debug == true) {
+            throw new TronException($message);
+        }
+
+        die($message);
     }
 }
