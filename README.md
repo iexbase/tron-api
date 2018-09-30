@@ -6,7 +6,7 @@
   A PHP API for interacting with the Tron (TRX)
 </h4>
 
-[![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/iexbase/tron-api)
+[![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/packages/iexbase/tron-api)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 [![Build Status](https://api.travis-ci.com/iexbase/tron-api.svg?branch=master)](https://travis-ci.com/iexbase/tron-api)
 
