@@ -1,7 +1,7 @@
 <?php
 include_once '../vendor/autoload.php';
 
-use IEXBase\TronAPI\Providers\HttpProvider;
+use IEXBase\TronAPI\Provider\HttpProvider;
 use IEXBase\TronAPI\Tron;
 
 $fullNode = new HttpProvider('https://api.trongrid.io:8090');
