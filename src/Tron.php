@@ -47,6 +47,13 @@ class Tron implements TronContract
     protected $privateKey;
 
     /**
+     * Блок по умолчанию
+     *
+     * @var string|integer|bool
+    */
+    protected $defaultBlock = false;
+
+    /**
      * Создаем новый объект Tron
      *
      * @param string $fullNode
@@ -134,6 +141,25 @@ class Tron implements TronContract
     }
 
     /**
+     * Устанавливанием блок по умолчанию
+     *
+     * @param bool $blockID
+     * @return bool|int
+     */
+    public function setDefaultBlock($blockID = false)
+    {
+        if($blockID === false || $blockID == 'latest' || $blockID == 'earliest' || $blockID === 0) {
+            return $this->defaultBlock = $blockID;
+        }
+
+        if(!is_integer($blockID)) {
+            die('Invalid block ID provided');
+        }
+
+        $this->defaultBlock = abs($blockID);
+    }
+
+    /**
      * Указываем приватный ключ к учетной записи
      *
      * @param string $privateKey
@@ -185,7 +211,9 @@ class Tron implements TronContract
      */
     public function getBlock($block = null)
     {
-        if(is_null($block)) {
+        $block = ($block === null ? $this->defaultBlock : $block);
+
+        if($block === false) {
             die('No block identifier provided');
         }
 
@@ -349,19 +377,21 @@ class Tron implements TronContract
      * Получение баланса
      *
      * @param null $address
+     * @param bool $fromTron
      * @return mixed
      */
-    public function getBalance($address = null)
+    public function getBalance($address = null, bool $fromTron = false)
     {
         $address = (is_string($address) ? $address : $this->address);
+        $balance = $this->getAccount($address);
 
-       $balance = $this->getAccount($address)['balance'];
+        if(!$balance['balance']) {
+            return 0;
+        }
 
-       if(!$balance) {
-           return 0;
-       }
-
-       return $balance;
+        return ($fromTron == true ?
+            $this->fromTron($balance['balance']) :
+            $balance['balance']);
     }
 
     /**
