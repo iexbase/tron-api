@@ -1131,6 +1131,16 @@ class Tron implements TronContract
     }
 
     /**
+     * Создать новый аккаунт
+     *
+     * @return array
+     */
+    public function createAccount(): array
+    {
+        return $this->generateAddress();
+    }
+
+    /**
      * Генерация нового адреса
      *
      * @return array
