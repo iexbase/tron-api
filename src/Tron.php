@@ -1,17 +1,36 @@
 <?php
+
+/**
+ * TronAPI
+ *
+ * @author  Shamsudin Serderov <steein.shamsudin@gmail.com>
+ * @license https://github.com/iexbase/tron-api/blob/master/LICENSE (MIT License)
+ * @version 1.3.3
+ * @link    https://github.com/iexbase/tron-api
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace IEXBase\TronAPI;
 
-use IEXBase\TronAPI\Contracts\HttpProviderContract;
-use IEXBase\TronAPI\Contracts\TronContract;
+use IEXBase\TronAPI\Contracts\{HttpProviderContract, TronContract};
+use IEXBase\TronAPI\Support\{Traits\CryptoTrait, Utils};
 use IEXBase\TronAPI\Exceptions\TronException;
 use IEXBase\TronAPI\Providers\HttpProvider;
-use IEXBase\TronAPI\Support\Utils;
 
+/**
+ * A PHP API for interacting with the Tron (TRX)
+ *
+ * @package TronAPI
+ * @author  Shamsudin Serderov <steein.shamsudin@gmail.com>
+ * @since   1.0.0
+ */
 class Tron implements TronContract
 {
-    use Support\Traits\CryptoTrait;
+    use CryptoTrait;
 
     /**
      * Режим отладки
@@ -65,12 +84,14 @@ class Tron implements TronContract
     /**
      * Создаем новый объект Tron
      *
-     * @param string $fullNode
-     * @param string $solidityNode
+     * @param HttpProviderContract $fullNode
+     * @param HttpProviderContract $solidityNode
      * @param string $privateKey
      * @throws TronException
      */
-    public function __construct($fullNode = null, $solidityNode = null, $privateKey = null)
+    public function __construct(?HttpProviderContract $fullNode = null,
+                                ?HttpProviderContract $solidityNode = null,
+                                string $privateKey = null)
     {
         if(!$fullNode instanceof HttpProvider) {
             $fullNode = new HttpProvider($this->fullNode);
