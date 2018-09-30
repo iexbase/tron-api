@@ -6,6 +6,8 @@
   A PHP API for interacting with the Tron (TRX)
 </h4>
 
+[![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/iexbase/tron-api)
+
 ## Install
 
 ```bash
