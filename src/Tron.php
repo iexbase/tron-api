@@ -177,6 +177,7 @@ class Tron implements TronInterface
     {
         if($blockID === false || $blockID == 'latest' || $blockID == 'earliest' || $blockID === 0) {
             $this->defaultBlock = $blockID;
+            return;
         }
 
         if(!is_integer($blockID)) {
