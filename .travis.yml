@@ -1,0 +1,9 @@
+language: php
+
+php:
+  - 7.1
+  - 7.2
+  
+# This triggers builds to run on the new TravisCI infrastructure.
+# See: http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: false
