@@ -1,15 +1,14 @@
-<?php
-namespace IEXBase\TronAPI\Providers;
+<?php declare(strict_types=1);
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
+namespace IEXBase\TronAPI\Provider;
+
+use GuzzleHttp\{Client, ClientInterface};
 use GuzzleHttp\Psr7\Request;
-use IEXBase\TronAPI\Contracts\HttpProviderContract;
-use IEXBase\TronAPI\Exceptions\TronException;
+use Psr\Http\Message\StreamInterface;
+use IEXBase\TronAPI\Exception\{NotFoundException, TronException};
 use IEXBase\TronAPI\Support\Utils;
-use IEXBase\TronAPI\TronResponse;
 
-class HttpProvider implements HttpProviderContract
+class HttpProvider implements HttpProviderInterface
 {
     /**
      * Обработчик HTTP-клиента
@@ -17,34 +16,6 @@ class HttpProvider implements HttpProviderContract
      * @var ClientInterface.
      */
     protected $httpClient;
-
-    /**
-     * URL Сервера или RPC
-     *
-     * @var string
-    */
-    protected $host;
-
-    /**
-     * Время ожидания
-     *
-     * @var int
-     */
-    protected $timeOut = 30000;
-
-    /**
-     * Имя пользователя
-     *
-     * @var string | null
-     */
-    protected $user = null;
-
-    /**
-     * Пароль пользователя
-     *
-     * @var string | null
-     */
-    protected $password = null;
 
     /**
      * Получаем кастомные заголовки
@@ -63,40 +34,35 @@ class HttpProvider implements HttpProviderContract
     /**
      * Создаем объект HttpProvider
      *
-     * @param $host
+     * @param string $host
      * @param int $timeout
      * @param $user
      * @param $password
      * @param array $headers
      * @param string $statusPage
+     * @throws TronException
      */
-    public function __construct($host, $timeout = 30000, $user = false, $password = false, $headers = [], $statusPage = '/')
+    public function __construct($host, int $timeout = 30000,
+                                $user = false, $password = false,
+                                array $headers = [], string $statusPage = '/')
     {
         if(!Utils::isValidUrl($host)) {
-            die('Invalid URL provided to HttpProvider');
+            throw new TronException('Invalid URL provided to HttpProvider');
         }
 
         if(is_nan($timeout) || $timeout < 0) {
-            die('Invalid timeout duration provided');
+            throw new TronException('Invalid timeout duration provided');
         }
 
         if(!Utils::isArray($headers)) {
-            die('Invalid headers array provided');
+            throw new TronException('Invalid headers array provided');
         }
 
-        if(substr($host,strlen($host) - 1) === '/') {
-            $host = substr($host, 0,strlen($host) - 1);
-        }
-
-        $this->host = $host;
-        $this->timeOut = $timeout;
-        $this->user = $user;
-        $this->password = $password;
         $this->statusPage = $statusPage;
 
         $this->httpClient = new Client([
-            'base_uri'  =>  $this->host,
-            'timeout'   =>  $this->timeOut,
+            'base_uri'  =>  $host,
+            'timeout'   =>  $timeout,
             'auth'      =>  $user && [$user, $password]
         ]);
     }
@@ -106,7 +72,7 @@ class HttpProvider implements HttpProviderContract
      *
      * @param string $page
      */
-    public function setStatusPage($page = '/') {
+    public function setStatusPage(string $page = '/') {
         $this->statusPage = $page;
     }
 
@@ -114,7 +80,8 @@ class HttpProvider implements HttpProviderContract
      * Проверить соединение
      *
      * @return bool
-    */
+     * @throws TronException
+     */
     public function isConnected() : bool
     {
         $response = $this->request($this->statusPage);
@@ -127,14 +94,15 @@ class HttpProvider implements HttpProviderContract
      * @param $url
      * @param array $payload
      * @param string $method
-     * @return array
+     * @return array|mixed
+     * @throws TronException
      */
-    public function request($url, $payload = [], $method = 'get')
+    public function request($url, array $payload = [], string $method = 'get')
     {
         $method = strtoupper($method);
 
         if(!in_array($method, ['GET', 'POST'])) {
-            die('The method is not defined');
+            throw new TronException('The method is not defined');
         }
 
         $options = [
@@ -145,15 +113,31 @@ class HttpProvider implements HttpProviderContract
         $request = new Request($method, $url, $options['headers'], $options['body']);
         $rawResponse = $this->httpClient->send($request, $options);
 
-        try {
-            $returnResponse = new TronResponse(
-                $rawResponse->getBody(),
-                $rawResponse->getStatusCode()
-            );
-        } catch (TronException $e) {
-            die($e->getMessage());
+        return $this->decodeBody(
+            $rawResponse->getBody(),
+            $rawResponse->getStatusCode()
+        );
+    }
+
+    /**
+     * Преобразуем исходный ответ в массив
+     *
+     * @param StreamInterface $stream
+     * @param int $status
+     * @return array|mixed
+     */
+    protected function decodeBody(StreamInterface $stream, int $status): array
+    {
+        $decodedBody = json_decode($stream->getContents(),true);
+
+        if ($decodedBody == null or !is_array($decodedBody)) {
+            $decodedBody = [];
         }
 
-        return $returnResponse->getDecodedBody();
+        if($status == 404) {
+            throw new NotFoundException('Page not found');
+        }
+
+        return $decodedBody;
     }
 }

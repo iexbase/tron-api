@@ -1,10 +1,10 @@
-<?php
-namespace IEXBase\TronAPI\Support\Traits;
+<?php declare(strict_types=1);
 
-use IEXBase\TronAPI\Support\Base58Check;
-use IEXBase\TronAPI\Support\BigInteger;
+namespace IEXBase\TronAPI;
 
-trait CryptoTrait
+use IEXBase\TronAPI\Support\{Base58Check, BigInteger};
+
+trait TronAwareTrait
 {
     /**
      * Преобразовывание из Hex

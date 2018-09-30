@@ -1,9 +1,10 @@
-<?php
-namespace IEXBase\TronAPI\Contracts;
+<?php declare(strict_types=1);
 
-use IEXBase\TronAPI\Exceptions\TronException;
+namespace IEXBase\TronAPI;
 
-interface TronContract
+use IEXBase\TronAPI\Exception\TronException;
+
+interface TronInterface
 {
     /**
      * Укажите ссылку на полную ноду

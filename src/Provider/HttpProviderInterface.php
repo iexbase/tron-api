@@ -1,14 +1,16 @@
-<?php
-namespace IEXBase\TronAPI\Contracts;
+<?php declare(strict_types=1);
 
-interface HttpProviderContract
+namespace IEXBase\TronAPI\Provider;
+
+
+interface HttpProviderInterface
 {
     /**
      * Указываем новую страницу
      *
      * @param string $page
      */
-    public function setStatusPage($page = '/');
+    public function setStatusPage(string $page = '/');
 
     /**
      * Проверить соединение
@@ -20,10 +22,10 @@ interface HttpProviderContract
     /**
      * Отправляем запросы на сервер
      *
-     * @param $url
+     * @param string $url
      * @param array $payload
      * @param string $method
      * @return array
      */
-    public function request($url, $payload = [], $method = 'get');
+    public function request($url, array $payload = [], string $method = 'get');
 }
