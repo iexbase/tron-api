@@ -28,10 +28,10 @@ interface TronContract
     /**
      * Получение баланса учетной записи
      *
-     * @param null $address
+     * @param string $address
      * @return array
      */
-    public function getBalance($address = null);
+    public function getBalance(string $address = null);
 
     /**
      * Получаем информацию о транзакции по TxID
@@ -39,7 +39,7 @@ interface TronContract
      * @param $transactionID
      * @return array
      */
-    public function getTransaction($transactionID);
+    public function getTransaction(string $transactionID);
 
     /**
      * Получаем счетчик транзакций в Blockchain
@@ -58,7 +58,7 @@ interface TronContract
      * @return array
      * @throws TronException
      */
-    public function sendTransaction($from, $to, $amount);
+    public function sendTransaction(string $from, string $to, float $amount);
 
     /**
      * Изменить имя учетной записи (только один раз)
@@ -67,7 +67,7 @@ interface TronContract
      * @param $newName
      * @return array
      */
-    public function changeAccountName($address = null, $newName);
+    public function changeAccountName(string $address = null, string $newName);
 
     /**
      * Регистрация новой учетной записи в сети
@@ -76,16 +76,16 @@ interface TronContract
      * @param $newAccountAddress
      * @return array
      */
-    public function registerAccount($address, $newAccountAddress);
+    public function registerAccount(string $address, string $newAccountAddress);
 
     /**
      * Применяется, чтобы стать супер представителем. Стоимость 9999 TRX.
      *
-     * @param $address
-     * @param $url
+     * @param string $address
+     * @param string $url
      * @return array
      */
-    public function applyForSuperRepresentative($address, $url);
+    public function applyForSuperRepresentative(string $address, string $url);
 
     /**
      * Возвращает транзакцию передачи неподписанных активов
@@ -101,22 +101,22 @@ interface TronContract
     /**
      * Создаем и отправляем транзакцию с использованием пароля
      *
-     * @param $to
-     * @param $amount
-     * @param $password
+     * @param string $to
+     * @param float $amount
+     * @param string $password
      * @return array
      */
-    public function sendTransactionByPassword($to, $amount, $password);
+    public function sendTransactionByPassword(string $to, float $amount, string $password);
 
     /**
      * Создаем и отправляем транзакцию с использованием приватного ключа
      *
-     * @param $to
-     * @param $amount
-     * @param $privateKey
+     * @param string $to
+     * @param float $amount
+     * @param string $privateKey
      * @return array
      */
-    public function sendTransactionByPrivateKey($to, $amount, $privateKey);
+    public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey);
 
     /**
      * Создание нового адрес с паролем
@@ -124,17 +124,17 @@ interface TronContract
      * @param $password
      * @return array
      */
-    public function createAddressWithPassword($password);
+    public function createAddressWithPassword(string $password);
 
     /**
      * Создаем транзакцию с фиксированным балансом
      *
-     * @param $address
-     * @param $amount
+     * @param string $address
+     * @param float $amount
      * @param int $duration
      * @return array
      */
-    public function createFreezeBalanceTransaction($address, $amount, $duration = 3);
+    public function createFreezeBalanceTransaction(string $address, float $amount, int $duration = 3);
 
     /**
      * Создаем транзакцию баланса заморозки и размораживания
@@ -142,7 +142,7 @@ interface TronContract
      * @param $address
      * @return array
      */
-    public function createUnfreezeBalanceTransaction($address);
+    public function createUnfreezeBalanceTransaction(string $address);
 
     /**
      * Получаем детали блока с помощью HashString или blockNumber
@@ -158,15 +158,16 @@ interface TronContract
      * @param int $limit
      * @return array
      */
-    public function getLatestBlocks($limit = 1);
+    public function getLatestBlocks(int $limit = 1);
 
     /**
      * Проверка адреса
      *
-     * @param $address
+     * @param string $address
+     * @param bool $hex
      * @return array
      */
-    public function validateAddress($address);
+    public function validateAddress(string $address, bool $hex = false);
 
     /**
      * Генерация нового адреса

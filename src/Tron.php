@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace IEXBase\TronAPI;
 
 use IEXBase\TronAPI\Contracts\HttpProviderContract;
@@ -100,7 +102,13 @@ class Tron implements TronContract
         return ($provider instanceof HttpProvider);
     }
 
-    public function setDebug(bool $debug): void {
+    /**
+     * Указываем тип ошибки
+     *
+     * @param bool $debug
+     */
+    public function setDebug(bool $debug): void
+    {
         $this->debug = $debug;
     }
 
@@ -210,7 +218,7 @@ class Tron implements TronContract
      *
      * @return array
     */
-    public function currentProviders()
+    public function currentProviders(): array
     {
         return [
             'fullNode'      =>  $this->fullNode,
@@ -238,7 +246,7 @@ class Tron implements TronContract
      */
     public function getBlock($block = null)
     {
-        $block = ($block === null ? $this->defaultBlock : $block);
+        $block = (is_null($block) ? $this->defaultBlock : $block);
 
         if($block === false) {
             $this->exception('No block identifier provided');
@@ -265,7 +273,7 @@ class Tron implements TronContract
      * @param $hashBlock
      * @return array
      */
-    public function getBlockByHash($hashBlock)
+    public function getBlockByHash(string $hashBlock)
     {
         return $this->fullNode->request('wallet/getblockbyid', [
             'value' =>  $hashBlock
@@ -279,7 +287,7 @@ class Tron implements TronContract
      * @return array
      * @throws TronException
      */
-    public function getBlockByNumber($blockID)
+    public function getBlockByNumber(int $blockID)
     {
         if(!is_integer($blockID) || $blockID < 0) {
             $this->exception('Invalid block number provided');
@@ -320,7 +328,6 @@ class Tron implements TronContract
     {
         if(!is_integer($index) || $index < 0) {
             $this->exception('Invalid transaction index provided');
-
         }
 
         $transactions = $this->getBlock($block)['transactions'];
@@ -338,7 +345,7 @@ class Tron implements TronContract
      * @return array
      * @throws TronException
      */
-    public function getTransaction($transactionID)
+    public function getTransaction(string $transactionID)
     {
         $response = $this->fullNode->request('wallet/gettransactionbyid', [
             'value' =>  $transactionID
@@ -357,7 +364,7 @@ class Tron implements TronContract
      * @param $transactionID
      * @return array
      */
-    public function getTransactionInfo($transactionID)
+    public function getTransactionInfo(string $transactionID)
     {
         return $this->solidityNode->request('walletsolidity/gettransactioninfobyid', [
             'value' =>  $transactionID
@@ -367,13 +374,13 @@ class Tron implements TronContract
     /**
      * Получение транзакций по направлении "to"
      *
-     * @param null $address
+     * @param string $address
      * @param int $limit
      * @param int $offset
      * @return array
      * @throws TronException
      */
-    public function getTransactionsToAddress($address = null, $limit = 30, $offset = 0)
+    public function getTransactionsToAddress(string $address, int $limit = 30, int $offset = 0)
     {
         return $this->getTransactionsRelated($address,'to', $limit, $offset);
     }
@@ -387,7 +394,7 @@ class Tron implements TronContract
      * @return array
      * @throws TronException
      */
-    public function getTransactionsFromAddress($address = null, $limit = 30, $offset = 0)
+    public function getTransactionsFromAddress(string $address, int $limit = 30, int $offset = 0)
     {
         return $this->getTransactionsRelated($address,'from', $limit, $offset);
     }
@@ -398,9 +405,9 @@ class Tron implements TronContract
      * @param $address
      * @return array
      */
-    public function getAccount($address = null)
+    public function getAccount(string $address = null)
     {
-        $address = (is_string($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address);
 
         return $this->fullNode->request('wallet/getaccount', [
             'address'   =>  $this->toHex($address)
@@ -410,13 +417,13 @@ class Tron implements TronContract
     /**
      * Получение баланса
      *
-     * @param null $address
+     * @param string $address
      * @param bool $fromTron
      * @return mixed
      */
-    public function getBalance($address = null, bool $fromTron = false)
+    public function getBalance(string $address = null, bool $fromTron = false)
     {
-        $address = (is_string($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address);
         $balance = $this->getAccount($address);
 
         if(!$balance['balance']) {
@@ -434,9 +441,9 @@ class Tron implements TronContract
      * @param $address
      * @return array
      */
-    public function getBandwidth($address = null)
+    public function getBandwidth(string $address = null)
     {
-        $address = (is_string($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address);
 
         return $this->fullNode->request('wallet/getaccountnet', [
             'address'   =>  $this->toHex($address)
@@ -446,14 +453,15 @@ class Tron implements TronContract
     /**
      * Получение транзакций по направлениям "from" и "to"
      *
-     * @param null $address
+     * @param string $address
      * @param string $direction
      * @param int $limit
      * @param int $offset
      * @return array
      * @throws TronException
      */
-    public function getTransactionsRelated($address = null, $direction = 'from', $limit = 30, $offset = 0)
+    public function getTransactionsRelated(string $address,
+                                           string $direction = 'to', int $limit = 30, int $offset = 0)
     {
         if(!in_array($direction, ['to', 'from'])) {
             $this->exception('Invalid direction provided: Expected "to", "from"');
@@ -481,7 +489,7 @@ class Tron implements TronContract
      *
      * @return integer
     */
-    public function getTransactionCount()
+    public function getTransactionCount(): int
     {
         $response = $this->fullNode->request('wallet/totaltransaction');
         return $response['num'];
@@ -490,14 +498,14 @@ class Tron implements TronContract
     /**
      * Отправляем транзакцию в Blockchain
      *
-     * @param $from
-     * @param $to
-     * @param $amount
+     * @param string $from
+     * @param string $to
+     * @param float $amount
      *
      * @return array
      * @throws TronException
      */
-    public function sendTransaction($from, $to, $amount)
+    public function sendTransaction(string $from, string $to, float $amount)
     {
         if(!$this->privateKey) {
             throw new TronException('Missing private key');
@@ -513,12 +521,12 @@ class Tron implements TronContract
     /**
      * Создаем неподписанную транзакцию
      *
-     * @param $from
-     * @param $to
-     * @param $amount
+     * @param string $from
+     * @param string $to
+     * @param float $amount
      * @return array
      */
-    public function createTransaction($from, $to, $amount)
+    public function createTransaction(string $from, string $to, float $amount)
     {
         $response = $this->fullNode->request('wallet/createtransaction', [
             'to_address'    =>  $this->toHex($to),
@@ -581,9 +589,9 @@ class Tron implements TronContract
      * @return array
      * @throws TronException
      */
-    public function changeAccountName($address = null, $newName)
+    public function changeAccountName(string $address = null, string $newName)
     {
-        $address = (is_string($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address);
 
         $transaction = $this->fullNode->request('wallet/updateaccount', [
             'account_name'  =>  $this->stringUtf8toHex($newName),
@@ -654,7 +662,7 @@ class Tron implements TronContract
             'free_asset_net_limit'          =>  $token['free_asset_net_limit'],
             'public_free_asset_net_limit'   => $token['public_free_asset_net_limit'],
             'frozen_supply'                 =>  $token['frozen_supply']
-        ]);
+        ],'post');
     }
 
     /**
@@ -664,7 +672,7 @@ class Tron implements TronContract
      * @param $newAccountAddress
      * @return array
      */
-    public function registerAccount($address, $newAccountAddress)
+    public function registerAccount(string $address, string $newAccountAddress)
     {
         return $this->fullNode->request('wallet/createaccount', [
             'owner_address'     =>  $this->toHex($address),
@@ -679,7 +687,7 @@ class Tron implements TronContract
      * @param $url
      * @return array
      */
-    public function applyForSuperRepresentative($address, $url)
+    public function applyForSuperRepresentative(string $address, string $url)
     {
         return $this->fullNode->request('wallet/createwitness', [
             'owner_address' =>  $this->toHex($address),
@@ -698,8 +706,6 @@ class Tron implements TronContract
      */
     public function createSendAssetTransaction($from, $to, $assetID, $amount)
     {
-        $from = (is_string($from) ? $from : $this->address);
-
         return $this->fullNode->request('wallet/transferasset', [
             'owner_address' =>  $this->toHex($from),
             'to_address'    =>  $this->toHex($to),
@@ -711,12 +717,12 @@ class Tron implements TronContract
     /**
      * Создаем и отправляем транзакцию с использованием пароля
      *
-     * @param $to
-     * @param $amount
-     * @param $password
+     * @param string $to
+     * @param float $amount
+     * @param string $password
      * @return array
      */
-    public function sendTransactionByPassword($to, $amount, $password)
+    public function sendTransactionByPassword(string $to, float $amount, string $password)
     {
         return $this->fullNode->request('wallet/easytransfer', [
             'passPhrase'    =>  $this->stringUtf8toHex($password),
@@ -728,12 +734,12 @@ class Tron implements TronContract
     /**
      * Создаем и отправляем транзакцию с использованием приватного ключа
      *
-     * @param $to
-     * @param $amount
-     * @param $privateKey
+     * @param string $to
+     * @param float $amount
+     * @param string $privateKey
      * @return array
      */
-    public function sendTransactionByPrivateKey($to, $amount, $privateKey)
+    public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey)
     {
         return $this->fullNode->request('wallet/easytransferbyprivate', [
             'privateKey'    =>  $this->stringUtf8toHex($privateKey),
@@ -748,7 +754,7 @@ class Tron implements TronContract
      * @param $password
      * @return array
      */
-    public function createAddressWithPassword($password)
+    public function createAddressWithPassword(string $password)
     {
         return $this->fullNode->request('wallet/createaddress', [
             'value' =>  $this->stringUtf8toHex($password)
@@ -777,12 +783,12 @@ class Tron implements TronContract
     /**
      * Создаем транзакцию с фиксированным балансом
      *
-     * @param $address
-     * @param $amount
+     * @param string $address
+     * @param float $amount
      * @param int $duration
      * @return array
      */
-    public function createFreezeBalanceTransaction($address, $amount, $duration = 3)
+    public function createFreezeBalanceTransaction(string $address, float $amount, int $duration = 3)
     {
         return $this->fullNode->request('wallet/freezebalance', [
             'owner_address'     =>  $this->toHex($address),
@@ -794,10 +800,10 @@ class Tron implements TronContract
     /**
      * Создаем транзакцию баланса заморозки и размораживания
      *
-     * @param $address
+     * @param string $address
      * @return array
      */
-    public function createUnfreezeBalanceTransaction($address)
+    public function createUnfreezeBalanceTransaction(string $address)
     {
         return $this->fullNode->request('wallet/unfreezebalance', [
             'owner_address' =>  $this->toHex($address)
@@ -810,7 +816,7 @@ class Tron implements TronContract
      * @param $address
      * @return array
      */
-    public function createUnfreezeAssetTransaction($address)
+    public function createUnfreezeAssetTransaction(string $address)
     {
         return $this->fullNode->request('wallet/unfreezeasset', [
             'owner_address' =>  $this->toHex($address)
@@ -820,10 +826,10 @@ class Tron implements TronContract
     /**
      * Создаем транзакцию для SRs, чтобы снять свои бонусные вознаграждения
      *
-     * @param $address
+     * @param string $address
      * @return array
      */
-    public function createWithdrawBlockRewardTransaction($address)
+    public function createWithdrawBlockRewardTransaction(string $address)
     {
         return $this->fullNode->request('wallet/withdrawbalance', [
             'owner_address' =>  $this->toHex($address)
@@ -856,7 +862,7 @@ class Tron implements TronContract
      *
      * @return array
     */
-    public function listNodes()
+    public function listNodes(): array
     {
         return $this->fullNode->request('wallet/listnodes');
     }
@@ -864,12 +870,12 @@ class Tron implements TronContract
     /**
      * Попытки найти токен с адресом учетной записи, который его выпустил
      *
-     * @param $address
+     * @param string $address
      * @return array
      */
-    public function getTokensIssuedByAddress($address = null)
+    public function getTokensIssuedByAddress(string $address = null)
     {
-        $address = (is_string($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address);
 
         return $this->fullNode->request('wallet/getassetissuebyaccount',[
             'address'   =>  $this->toHex($address)
@@ -892,12 +898,12 @@ class Tron implements TronContract
     /**
      * Получаем список блоков из определенного диапазона
      *
-     * @param $start
-     * @param $end
+     * @param int $start
+     * @param int $end
      * @return array
      * @throws TronException
      */
-    public function getBlockRange($start = 0, $end = 30)
+    public function getBlockRange(int $start = 0, int $end = 30)
     {
         if(!is_integer($start) || $start < 0) {
             $this->exception('Invalid start of range provided');
@@ -910,7 +916,7 @@ class Tron implements TronContract
         return $this->fullNode->request('wallet/getblockbylimitnext', [
             'startNum'  =>  intval($start),
             'endNum'    =>  intval($end) + 1
-        ])['block'];
+        ],'post')['block'];
     }
 
     /**
@@ -920,7 +926,7 @@ class Tron implements TronContract
      * @return array
      * @throws TronException
      */
-    public function getLatestBlocks($limit = 1)
+    public function getLatestBlocks(int $limit = 1)
     {
         if(!is_integer($limit) || $limit <= 0) {
             $this->exception('Invalid limit provided');
@@ -928,7 +934,7 @@ class Tron implements TronContract
 
         return $this->fullNode->request('wallet/getblockbylatestnum', [
             'num'   =>  $limit
-        ])['block'];
+        ],'post')['block'];
     }
 
     /**
@@ -936,7 +942,7 @@ class Tron implements TronContract
      *
      * @return array
     */
-    public function listSuperRepresentatives()
+    public function listSuperRepresentatives(): array
     {
         return $this->fullNode->request('wallet/listwitnesses')['witnesses'];
     }
@@ -949,7 +955,7 @@ class Tron implements TronContract
      * @return array
      * @throws TronException
      */
-    public function listTokens($limit = 0, $offset = 0)
+    public function listTokens(int $limit = 0, int $offset = 0)
     {
         if(!is_integer($limit) || $limit < 0 || ($offset && $limit < 1)) {
             $this->exception('Invalid limit provided');
@@ -989,21 +995,19 @@ class Tron implements TronContract
     /**
      * Проверка адреса
      *
-     * @param $address
+     * @param string $address
      * @param bool $hex
      * @return array
      */
-    public function validateAddress($address = null, $hex = false)
+    public function validateAddress(string $address = null, bool $hex = false)
     {
-        $address = (is_string($address) ? $address : $this->address);
-
+        $address = (!is_null($address) ? $address : $this->address);
         if($hex) {
             $address = $this->toHex($address);
         }
-
         return $this->fullNode->request('wallet/validateaddress', [
             'address'   =>  $address
-        ]);
+        ],'post');
     }
 
     /**
@@ -1093,12 +1097,12 @@ class Tron implements TronContract
     /**
      * Дополнительные ресурсы учетной записи
      *
-     * @param null $address
+     * @param string $address
      * @return array
      */
-    public function getAccountResources($address = null)
+    public function getAccountResources(string $address = null)
     {
-        $address = (is_string($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address);
 
         return $this->fullNode->request('/wallet/getaccountresource', [
            'address' =>  $this->toHex($address)
@@ -1110,7 +1114,7 @@ class Tron implements TronContract
      *
      * @return array
     */
-    public function generateAddress() : array
+    public function generateAddress(): array
     {
         return $this->fullNode->request('wallet/generateaddress');
     }
@@ -1120,7 +1124,7 @@ class Tron implements TronContract
      *
      * @return array
      */
-    public function getBalanceInfo() : array
+    public function getBalanceInfo(): array
     {
         return $this->tronNode->request('api/v2/node/balance_info');
     }
@@ -1130,7 +1134,7 @@ class Tron implements TronContract
      *
      * @return array
      */
-    public function getNodeMap() : array
+    public function getNodeMap(): array
     {
         return $this->tronNode->request('api/v2/node/nodemap');
     }
@@ -1140,7 +1144,7 @@ class Tron implements TronContract
      *
      * @return array
     */
-    public function isConnected() : array
+    public function isConnected(): array
     {
         return [
             'fullNode'      =>  $this->fullNode->isConnected(),
