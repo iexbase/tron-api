@@ -5,7 +5,7 @@
  *
  * @author  Shamsudin Serderov <steein.shamsudin@gmail.com>
  * @license https://github.com/iexbase/tron-api/blob/master/LICENSE (MIT License)
- * @version 1.3.3
+ * @version 1.3.4
  * @link    https://github.com/iexbase/tron-api
  *
  * For the full copyright and license information, please view the LICENSE
