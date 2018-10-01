@@ -1,10 +1,5 @@
-<h1 align="center">
-  TRON API
-  <br>
-</h1>
-<h4 align="center">
-  A PHP API for interacting with the Tron (TRX)
-</h4>
+# TRON API
+A PHP API for interacting with the Tron (TRX)
 
 [![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/packages/iexbase/tron-api)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
