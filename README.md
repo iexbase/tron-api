@@ -11,6 +11,7 @@
 [![Build Status](https://api.travis-ci.com/iexbase/tron-api.svg?branch=master)](https://travis-ci.com/iexbase/tron-api)
 [![Issues](https://img.shields.io/github/issues/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/pulls)
+[![Contributors](https://img.shields.io/github/contributors/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/graphs/contributors)
 
 ## Install
 
