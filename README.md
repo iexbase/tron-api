@@ -6,12 +6,35 @@
   A PHP API for interacting with the Tron (TRX)
 </h4>
 
-[![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/packages/iexbase/tron-api)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
-[![Build Status](https://api.travis-ci.com/iexbase/tron-api.svg?branch=master)](https://travis-ci.com/iexbase/tron-api)
-[![Issues](https://img.shields.io/github/issues/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/pulls)
-[![Contributors](https://img.shields.io/github/contributors/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/graphs/contributors)
+<p align="center">
+  <a href="https://poser.pugx.org/iexbase/tron-api/version">
+    <img src="https://img.shields.io/badge/chat-on%20slack-brightgreen.svg">
+  </a>
+    
+  <a href="https://packagist.org/packages/iexbase/tron-api">
+    <img src="https://poser.pugx.org/iexbase/tron-api/version">
+  </a>
+  
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/iexbase/tron-api.svg">
+  </a>
+  
+  <a href="https://travis-ci.com/iexbase/tron-api">
+    <img src="https://api.travis-ci.com/iexbase/tron-api.svg?branch=master">
+  </a>
+  
+  <a href="https://github.com/iexbase/tron-api/issues">
+    <img src="https://img.shields.io/github/issues/iexbase/tron-api.svg">
+  </a>
+  
+  <a href="https://github.com/iexbase/tron-api/pulls"> 
+    <img src="https://img.shields.io/github/issues-pr/iexbase/tron-api.svg">
+  </a>
+  
+  <a href="https://github.com/iexbase/tron-api/graphs/contributors"> 
+    <img src="https://img.shields.io/github/contributors/iexbase/tron-api.svg">
+  </a>
+</p>
 
 ## Install
 
