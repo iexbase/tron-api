@@ -112,7 +112,7 @@ class Tron implements TronInterface
      */
     public function isValidProvider($provider): bool
     {
-        return ($provider instanceof HttpProvider);
+        return ($provider instanceof HttpProviderInterface);
     }
 
     /**
