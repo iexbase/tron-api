@@ -85,21 +85,21 @@ class Tron implements TronInterface
                                 ?HttpProviderInterface $solidityNode = null,
                                 string $privateKey = null)
     {
-        if(!$fullNode instanceof HttpProvider) {
-            $fullNode = new HttpProvider($this->fullNode);
+        if(!$fullNode instanceof HttpProviderInterface) {
+            $fullNode = new HttpProvider((string)$this->fullNode);
         }
 
-        if(!$solidityNode instanceof HttpProvider) {
-            $solidityNode = new HttpProvider($this->solidityNode);
+        if(!$solidityNode instanceof HttpProviderInterface) {
+            $solidityNode = new HttpProvider((string)$this->solidityNode);
         }
 
-        $tronNode = new HttpProvider($this->tronNode);
+        $tronNode = new HttpProvider((string)$this->tronNode);
 
         $this->setFullNode($fullNode);
         $this->setSolidityNode($solidityNode);
         $this->setTronNode($tronNode);
 
-        if($privateKey) {
+        if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
         }
     }
@@ -212,7 +212,7 @@ class Tron implements TronInterface
      *
      * @param string $address
      */
-    public function setAddress(string $address) : void
+    public function setAddress(string $address): void
     {
         $this->address = $address;
     }
@@ -435,18 +435,18 @@ class Tron implements TronInterface
      * @param bool $fromTron
      * @return mixed
      */
-    public function getBalance(string $address = null, bool $fromTron = false)
+    public function getBalance(string $address = null, bool $fromTron = false): float
     {
         $address = (!is_null($address) ? $address : $this->address);
-        $balance = $this->getAccount($address);
+        $account = $this->getAccount($address);
 
-        if(!$balance['balance']) {
+        if(!$account['balance'] || !array_key_exists('balance', $account)) {
             return 0;
         }
 
         return ($fromTron == true ?
-            $this->fromTron($balance['balance']) :
-            $balance['balance']);
+            $this->fromTron($account['balance']) :
+            $account['balance']);
     }
 
     /**

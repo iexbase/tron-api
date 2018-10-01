@@ -101,10 +101,10 @@ trait TronAwareTrait
      * Преобразовываем сумму из формата Tron
      *
      * @param $amount
-     * @return string
+     * @return float
      */
-    public function fromTron($amount) {
-        return bcdiv((string)$amount, (string)1e6, 8);
+    public function fromTron($amount): float {
+        return (float) bcdiv((string)$amount, (string)1e6, 8);
     }
 
     /**
@@ -113,7 +113,7 @@ trait TronAwareTrait
      * @param $double
      * @return int
      */
-    public function toTron($double) {
+    public function toTron($double): int {
         return (int) bcmul((string)$double, (string)1e6,0);
     }
 }
