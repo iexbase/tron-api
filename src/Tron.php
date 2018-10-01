@@ -34,21 +34,21 @@ class Tron implements TronInterface
     /**
      * URL полной ноды
      *
-     * @var HttpProviderInterface
+     * @var HttpProviderInterface|string
     */
     protected $fullNode = 'http://13.125.210.234:8090';
 
     /**
      * Серверный нод TRON
      *
-     * @var HttpProviderInterface
+     * @var HttpProviderInterface|string
     */
     protected $tronNode = 'https://server.tron.network';
 
     /**
      * Solidity URL Node
      *
-     * @var HttpProviderInterface
+     * @var HttpProviderInterface|string
     */
     protected $solidityNode;
 

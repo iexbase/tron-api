@@ -18,6 +18,20 @@ class HttpProvider implements HttpProviderInterface
     protected $httpClient;
 
     /**
+     * URL Сервера или RPC
+     *
+     * @var string
+    */
+    protected $host;
+
+    /**
+     * Время ожидания
+     *
+     * @var int
+     */
+    protected $timeout = 30000;
+
+    /**
      * Получаем кастомные заголовки
      *
      * @var array
@@ -42,7 +56,7 @@ class HttpProvider implements HttpProviderInterface
      * @param string $statusPage
      * @throws TronException
      */
-    public function __construct($host, int $timeout = 30000,
+    public function __construct(string $host, int $timeout = 30000,
                                 $user = false, $password = false,
                                 array $headers = [], string $statusPage = '/')
     {
@@ -58,6 +72,8 @@ class HttpProvider implements HttpProviderInterface
             throw new TronException('Invalid headers array provided');
         }
 
+        $this->host = $host;
+        $this->timeout = $timeout;
         $this->statusPage = $statusPage;
 
         $this->httpClient = new Client([
@@ -72,7 +88,8 @@ class HttpProvider implements HttpProviderInterface
      *
      * @param string $page
      */
-    public function setStatusPage(string $page = '/') {
+    public function setStatusPage(string $page = '/'): void
+    {
         $this->statusPage = $page;
     }
 
@@ -89,6 +106,26 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
+     * Получение хоста
+     *
+     * @return string
+    */
+    public function getHost(): string
+    {
+        return $this->host;
+    }
+
+    /**
+     * Получение timeout
+     *
+     * @return int
+    */
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
+    /**
      * Отправляем запросы на сервер
      *
      * @param $url
@@ -97,7 +134,7 @@ class HttpProvider implements HttpProviderInterface
      * @return array|mixed
      * @throws TronException
      */
-    public function request($url, array $payload = [], string $method = 'get')
+    public function request($url, array $payload = [], string $method = 'get'): array
     {
         $method = strtoupper($method);
 
