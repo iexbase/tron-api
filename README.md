@@ -7,14 +7,7 @@
 </h4>
 
 <p align="center">
-  <a href="https://poser.pugx.org/iexbase/tron-api/version">
-    <img src="https://img.shields.io/badge/chat-on%20slack-brightgreen.svg">
-  </a>
-    
-  <a href="https://packagist.org/packages/iexbase/tron-api">
-    <img src="https://poser.pugx.org/iexbase/tron-api/version">
-  </a>
-  
+      
   <a href="LICENSE">
     <img src="https://img.shields.io/github/license/iexbase/tron-api.svg">
   </a>
