@@ -20,12 +20,6 @@ The following versions of PHP are supported by this version.
 * PHP 7.1
 * PHP 7.2
 
-## Testing
-
-``` bash
-$ vendor/bin/phpunit
-```
-
 ## Example Usage
 
 ```php
@@ -55,7 +49,12 @@ var_dump($tron->getLatestBlocks(2));
 
 //Change account name (only once)
 var_dump($tron->changeAccountName('address', 'NewName'));
+```
 
+## Testing
+
+``` bash
+$ vendor/bin/phpunit
 ```
 
 ## Donations
