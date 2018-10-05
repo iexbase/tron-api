@@ -13,6 +13,18 @@ A PHP API for interacting with the Tron Protocol
 ```bash
 > composer require iexbase/tron-api
 ```
+## Requirements
+
+The following versions of PHP are supported by this version.
+
+* PHP 7.1
+* PHP 7.2
+
+## Testing
+
+``` bash
+$ vendor/bin/phpunit
+```
 
 ## Example Usage
 
