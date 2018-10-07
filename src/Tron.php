@@ -539,12 +539,24 @@ class Tron implements TronInterface
      * @param string $to
      * @param float $amount
      * @return array
+     * @throws TronException
      */
     public function createTransaction(string $from, string $to, float $amount)
     {
+        if(!is_float($amount) || $amount < 0) {
+            throw new TronException('Invalid amount provided');
+        }
+
+        $to = $this->toHex($to);
+        $from = $this->toHex($from);
+
+        if($from === $to) {
+            throw new TronException('Cannot transfer TRX to the same account');
+        }
+        
         $response = $this->fullNode->request('wallet/createtransaction', [
-            'to_address'    =>  $this->toHex($to),
-            'owner_address' =>  $this->toHex($from),
+            'to_address'    =>  $to,
+            'owner_address' =>  $from,
             'amount'        =>  $this->toTron($amount),
         ], 'post');
 
