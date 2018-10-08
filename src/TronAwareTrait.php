@@ -3,6 +3,7 @@
 namespace IEXBase\TronAPI;
 
 use IEXBase\TronAPI\Support\{Base58Check, BigInteger};
+use kornrunner\Keccak;
 
 trait TronAwareTrait
 {
@@ -115,5 +116,18 @@ trait TronAwareTrait
      */
     public function toTron($double): int {
         return (int) bcmul((string)$double, (string)1e6,0);
+    }
+
+    /**
+     * Конвертируем в SHA3
+     *
+     * @param $string
+     * @param bool $prefix
+     * @return string
+     * @throws \Exception
+     */
+    public function sha3($string, $prefix = false)
+    {
+        return ($prefix ? '0x' : ''). Keccak::hash($string, 256);
     }
 }
