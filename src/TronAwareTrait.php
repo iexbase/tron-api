@@ -2,8 +2,7 @@
 
 namespace IEXBase\TronAPI;
 
-use IEXBase\TronAPI\Support\{Base58Check, BigInteger};
-use kornrunner\Keccak;
+use IEXBase\TronAPI\Support\{Base58Check, BigInteger, Keccak};
 
 trait TronAwareTrait
 {
