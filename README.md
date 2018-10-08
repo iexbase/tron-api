@@ -25,21 +25,20 @@ The following versions of PHP are supported by this version.
 ```php
 use IEXBase\TronAPI\Tron;
 
-$tron = new Tron();
-
-//Change node address
 $fullNode = new HttpProvider('https://api.trongrid.io:8090');
 $solidityNode = new HttpProvider('https://api.trongrid.io:8091');
-$tron - new Tron($fullNode, $solidityNode);
+$privateKey = '....';
 
-//alternative way to enter a private key
-$tron->setPrivateKey('private_key');
+$tron - new Tron($fullNode, 
+                 $solidityNode,
+                 $privateKey);
 
+$this->setAddress('..');
 //Balance
-$tron->fromTron($tron->getBalance());
+$tron->getBalance(null, true);
 
 // Transfer Trx
-var_dump($tron->sendTransaction('from', 'to', 'amount'));
+var_dump($tron->sendTransaction('from', 'to', 1.5));
 
 //Generate Address
 var_dump($tron->generateAddress());
