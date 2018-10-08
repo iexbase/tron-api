@@ -2,8 +2,7 @@
 
 namespace IEXBase\TronAPI\Provider;
 
-use GuzzleHttp\{Client, ClientInterface};
-use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\{Psr7\Request, Client, ClientInterface};
 use Psr\Http\Message\StreamInterface;
 use IEXBase\TronAPI\Exception\{NotFoundException, TronException};
 use IEXBase\TronAPI\Support\Utils;

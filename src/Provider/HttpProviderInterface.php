@@ -10,14 +10,14 @@ interface HttpProviderInterface
      *
      * @param string $page
      */
-    public function setStatusPage(string $page = '/');
+    public function setStatusPage(string $page = '/'): void;
 
     /**
      * Проверить соединение
      *
      * @return bool
      */
-    public function isConnected() : bool;
+    public function isConnected(): bool;
 
     /**
      * Отправляем запросы на сервер
@@ -27,5 +27,5 @@ interface HttpProviderInterface
      * @param string $method
      * @return array
      */
-    public function request($url, array $payload = [], string $method = 'get');
+    public function request($url, array $payload = [], string $method = 'get'): array;
 }

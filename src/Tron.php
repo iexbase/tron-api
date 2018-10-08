@@ -122,7 +122,7 @@ class Tron implements TronInterface
      * @return void | string
      * @throws TronException
      */
-    public function setFullNode($provider)
+    public function setFullNode($provider): void
     {
         if(!$this->isValidProvider($provider)) {
             throw new TronException('Invalid full node provided');
@@ -139,7 +139,7 @@ class Tron implements TronInterface
      * @return void | string
      * @throws TronException
      */
-    public function setSolidityNode($provider)
+    public function setSolidityNode($provider): void
     {
         if(!$this->isValidProvider($provider)) {
             throw new TronException('Invalid solidity node provided');
@@ -157,7 +157,7 @@ class Tron implements TronInterface
      * @return void | string
      * @throws TronException
      */
-    public function setTronNode($provider)
+    public function setTronNode($provider): void
     {
         if(!$this->isValidProvider($provider)) {
             throw new TronException('Invalid tron node provided');
@@ -173,7 +173,7 @@ class Tron implements TronInterface
      * @return void
      * @throws TronException
      */
-    public function setDefaultBlock($blockID = false)
+    public function setDefaultBlock($blockID = false): void
     {
         if($blockID === false || $blockID == 'latest' || $blockID == 'earliest' || $blockID === 0) {
             $this->defaultBlock = $blockID;
@@ -246,7 +246,7 @@ class Tron implements TronInterface
      *
      * @return array
     */
-    public function getCurrentBlock()
+    public function getCurrentBlock(): array
     {
         return $this->fullNode->request('wallet/getnowblock');
     }
@@ -258,7 +258,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getBlock($block = null)
+    public function getBlock($block = null): array
     {
         $block = (is_null($block) ? $this->defaultBlock : $block);
 
@@ -287,7 +287,7 @@ class Tron implements TronInterface
      * @param $hashBlock
      * @return array
      */
-    public function getBlockByHash(string $hashBlock)
+    public function getBlockByHash(string $hashBlock): array
     {
         return $this->fullNode->request('wallet/getblockbyid', [
             'value' =>  $hashBlock
@@ -301,7 +301,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getBlockByNumber(int $blockID)
+    public function getBlockByNumber(int $blockID): array
     {
         if(!is_integer($blockID) || $blockID < 0) {
             throw new TronException('Invalid block number provided');
@@ -319,7 +319,7 @@ class Tron implements TronInterface
      * @return int
      * @throws TronException
      */
-    public function getBlockTransactionCount($block)
+    public function getBlockTransactionCount($block): int
     {
         $transaction = $this->getBlock($block)['transactions'];
 
@@ -359,7 +359,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getTransaction(string $transactionID)
+    public function getTransaction(string $transactionID): array
     {
         $response = $this->fullNode->request('wallet/gettransactionbyid', [
             'value' =>  $transactionID
@@ -378,7 +378,7 @@ class Tron implements TronInterface
      * @param $transactionID
      * @return array
      */
-    public function getTransactionInfo(string $transactionID)
+    public function getTransactionInfo(string $transactionID): array
     {
         return $this->solidityNode->request('walletsolidity/gettransactioninfobyid', [
             'value' =>  $transactionID
@@ -419,7 +419,7 @@ class Tron implements TronInterface
      * @param $address
      * @return array
      */
-    public function getAccount(string $address = null)
+    public function getAccount(string $address = null): array
     {
         $address = (!is_null($address) ? $address : $this->address);
 
@@ -433,7 +433,7 @@ class Tron implements TronInterface
      *
      * @param string $address
      * @param bool $fromTron
-     * @return mixed
+     * @return float
      */
     public function getBalance(string $address = null, bool $fromTron = false): float
     {
@@ -519,7 +519,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendTransaction(string $from, string $to, float $amount)
+    public function sendTransaction(string $from, string $to, float $amount): array
     {
         if(!$this->privateKey) {
             throw new TronException('Missing private key');
@@ -541,7 +541,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function createTransaction(string $from, string $to, float $amount)
+    public function createTransaction(string $from, string $to, float $amount): array
     {
         if(!is_float($amount) || $amount < 0) {
             throw new TronException('Invalid amount provided');
@@ -570,7 +570,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function signTransaction($transaction)
+    public function signTransaction($transaction): array
     {
         if(!is_array($transaction)) {
             throw new TronException('Invalid transaction provided');
@@ -593,7 +593,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendRawTransaction($signedTransaction)
+    public function sendRawTransaction($signedTransaction): array
     {
         if(!is_array($signedTransaction)) {
             throw new TronException('Invalid transaction provided');
@@ -637,7 +637,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function send(...$args) {
+    public function send(...$args): array {
         return $this->sendTransaction(...$args);
     }
 
@@ -648,7 +648,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendTrx(...$args) {
+    public function sendTrx(...$args): array {
         return $this->sendTransaction(...$args);
     }
 
@@ -698,7 +698,7 @@ class Tron implements TronInterface
      * @param $newAccountAddress
      * @return array
      */
-    public function registerAccount(string $address, string $newAccountAddress)
+    public function registerAccount(string $address, string $newAccountAddress): array
     {
         return $this->fullNode->request('wallet/createaccount', [
             'owner_address'     =>  $this->toHex($address),
@@ -748,7 +748,7 @@ class Tron implements TronInterface
      * @param string $password
      * @return array
      */
-    public function sendTransactionByPassword(string $to, float $amount, string $password)
+    public function sendTransactionByPassword(string $to, float $amount, string $password): array
     {
         return $this->fullNode->request('wallet/easytransfer', [
             'passPhrase'    =>  $this->stringUtf8toHex($password),
@@ -765,7 +765,7 @@ class Tron implements TronInterface
      * @param string $privateKey
      * @return array
      */
-    public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey)
+    public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey): array
     {
         return $this->fullNode->request('wallet/easytransferbyprivate', [
             'privateKey'    =>  $this->stringUtf8toHex($privateKey),
@@ -780,7 +780,7 @@ class Tron implements TronInterface
      * @param $password
      * @return array
      */
-    public function createAddressWithPassword(string $password)
+    public function createAddressWithPassword(string $password): array
     {
         return $this->fullNode->request('wallet/createaddress', [
             'value' =>  $this->stringUtf8toHex($password)
@@ -952,7 +952,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getLatestBlocks(int $limit = 1)
+    public function getLatestBlocks(int $limit = 1): array
     {
         if(!is_integer($limit) || $limit <= 0) {
             throw new TronException('Invalid limit provided');
@@ -1004,10 +1004,10 @@ class Tron implements TronInterface
     /**
      * Возвращает время в миллисекундах до следующего подсчета голосов SR
      *
-     * @return array
+     * @return float
      * @throws TronException
      */
-    public function timeUntilNextVoteCycle()
+    public function timeUntilNextVoteCycle(): float
     {
         $num = $this->fullNode->request('wallet/getnextmaintenancetime')['num'];
 
@@ -1025,7 +1025,7 @@ class Tron implements TronInterface
      * @param bool $hex
      * @return array
      */
-    public function validateAddress(string $address = null, bool $hex = false)
+    public function validateAddress(string $address = null, bool $hex = false): array
     {
         $address = (!is_null($address) ? $address : $this->address);
         if($hex) {
