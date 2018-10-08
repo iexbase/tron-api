@@ -126,7 +126,7 @@ trait TronAwareTrait
      * @return string
      * @throws \Exception
      */
-    public function sha3($string, $prefix = false)
+    public function sha3($string, $prefix = true)
     {
         return ($prefix ? '0x' : ''). Keccak::hash($string, 256);
     }
