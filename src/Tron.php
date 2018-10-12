@@ -36,7 +36,7 @@ class Tron implements TronInterface
      *
      * @var HttpProviderInterface|string
     */
-    protected $fullNode = 'http://13.125.210.234:8090';
+    protected $fullNode = 'https://api.trongrid.io';
 
     /**
      * Серверный нод TRON
