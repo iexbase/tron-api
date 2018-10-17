@@ -29,7 +29,8 @@ use IEXBase\TronAPI\Exception\TronException;
  */
 class Tron implements TronInterface
 {
-    use TronAwareTrait;
+    use TronAwareTrait,
+        Concerns\ManagesUniversal;
 
     /**
      * URL полной ноды
