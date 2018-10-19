@@ -26,8 +26,8 @@ The following versions of PHP are supported by this version.
 ```php
 use IEXBase\TronAPI\Tron;
 
-$fullNode = new HttpProvider('https://api.trongrid.io:8090');
-$solidityNode = new HttpProvider('https://api.trongrid.io:8091');
+$fullNode = new HttpProvider('https://api.trongrid.io');
+$solidityNode = new HttpProvider('https://api.trongrid.io');
 $privateKey = '....';
 
 $tron - new Tron($fullNode, 
