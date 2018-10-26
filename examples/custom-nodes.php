@@ -4,8 +4,8 @@ include_once '../vendor/autoload.php';
 use IEXBase\TronAPI\Provider\HttpProvider;
 use IEXBase\TronAPI\Tron;
 
-$fullNode = new HttpProvider('https://api.trongrid.io:8090');
-$solidityNode = new HttpProvider('https://api.trongrid.io:8091');
+$fullNode = new HttpProvider('https://api.trongrid.io');
+$solidityNode = new HttpProvider('https://api.trongrid.io');
 $privateKey = 'private_key';
 
 //Example 1
