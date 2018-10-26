@@ -4,7 +4,7 @@ namespace IEXBase\TronAPI\Support;
 class Base58
 {
     /**
-     * Кодирует переданную целую строку в представление base58.
+     * Encodes the passed whole string to base58.
      *
      * @param $num
      * @param int $length
@@ -17,7 +17,7 @@ class Base58
     }
 
     /**
-     * Декодирует base58 представление большого целого в строку.
+     * Base58 decodes a large integer to a string.
      *
      * @param string $addr
      * @param int $length

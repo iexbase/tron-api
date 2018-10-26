@@ -10,42 +10,42 @@ use IEXBase\TronAPI\Support\Utils;
 class HttpProvider implements HttpProviderInterface
 {
     /**
-     * Обработчик HTTP-клиента
+     * HTTP Client Handler
      *
      * @var ClientInterface.
      */
     protected $httpClient;
 
     /**
-     * URL Сервера или RPC
+     * Server or RPC URL
      *
      * @var string
     */
     protected $host;
 
     /**
-     * Время ожидания
+     * Waiting time
      *
      * @var int
      */
     protected $timeout = 30000;
 
     /**
-     * Получаем кастомные заголовки
+     * Get custom headers
      *
      * @var array
     */
     protected $headers = [];
 
     /**
-     * Получаем страницы
+     * Get the pages
      *
      * @var string
     */
     protected $statusPage = '/';
 
     /**
-     * Создаем объект HttpProvider
+     * Create an HttpProvider object
      *
      * @param string $host
      * @param int $timeout
@@ -83,7 +83,7 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
-     * Указываем новую страницу
+     * Enter a new page
      *
      * @param string $page
      */
@@ -93,7 +93,7 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
-     * Проверить соединение
+     * Check connection
      *
      * @return bool
      * @throws TronException
@@ -105,7 +105,7 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
-     * Получение хоста
+     * Getting a host
      *
      * @return string
     */
@@ -115,7 +115,7 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
-     * Получение timeout
+     * Getting timeout
      *
      * @return int
     */
@@ -125,7 +125,7 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
-     * Отправляем запросы на сервер
+     * We send requests to the server
      *
      * @param $url
      * @param array $payload
@@ -156,7 +156,7 @@ class HttpProvider implements HttpProviderInterface
     }
 
     /**
-     * Преобразуем исходный ответ в массив
+     * Convert the original answer to an array
      *
      * @param StreamInterface $stream
      * @param int $status

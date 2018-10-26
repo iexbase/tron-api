@@ -4,7 +4,7 @@ namespace IEXBase\TronAPI\Support;
 class Utils
 {
     /**
-     * Проверка ссылков
+     * Link verification
      *
      * @param $url
      * @return bool
@@ -14,7 +14,7 @@ class Utils
     }
 
     /**
-     * Проверить, является ли строка 16-ной записью числа
+     * Check if the string is a 16th notation
      *
      * @param $str
      * @return bool
@@ -24,7 +24,7 @@ class Utils
     }
 
     /**
-     * Проверить, является ли переданный параметр массивом
+     * Check whether the passed parameter is an array
      *
      * @param $array
      * @return bool

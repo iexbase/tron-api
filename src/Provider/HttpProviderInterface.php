@@ -6,21 +6,21 @@ namespace IEXBase\TronAPI\Provider;
 interface HttpProviderInterface
 {
     /**
-     * Указываем новую страницу
+     * Enter a new page
      *
      * @param string $page
      */
     public function setStatusPage(string $page = '/'): void;
 
     /**
-     * Проверить соединение
+     * Check connection
      *
      * @return bool
      */
     public function isConnected(): bool;
 
     /**
-     * Отправляем запросы на сервер
+     * We send requests to the server
      *
      * @param string $url
      * @param array $payload

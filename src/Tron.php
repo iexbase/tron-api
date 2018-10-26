@@ -33,14 +33,14 @@ class Tron implements TronInterface
         Concerns\ManagesUniversal;
 
     /**
-     * URL полной ноды
+     * Full node URL
      *
      * @var HttpProviderInterface|string
     */
     protected $fullNode = 'https://api.trongrid.io';
 
     /**
-     * Серверный нод TRON
+     * TRON Server Node
      *
      * @var HttpProviderInterface|string
     */
@@ -54,28 +54,28 @@ class Tron implements TronInterface
     protected $solidityNode;
 
     /**
-     * Адрес учетной записи
+     * Default Address
      *
      * @var string
     */
     protected $address;
 
     /**
-     * Приватный ключ
+     * Private key
      *
      * @var string
     */
     protected $privateKey;
 
     /**
-     * Блок по умолчанию
+     * Default block
      *
      * @var string|integer|bool
     */
     protected $defaultBlock = false;
 
     /**
-     * Создаем новый объект Tron
+     * Create a new Tron object
      *
      * @param HttpProviderInterface $fullNode
      * @param HttpProviderInterface $solidityNode
@@ -106,7 +106,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Проверка провайдера
+     * Check connected provider
      *
      * @param $provider
      * @return bool
@@ -117,7 +117,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Укажите ссылку на полную ноду
+     * Enter the link to the full node
+     *
      * @param $provider
      *
      * @return void | string
@@ -134,7 +135,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Укажите ссылку на полную ноду
+     * Enter the link to the solidity node
      * @param $provider
      *
      * @return void | string
@@ -151,7 +152,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Укажите ссылку на новую серверную ноду
+     * Enter the link to the server node
      *
      * @param $provider
      *
@@ -168,7 +169,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Устанавливанием блок по умолчанию
+     * Enter the default block
      *
      * @param bool $blockID
      * @return void
@@ -189,7 +190,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем блок по умолчанию
+     * Get default block
      *
      * @return string|integer|bool
     */
@@ -199,7 +200,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Указываем приватный ключ к учетной записи
+     * Enter your private account key
      *
      * @param string $privateKey
      */
@@ -209,7 +210,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Указываем базовый адрес учетной записи
+     * Enter your account address
      *
      * @param string $address
      */
@@ -219,7 +220,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем адрес учетной записи
+     * Get account address
      *
      * @return string
     */
@@ -229,7 +230,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем настроенные данные провайдера
+     * Get customized provider data
      *
      * @return array
     */
@@ -243,7 +244,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Последний номер блока
+     * Last block number
      *
      * @return array
     */
@@ -253,7 +254,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем детали блока с помощью HashString или blockNumber
+     * Get block details using HashString or blockNumber
      *
      * @param null $block
      * @return array
@@ -283,7 +284,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем информацию о блоке по Hash
+     * Query block by ID
      *
      * @param $hashBlock
      * @return array
@@ -296,7 +297,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем информацию о блоке по номеру
+     * Query block by height
      *
      * @param $blockID
      * @return array
@@ -314,7 +315,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем счетчик транзакций в блоке по hashString или blockNumber
+     * Total number of transactions in a block
      *
      * @param $block
      * @return int
@@ -332,7 +333,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем детали транзакции из Блока
+     * Get transaction details from Block
      *
      * @param null $block
      * @param int $index
@@ -354,7 +355,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем информацию о транзакции по TxID
+     * Query transaction based on id
      *
      * @param $transactionID
      * @return array
@@ -374,7 +375,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем информацию о транзакции
+     * Query transaction fee based on id
      *
      * @param $transactionID
      * @return array
@@ -387,7 +388,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получение транзакций по направлении "to"
+     * Query the list of transactions received by an address
      *
      * @param string $address
      * @param int $limit
@@ -401,7 +402,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получение транзакций по направлении "from"
+     * Query the list of transactions sent by an address
      *
      * @param string $address
      * @param int $limit
@@ -415,7 +416,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Информация об аккаунте
+     * Query information about an account
      *
      * @param $address
      * @return array
@@ -430,7 +431,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получение баланса
+     * Getting a balance
      *
      * @param string $address
      * @param bool $fromTron
@@ -451,7 +452,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Выбирает доступную пропускную способность для определенной учетной записи
+     * Query bandwidth information.
      *
      * @param $address
      * @return array
@@ -466,7 +467,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получение транзакций по направлениям "from" и "to"
+     * Getting data in the "from","to" directions
      *
      * @param string $address
      * @param string $direction
@@ -499,7 +500,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем счетчик транзакций в Blockchain
+     * Count all transactions on the network
      *
      * @return integer
     */
@@ -510,7 +511,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Отправляем транзакцию в Blockchain
+     * Send transaction to Blockchain
      *
      * @param string $from
      * @param string $to
@@ -533,7 +534,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем неподписанную транзакцию
+     * Creates a transaction of transfer.
+     * If the recipient address does not exist, a corresponding account will be created on the blockchain.
      *
      * @param string $from
      * @param string $to
@@ -564,7 +566,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Подписываем транзакцию с использованием PrivateKey
+     * Sign the transaction, the api has the risk of leaking the private key,
+     * please make sure to call the api in a secure environment
      *
      * @param $transaction
      * @return array
@@ -587,7 +590,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Отправляем подписанную транзакцию
+     * Broadcast the signed transaction
      *
      * @param $signedTransaction
      * @return array
@@ -608,19 +611,20 @@ class Tron implements TronInterface
     }
 
     /**
-     * Изменить имя учетной записи (только один раз)
+     * Modify account name
+     * Note: Username is allowed to edit only once.
      *
      * @param $address
-     * @param $newName
+     * @param $account_name
      * @return array
      * @throws TronException
      */
-    public function changeAccountName(string $address = null, string $newName)
+    public function changeAccountName(string $address = null, string $account_name)
     {
         $address = (!is_null($address) ? $address : $this->address);
 
         $transaction = $this->fullNode->request('wallet/updateaccount', [
-            'account_name'  =>  $this->stringUtf8toHex($newName),
+            'account_name'  =>  $this->stringUtf8toHex($account_name),
             'owner_address' =>  $this->toHex($address)
         ],'post');
 
@@ -631,7 +635,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Отправляем средства на счет Tron (option 2)
+     * Send funds to the Tron account (option 2)
      *
      * @param array $args
      * @return array
@@ -642,7 +646,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Отправляем средства на счет Tron (option 3)
+     * Send funds to the Tron account (option 3)
      *
      * @param array $args
      * @return array
@@ -653,7 +657,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создание нового токена на базе Tron
+     * Creating a new token based on Tron
      *
      *   @param array token {
      *   "owner_address": "41e552f6487585c2b58bc2c9bb4492bc1f17132cd0",
@@ -692,7 +696,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Регистрация новой учетной записи в сети
+     * Create an account.
+     * Uses an already activated account to create a new account
      *
      * @param $address
      * @param $newAccountAddress
@@ -707,7 +712,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Применяется, чтобы стать супер представителем. Стоимость 9999 TRX.
+     * Apply to become a super representative
      *
      * @param $address
      * @param $url
@@ -722,7 +727,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Возвращает транзакцию передачи неподписанных активов
+     * Transfer Token
      *
      * @param $from
      * @param $to
@@ -741,7 +746,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем и отправляем транзакцию с использованием пароля
+     * Easily transfer from an address using the password string.
+     * Only works with accounts created from createAddress
      *
      * @param string $to
      * @param float $amount
@@ -758,7 +764,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем и отправляем транзакцию с использованием приватного ключа
+     * Easily transfer from an address using the private key.
      *
      * @param string $to
      * @param float $amount
@@ -775,7 +781,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создание нового адрес с паролем
+     * Create address from a specified password string (NOT PRIVATE KEY)
      *
      * @param $password
      * @return array
@@ -788,7 +794,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем транзакцию для покупки активов
+     * Purchase a Token
      *
      * @param $tokenIssuer
      * @param $address
@@ -807,7 +813,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем транзакцию с фиксированным балансом
+     * Freezes an amount of TRX.
+     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
      *
      * @param string $address
      * @param float $amount
@@ -824,7 +831,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем транзакцию баланса заморозки и размораживания
+     * Unfreeze TRX that has passed the minimum freeze duration.
+     * Unfreezing will remove bandwidth and TRON Power.
      *
      * @param string $address
      * @return array
@@ -837,7 +845,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создает транзакцию без разглашения (используется для учетных записей, создавших замороженный актив)
+     * Unfreeze a token that has passed the minimum freeze duration.
      *
      * @param $address
      * @return array
@@ -850,7 +858,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем транзакцию для SRs, чтобы снять свои бонусные вознаграждения
+     * Withdraw Super Representative rewards, useable every 24 hours.
      *
      * @param string $address
      * @return array
@@ -863,7 +871,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем транзакцию для изменения метаинформации актива
+     * Update a Token's information
      *
      * @param $address
      * @param $description
@@ -884,7 +892,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Список нодов
+     * Node list
      *
      * @return array
     */
@@ -894,7 +902,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Попытки найти токен с адресом учетной записи, который его выпустил
+     * List the tokens issued by an account.
      *
      * @param string $address
      * @return array
@@ -909,7 +917,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Попытки найти токен по имени
+     * Query token by name.
      *
      * @param $tokenID
      * @return array
@@ -922,7 +930,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем список блоков из определенного диапазона
+     * Query a range of blocks by block height
      *
      * @param int $start
      * @param int $end
@@ -946,7 +954,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем список последних блоков
+     * Query the latest blocks
      *
      * @param int $limit
      * @return array
@@ -964,7 +972,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем список суперпредставителей
+     * Query the list of Super Representatives
      *
      * @return array
     */
@@ -974,7 +982,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем список выпущенных токенов
+     * Query the list of Tokens with pagination
      *
      * @param int $limit
      * @param int $offset
@@ -1002,7 +1010,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Возвращает время в миллисекундах до следующего подсчета голосов SR
+     * Get the time of the next Super Representative vote
      *
      * @return float
      * @throws TronException
@@ -1019,7 +1027,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Проверка адреса
+     * Validate address
      *
      * @param string $address
      * @param bool $hex
@@ -1037,7 +1045,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создаем транзакцию для развертывания контракта
+     * Deploys a contract
      *
      * @param $abi
      * @param $bytecode
@@ -1081,20 +1089,8 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получение контракта
-     *
-     * @param $contractAddress
-     * @return array
-     */
-    public function getContract($contractAddress)
-    {
-        return $this->fullNode->request('wallet/getcontract', [
-            'value' =>  $this->toHex($contractAddress)
-        ]);
-    }
-
-    /**
-     * Freeze TRX, получить пропускную способность, получить права голоса или энергию
+     * Freezes an amount of TRX.
+     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
      *
      * @param string $owner_address
      * @param float $frozen_balance
@@ -1113,7 +1109,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем список бирж(обменников)
+     * Get a list of exchanges
      *
      * @return array
     */
@@ -1123,7 +1119,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Дополнительные ресурсы учетной записи
+     * Query the resource information of the account
      *
      * @param string $address
      * @return array
@@ -1138,7 +1134,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Создать новый аккаунт
+     * Create a new account
      *
      * @return array
      */
@@ -1148,7 +1144,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Генерация нового адреса
+     * Generate new address
      *
      * @return array
     */
@@ -1158,7 +1154,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Статистика учетных записей (с крупными балансами)
+     * Get Balance Info
      *
      * @return array
      */
@@ -1168,7 +1164,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Получаем карту узлов
+     * Get the node map
      *
      * @return array
      */
@@ -1178,7 +1174,7 @@ class Tron implements TronInterface
     }
 
     /**
-     * Проверка всех подключенных нодов
+     * Check all connected nodes
      *
      * @return array
     */

@@ -4,7 +4,7 @@ namespace IEXBase\TronAPI\Support;
 class Base58Check
 {
     /**
-     * Кодируем в Base58Check
+     * Encode Base58Check
      *
      * @param string $string
      * @param int $prefix
@@ -37,7 +37,7 @@ class Base58Check
     }
 
     /**
-     * Декодирование из Base58Check
+     * Decoding from Base58Check
      *
      * @param string $string
      * @param int $removeLeadingBytes
@@ -49,17 +49,17 @@ class Base58Check
     {
         $string = bin2hex(Crypto::bc2bin(Base58::decode($string)));
 
-        //Если конечные байты: Network type
+        //If end bytes: Network type
         if ($removeLeadingBytes) {
             $string = substr($string, $removeLeadingBytes * 2);
         }
 
-        //Если конечные байты: Checksum
+        //If the final bytes: Checksum
         if ($removeTrailingBytes) {
             $string = substr($string, 0, -($removeTrailingBytes * 2));
         }
 
-        //Если конечные байты: compressed byte
+        //If end bytes: compressed byte
         if ($removeCompression) {
             $string = substr($string, 0, -2);
         }

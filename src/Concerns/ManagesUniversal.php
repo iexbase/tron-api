@@ -7,7 +7,7 @@ use IEXBase\TronAPI\Exception\ErrorException;
 trait ManagesUniversal
 {
     /**
-     * Аттрибуты по умолчанию
+     * Default Attributes
      *
      * @var array
     */
@@ -17,7 +17,7 @@ trait ManagesUniversal
     ];
 
     /**
-     * Проверяем сразу несколько балансов
+     * Check multiple balances
      *
      * @param array $accounts
      * @param bool $isValid
@@ -50,7 +50,7 @@ trait ManagesUniversal
     }
 
     /**
-     * Отправляем средства сразу на несколько адресов
+     * We send funds to several addresses at once.
      *
      * @param string $from
      * @param array $to

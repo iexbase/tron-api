@@ -7,7 +7,7 @@ use IEXBase\TronAPI\Support\{Base58Check, BigInteger, Keccak};
 trait TronAwareTrait
 {
     /**
-     * Преобразовывание из Hex
+     * Convert from Hex
      *
      * @param $string
      * @return string
@@ -22,7 +22,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Преобразование в Hex
+     * Convert to Hex
      *
      * @param $str
      * @return string
@@ -37,7 +37,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Проверяем адрес перед преобразованием в Hex
+     * Check the address before converting to Hex
      *
      * @param $sHexAddress
      * @return string
@@ -51,7 +51,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Проверяем Hex адрес перед преобразованием в Base58
+     * Check Hex address before converting to Base58
      *
      * @param $sHexString
      * @return string
@@ -66,7 +66,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Преобразовываем строку в Hex
+     * Convert string to hex
      *
      * @param $sUtf8
      * @return string
@@ -77,7 +77,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Преобразовываем hex в строку
+     * Convert hex to string
      *
      * @param $sHexString
      * @return string
@@ -88,7 +88,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Преобразовываем в большое значение
+     * Convert to great value
      *
      * @param $str
      * @return BigInteger
@@ -98,7 +98,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Преобразовываем сумму из формата Tron
+     * Convert trx to float
      *
      * @param $amount
      * @return float
@@ -108,7 +108,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Преобразовываем сумму в формат Tron
+     * Convert float to trx format
      *
      * @param $double
      * @return int
@@ -118,7 +118,7 @@ trait TronAwareTrait
     }
 
     /**
-     * Конвертируем в SHA3
+     * Convert to SHA3
      *
      * @param $string
      * @param bool $prefix

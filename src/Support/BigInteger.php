@@ -8,24 +8,24 @@ use RuntimeException;
 class BigInteger
 {
     /**
-     * Значение представлено в виде строки.
+     * The value represented as a string.
      *
      * @var string
      */
     private $value;
 
     /**
-     * Флаг, указывающий, можно ли изменить состояние этого объекта.
+     * A flag that indicates whether or not the state of this object can be changed.
      *
      * @var bool
      */
     private $mutable;
 
     /**
-     * Инициализирует новый экземпляр этого класса.
+     * Initializes a new instance of this class.
      *
-     * @param string $value
-     * @param bool $mutable
+     * @param string $value The value to set.
+     * @param bool $mutable Whether or not the state of this object can be changed.
      */
     public function __construct(string $value = '0', bool $mutable = true)
     {
@@ -34,7 +34,7 @@ class BigInteger
     }
 
     /**
-     * Получает значение большого целого.
+     * Gets the value of the big integer.
      *
      * @return string
      */
@@ -44,9 +44,9 @@ class BigInteger
     }
 
     /**
-     * Устанавливает значение.
+     * Sets the value.
      *
-     * @param string $value
+     * @param string $value The value to set.
      * @return BigInteger
      */
     public function setValue(string $value): BigInteger
@@ -61,7 +61,7 @@ class BigInteger
     }
 
     /**
-     * Преобразует значение в абсолютное число.
+     * Converts the value to an absolute number.
      *
      * @return BigInteger
      */
@@ -73,9 +73,9 @@ class BigInteger
     }
 
     /**
-     * Добавляет заданное значение к этому значению.
+     * Adds the given value to this value.
      *
-     * @param string $value
+     * @param string $value The value to add.
      * @return BigInteger
      */
     public function add(string $value): BigInteger
@@ -88,16 +88,19 @@ class BigInteger
     }
 
     /**
-     * Сравнивает это число и заданный номер.
+     * Compares this number and the given number.
      *
-     * @param string $value
-     * @return int
+     * @param string $value The value to compare.
+     * @return int Returns -1 is the number is less than this number. 0 if equal and 1 when greater.
      */
     public function cmp($value): int
     {
         $value = $this->initValue($value);
 
         $result = gmp_cmp($this->value, $value);
+
+        // It could happen that gmp_cmp returns a value greater than one (e.g. gmp_cmp('123', '-123')). That's why
+        // we do an additional check to make sure to return the correct value.
 
         if ($result > 0) {
             return 1;
@@ -109,9 +112,9 @@ class BigInteger
     }
 
     /**
-     * Делит это значение на заданное значение.
+     * Divides this value by the given value.
      *
-     * @param string $value
+     * @param string $value The value to divide by.
      * @return BigInteger
      */
     public function divide(string $value): BigInteger
@@ -124,7 +127,7 @@ class BigInteger
     }
 
     /**
-     * Вычисляет факториал этого значения.
+     * Calculates factorial of this value.
      *
      * @return BigInteger
      */
@@ -136,9 +139,9 @@ class BigInteger
     }
 
     /**
-     * Выполняет операцию по модулю с заданным номером.
+     * Performs a modulo operation with the given number.
      *
-     * @param string $value
+     * @param string $value The value to perform a modulo operation with.
      * @return BigInteger
      */
     public function mod(string $value): BigInteger
@@ -151,9 +154,9 @@ class BigInteger
     }
 
     /**
-     * Умножает заданное значение на это значение
+     * Multiplies the given value with this value.
      *
-     * @param string $value
+     * @param string $value The value to multiply with.
      * @return BigInteger
      */
     public function multiply(string $value): BigInteger
@@ -166,7 +169,7 @@ class BigInteger
     }
 
     /**
-     * Отрицает значение.
+     * Negates the value.
      *
      * @return BigInteger
      */
@@ -178,9 +181,9 @@ class BigInteger
     }
 
     /**
-     * Выполняет операцию с заданным номером.
+     * Performs a power operation with the given number.
      *
-     * @param int $value
+     * @param int $value The value to perform a power operation with.
      * @return BigInteger
      */
     public function pow(int $value): BigInteger
@@ -191,7 +194,7 @@ class BigInteger
     }
 
     /**
-     * Вычитает заданное значение из этого значения.
+     * Subtracts the given value from this value.
      *
      * @param string $value The value to subtract.
      * @return BigInteger
@@ -206,10 +209,10 @@ class BigInteger
     }
 
     /**
-     * Проверяет, является ли большой интеграл простым числом.
+     * Checks if the big integr is the prime number.
      *
-     * @param float $probabilityFactor
-     * @return bool
+     * @param float $probabilityFactor A normalized factor between 0 and 1 used for checking the probability.
+     * @return bool Returns true if the number is a prime number false if not.
      */
     public function isPrimeNumber(float $probabilityFactor = 1.0): bool
     {
@@ -223,7 +226,7 @@ class BigInteger
     }
 
     /**
-     * Проверяет, является ли этот объект изменчивым.
+     * Checks if this object is mutable.
      *
      * @return bool
      */
@@ -233,7 +236,7 @@ class BigInteger
     }
 
     /**
-     * Преобразует этот класс в строку.
+     * Converts this class to a string.
      *
      * @return string
      */
@@ -243,7 +246,7 @@ class BigInteger
     }
 
     /**
-     * Преобразует этот класс в строку.
+     * Converts this class to a string.
      *
      * @return string
      */
@@ -253,9 +256,9 @@ class BigInteger
     }
 
     /**
-     * Вспомогательный метод для присвоения заданного значения.
+     * A helper method to assign the given value.
      *
-     * @param GMP $value
+     * @param GMP $value The value to assign.
      * @return BigInteger
      */
     private function assignValue(GMP $value): BigInteger
@@ -272,11 +275,11 @@ class BigInteger
     }
 
     /**
-     * Создает новый объект GMP.
+     * Creates a new GMP object.
      *
-     * @param string $value
+     * @param string $value The value to initialize with.
      * @return GMP
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException Thrown when the value is invalid.
      */
     private function initValue(string $value): GMP
     {

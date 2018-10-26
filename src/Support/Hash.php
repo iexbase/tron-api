@@ -4,7 +4,7 @@ namespace IEXBase\TronAPI\Support;
 class Hash
 {
     /**
-     * Хеширование SHA-256
+     * Hashing SHA-256
      *
      * @param $data
      * @param bool $raw
@@ -16,7 +16,7 @@ class Hash
     }
 
     /**
-     * Двойное хеширование SHA-256
+     * Double hashing SHA-256
      *
      * @param $data
      * @return string
@@ -27,7 +27,7 @@ class Hash
     }
 
     /**
-     * Хеширование RIPEMD160
+     * Hashing RIPEMD160
      *
      * @param $data
      * @param bool $raw

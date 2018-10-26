@@ -7,27 +7,28 @@ use IEXBase\TronAPI\Exception\TronException;
 interface TronInterface
 {
     /**
-     * Укажите ссылку на полную ноду
+     * Enter the link to the full node
+     *
      * @param $provider
      */
     public function setFullNode($provider);
 
     /**
-     * Указываем приватный ключ к учетной записи
+     * Enter your private account key
      *
      * @param string $privateKey
      */
     public function setPrivateKey(string $privateKey): void;
 
     /**
-     * Указываем базовый адрес учетной записи
+     * Enter your account address
      *
      * @param string $address
      */
     public function setAddress(string $address) : void;
 
     /**
-     * Получение баланса учетной записи
+     * Getting a balance
      *
      * @param string $address
      * @return array
@@ -35,7 +36,7 @@ interface TronInterface
     public function getBalance(string $address = null);
 
     /**
-     * Получаем информацию о транзакции по TxID
+     * Query transaction based on id
      *
      * @param $transactionID
      * @return array
@@ -43,14 +44,14 @@ interface TronInterface
     public function getTransaction(string $transactionID);
 
     /**
-     * Получаем счетчик транзакций в Blockchain
+     * Count all transactions on the network
      *
      * @return integer
      */
     public function getTransactionCount();
 
     /**
-     * Отправляем транзакцию в Blockchain
+     * Send transaction to Blockchain
      *
      * @param $from
      * @param $to
@@ -62,16 +63,18 @@ interface TronInterface
     public function sendTransaction(string $from, string $to, float $amount);
 
     /**
-     * Изменить имя учетной записи (только один раз)
+     * Modify account name
+     * Note: Username is allowed to edit only once.
      *
      * @param $address
-     * @param $newName
+     * @param $account_name
      * @return array
      */
-    public function changeAccountName(string $address = null, string $newName);
+    public function changeAccountName(string $address = null, string $account_name);
 
     /**
-     * Регистрация новой учетной записи в сети
+     * Create an account.
+     * Uses an already activated account to create a new account
      *
      * @param $address
      * @param $newAccountAddress
@@ -80,7 +83,7 @@ interface TronInterface
     public function registerAccount(string $address, string $newAccountAddress);
 
     /**
-     * Применяется, чтобы стать супер представителем. Стоимость 9999 TRX.
+     * Apply to become a super representative
      *
      * @param string $address
      * @param string $url
@@ -89,7 +92,7 @@ interface TronInterface
     public function applyForSuperRepresentative(string $address, string $url);
 
     /**
-     * Возвращает транзакцию передачи неподписанных активов
+     * Transfer Token
      *
      * @param $from
      * @param $to
@@ -100,7 +103,8 @@ interface TronInterface
     public function createSendAssetTransaction($from, $to, $assetID, $amount);
 
     /**
-     * Создаем и отправляем транзакцию с использованием пароля
+     * Easily transfer from an address using the password string.
+     * Only works with accounts created from createAddress
      *
      * @param string $to
      * @param float $amount
@@ -110,7 +114,7 @@ interface TronInterface
     public function sendTransactionByPassword(string $to, float $amount, string $password);
 
     /**
-     * Создаем и отправляем транзакцию с использованием приватного ключа
+     * Easily transfer from an address using the private key.
      *
      * @param string $to
      * @param float $amount
@@ -120,7 +124,7 @@ interface TronInterface
     public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey);
 
     /**
-     * Создание нового адрес с паролем
+     * Create address from a specified password string (NOT PRIVATE KEY)
      *
      * @param $password
      * @return array
@@ -128,7 +132,8 @@ interface TronInterface
     public function createAddressWithPassword(string $password);
 
     /**
-     * Создаем транзакцию с фиксированным балансом
+     * Freezes an amount of TRX.
+     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
      *
      * @param string $address
      * @param float $amount
@@ -138,7 +143,8 @@ interface TronInterface
     public function createFreezeBalanceTransaction(string $address, float $amount, int $duration = 3);
 
     /**
-     * Создаем транзакцию баланса заморозки и размораживания
+     * Unfreeze TRX that has passed the minimum freeze duration.
+     * Unfreezing will remove bandwidth and TRON Power.
      *
      * @param $address
      * @return array
@@ -146,7 +152,7 @@ interface TronInterface
     public function createUnfreezeBalanceTransaction(string $address);
 
     /**
-     * Получаем детали блока с помощью HashString или blockNumber
+     * Get block details using HashString or blockNumber
      *
      * @param null $block
      * @return array
@@ -154,7 +160,7 @@ interface TronInterface
     public function getBlock($block = null);
 
     /**
-     * Получаем список последних блоков
+     * Query the latest blocks
      *
      * @param int $limit
      * @return array
@@ -162,7 +168,7 @@ interface TronInterface
     public function getLatestBlocks(int $limit = 1);
 
     /**
-     * Проверка адреса
+     * Validate Address
      *
      * @param string $address
      * @param bool $hex
@@ -171,7 +177,7 @@ interface TronInterface
     public function validateAddress(string $address, bool $hex = false);
 
     /**
-     * Генерация нового адреса
+     * Generate new address
      *
      * @return array
      */
