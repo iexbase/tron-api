@@ -19,14 +19,15 @@ The following versions of PHP are supported by this version.
 
 * PHP 7.1
 * PHP 7.2
+* PHP 7.3
 
 ## Example Usage
 
 ```php
 use IEXBase\TronAPI\Tron;
 
-$fullNode = new HttpProvider('https://api.trongrid.io:8090');
-$solidityNode = new HttpProvider('https://api.trongrid.io:8091');
+$fullNode = new HttpProvider('https://api.trongrid.io');
+$solidityNode = new HttpProvider('https://api.trongrid.io');
 $privateKey = '....';
 
 $tron - new Tron($fullNode, 
