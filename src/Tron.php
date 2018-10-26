@@ -482,7 +482,7 @@ class Tron implements TronInterface
             throw new TronException('Invalid direction provided: Expected "to", "from"');
         }
 
-        if(!is_integer($limit) || $limit < 0 || ($offset && $limit) < 1) {
+        if(!is_integer($limit) || $limit < 0 || ($offset && $limit < 1)) {
             throw new TronException('Invalid limit provided');
         }
 
