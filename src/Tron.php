@@ -475,8 +475,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getTransactionsRelated(string $address,
-                                           string $direction = 'to', int $limit = 30, int $offset = 0)
+    public function getTransactionsRelated(string $address, string $direction = 'to', int $limit = 30, int $offset = 0)
     {
         if(!in_array($direction, ['to', 'from'])) {
             throw new TronException('Invalid direction provided: Expected "to", "from"');
