@@ -442,7 +442,7 @@ class Tron implements TronInterface
         $address = (!is_null($address) ? $address : $this->address);
         $account = $this->getAccount($address);
 
-        if(!$account['balance'] || !array_key_exists('balance', $account)) {
+        if(!array_key_exists('balance', $account)) {
             return 0;
         }
 
