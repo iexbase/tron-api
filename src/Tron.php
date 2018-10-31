@@ -522,10 +522,6 @@ class Tron implements TronInterface
      */
     public function sendTransaction(string $from, string $to, float $amount): array
     {
-        if(!$this->privateKey) {
-            throw new TronException('Missing private key');
-        }
-
         $transaction = $this->createTransaction($from, $to, $amount);
         $signedTransaction = $this->signTransaction($transaction);
         $response = $this->sendRawTransaction($signedTransaction);
@@ -575,6 +571,10 @@ class Tron implements TronInterface
      */
     public function signTransaction($transaction): array
     {
+        if(!$this->privateKey) {
+            throw new TronException('Missing private key');
+        }
+
         if(!is_array($transaction)) {
             throw new TronException('Invalid transaction provided');
         }
@@ -632,6 +632,16 @@ class Tron implements TronInterface
         $response = $this->sendRawTransaction($signedTransaction);
 
         return $response;
+    }
+
+    /**
+     * Transfer Token (option 2)
+     *
+     * @param array $args
+     * @return array
+     */
+    public function sendToken(...$args): array  {
+        return $this->createSendAssetTransaction(...$args);
     }
 
     /**
@@ -729,20 +739,40 @@ class Tron implements TronInterface
     /**
      * Transfer Token
      *
-     * @param $from
      * @param $to
-     * @param $assetID
      * @param $amount
+     * @param $tokenID
+     * @param $from
      * @return array
+     * @throws TronException
      */
-    public function createSendAssetTransaction($from, $to, $assetID, $amount)
+    public function createSendAssetTransaction($to, $amount, $tokenID, $from = null)
     {
-        return $this->fullNode->request('wallet/transferasset', [
+        if($from == null) {
+            $from = $this->address;
+        }
+
+        if (!is_float($amount) or $amount <= 0) {
+            throw new TronException('Invalid amount provided');
+        }
+
+        if (!is_string($tokenID)) {
+            throw new TronException('Invalid token ID provided');
+        }
+
+
+
+        $transfer =  $this->fullNode->request('wallet/transferasset', [
             'owner_address' =>  $this->toHex($from),
             'to_address'    =>  $this->toHex($to),
-            'asset_name'    =>  $this->stringUtf8toHex($assetID),
+            'asset_name'    =>  $this->stringUtf8toHex($tokenID),
             'amount'        =>  $this->toTron($amount)
         ],'post');
+
+        $signedTransaction = $this->signTransaction($transfer);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
     }
 
     /**
