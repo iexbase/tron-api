@@ -53,14 +53,14 @@ interface TronInterface
     /**
      * Send transaction to Blockchain
      *
-     * @param $from
      * @param $to
      * @param $amount
+     * @param $from
      *
      * @return array
      * @throws TronException
      */
-    public function sendTransaction(string $from, string $to, float $amount);
+    public function sendTransaction(string $to, float $amount, string $from = null);
 
     /**
      * Modify account name

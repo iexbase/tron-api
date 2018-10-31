@@ -513,15 +513,19 @@ class Tron implements TronInterface
     /**
      * Send transaction to Blockchain
      *
-     * @param string $from
      * @param string $to
      * @param float $amount
+     * @param string $from
      *
      * @return array
      * @throws TronException
      */
-    public function sendTransaction(string $from, string $to, float $amount): array
+    public function sendTransaction(string $to, float $amount, string $from = null): array
     {
+        if (is_null($from)) {
+            $from = $this->address;
+        }
+
         $transaction = $this->createTransaction($from, $to, $amount);
         $signedTransaction = $this->signTransaction($transaction);
         $response = $this->sendRawTransaction($signedTransaction);
@@ -539,7 +543,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function createTransaction(string $from, string $to, float $amount): array
+    protected function createTransaction(string $from, string $to, float $amount): array
     {
         if(!is_float($amount) || $amount < 0) {
             throw new TronException('Invalid amount provided');
@@ -569,7 +573,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function signTransaction($transaction): array
+    protected function signTransaction($transaction): array
     {
         if(!$this->privateKey) {
             throw new TronException('Missing private key');
@@ -596,7 +600,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendRawTransaction($signedTransaction): array
+    protected function sendRawTransaction($signedTransaction): array
     {
         if(!is_array($signedTransaction)) {
             throw new TronException('Invalid transaction provided');
