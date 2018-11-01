@@ -103,27 +103,6 @@ interface TronInterface
     public function createSendAssetTransaction($from, $to, $assetID, $amount);
 
     /**
-     * Easily transfer from an address using the password string.
-     * Only works with accounts created from createAddress
-     *
-     * @param string $to
-     * @param float $amount
-     * @param string $password
-     * @return array
-     */
-    public function sendTransactionByPassword(string $to, float $amount, string $password);
-
-    /**
-     * Easily transfer from an address using the private key.
-     *
-     * @param string $to
-     * @param float $amount
-     * @param string $privateKey
-     * @return array
-     */
-    public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey);
-
-    /**
      * Create address from a specified password string (NOT PRIVATE KEY)
      *
      * @param $password

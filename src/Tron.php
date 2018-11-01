@@ -643,6 +643,7 @@ class Tron implements TronInterface
      *
      * @param array $args
      * @return array
+     * @throws TronException
      */
     public function sendToken(...$args): array  {
         return $this->createSendAssetTransaction(...$args);
@@ -764,8 +765,6 @@ class Tron implements TronInterface
             throw new TronException('Invalid token ID provided');
         }
 
-
-
         $transfer =  $this->fullNode->request('wallet/transferasset', [
             'owner_address' =>  $this->toHex($from),
             'to_address'    =>  $this->toHex($to),
@@ -777,41 +776,6 @@ class Tron implements TronInterface
         $response = $this->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
-    }
-
-    /**
-     * Easily transfer from an address using the password string.
-     * Only works with accounts created from createAddress
-     *
-     * @param string $to
-     * @param float $amount
-     * @param string $password
-     * @return array
-     */
-    public function sendTransactionByPassword(string $to, float $amount, string $password): array
-    {
-        return $this->fullNode->request('wallet/easytransfer', [
-            'passPhrase'    =>  $this->stringUtf8toHex($password),
-            'toAddress'     =>  $this->toHex($to),
-            'amount'        =>  $this->toTron($amount)
-        ],'post');
-    }
-
-    /**
-     * Easily transfer from an address using the private key.
-     *
-     * @param string $to
-     * @param float $amount
-     * @param string $privateKey
-     * @return array
-     */
-    public function sendTransactionByPrivateKey(string $to, float $amount, string $privateKey): array
-    {
-        return $this->fullNode->request('wallet/easytransferbyprivate', [
-            'privateKey'    =>  $this->stringUtf8toHex($privateKey),
-            'toAddress'     =>  $this->toHex($to),
-            'amount'        =>  $this->toTron($amount)
-        ],'post');
     }
 
     /**
@@ -932,8 +896,15 @@ class Tron implements TronInterface
     */
     public function listNodes(): array
     {
-        return $this->fullNode->request('wallet/listnodes');
+        $nodes = $this->fullNode->request('wallet/listnodes');
+
+        return array_map(function($item) {
+            $address = $item['address'];
+
+            return sprintf('%s:%s', $this->toUtf8($address['host']), $address['port']);
+        }, $nodes['nodes']);
     }
+
 
     /**
      * List the tokens issued by an account.
@@ -1205,6 +1176,16 @@ class Tron implements TronInterface
     public function getNodeMap(): array
     {
         return $this->tronNode->request('api/v2/node/nodemap');
+    }
+
+    /**
+     * Helper function that will convert HEX to UTF8
+     *
+     * @param $str
+     * @return string
+     */
+    public function toUtf8($str): string {
+        return pack('H*', $str);
     }
 
     /**
