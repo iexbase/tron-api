@@ -515,19 +515,20 @@ class Tron implements TronInterface
      *
      * @param string $to
      * @param float $amount
+     * @param string|null $message
      * @param string $from
      *
      * @return array
      * @throws TronException
      */
-    public function sendTransaction(string $to, float $amount, string $from = null): array
+    public function sendTransaction(string $to, float $amount, string $message= null, string $from = null): array
     {
         if (is_null($from)) {
             $from = $this->address;
         }
 
         $transaction = $this->createTransaction($from, $to, $amount);
-        $signedTransaction = $this->signTransaction($transaction);
+        $signedTransaction = $this->signTransaction($transaction, $message);
         $response = $this->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
@@ -570,10 +571,11 @@ class Tron implements TronInterface
      * please make sure to call the api in a secure environment
      *
      * @param $transaction
+     * @param string|null $message
      * @return array
      * @throws TronException
      */
-    protected function signTransaction($transaction): array
+    protected function signTransaction($transaction, string $message = null): array
     {
         if(!$this->privateKey) {
             throw new TronException('Missing private key');
@@ -585,6 +587,10 @@ class Tron implements TronInterface
 
         if(isset($transaction['signature'])) {
             throw new TronException('Transaction is already signed');
+        }
+
+        if(!is_null($message)) {
+            $transaction['raw_data']['data'] = $this->stringUtf8toHex($message);
         }
 
         return $this->fullNode->request('wallet/gettransactionsign', [
