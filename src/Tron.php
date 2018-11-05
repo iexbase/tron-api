@@ -763,7 +763,7 @@ class Tron implements TronInterface
             $from = $this->address;
         }
 
-        if (!is_float($amount) or $amount <= 0) {
+        if (!is_integer($amount) or $amount <= 0) {
             throw new TronException('Invalid amount provided');
         }
 
@@ -779,6 +779,11 @@ class Tron implements TronInterface
             'amount'        =>  intval($amount)
         ],'post');
 
+        echo '<pre>';
+            print_r($transfer);
+        echo '</pre>';
+
+        exit;
         $signedTransaction = $this->signTransaction($transfer);
         $response = $this->sendRawTransaction($signedTransaction);
 
