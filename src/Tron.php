@@ -182,7 +182,7 @@ class Tron implements TronInterface
     public function setEventServer($provider): void
     {
         if(!$this->isValidProvider($provider)) {
-            throw new TronException('Invalid solidity node provided');
+            throw new TronException('Invalid event server provided');
         }
 
         $this->eventServer = $provider;
