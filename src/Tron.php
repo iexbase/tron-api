@@ -771,11 +771,12 @@ class Tron implements TronInterface
             throw new TronException('Invalid token ID provided');
         }
 
+
         $transfer =  $this->fullNode->request('wallet/transferasset', [
             'owner_address' =>  $this->toHex($from),
             'to_address'    =>  $this->toHex($to),
             'asset_name'    =>  $this->stringUtf8toHex($tokenID),
-            'amount'        =>  $this->toTron($amount)
+            'amount'        =>  intval($amount)
         ],'post');
 
         $signedTransaction = $this->signTransaction($transfer);
