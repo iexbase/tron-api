@@ -7,11 +7,11 @@ use IEXBase\TronAPI\Exception\TronException;
 interface TronInterface
 {
     /**
-     * Enter the link to the full node
+     * Enter the link to the manager nodes
      *
-     * @param $provider
+     * @param $providers
      */
-    public function setFullNode($provider);
+    public function setManager($providers);
 
     /**
      * Enter your private account key

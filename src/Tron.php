@@ -33,27 +33,6 @@ class Tron implements TronInterface
         Concerns\ManagesUniversal;
 
     /**
-     * Full node URL
-     *
-     * @var HttpProviderInterface|string
-    */
-    protected $fullNode = 'https://api.trongrid.io';
-
-    /**
-     * Solidity URL Node
-     *
-     * @var HttpProviderInterface|string
-     */
-    protected $solidityNode = 'https://api.trongrid.io';
-
-    /**
-     * Event Server Url
-     *
-     * @var HttpProviderInterface|string
-     */
-    protected $eventServer = 'https://api.trongrid.io';
-
-    /**
      * Default Address
      *
      * @var string
@@ -82,6 +61,13 @@ class Tron implements TronInterface
     protected $transactionBuilder;
 
     /**
+     * Provider manager
+     *
+     * @var TronManager
+    */
+    protected $manager;
+
+    /**
      * Create a new Tron object
      *
      * @param HttpProviderInterface $fullNode
@@ -95,27 +81,35 @@ class Tron implements TronInterface
                                 ?HttpProviderInterface $eventServer = null,
                                 string $privateKey = null)
     {
-        if(!$fullNode instanceof HttpProviderInterface) {
-            $fullNode = new HttpProvider((string)$this->fullNode);
-        }
-
-        if(!$solidityNode instanceof HttpProviderInterface) {
-            $solidityNode = new HttpProvider((string)$this->solidityNode);
-        }
-
-        if(!$eventServer instanceof HttpProviderInterface) {
-            $eventServer = new HttpProvider((string)$this->eventServer);
-        }
-
-        $this->setFullNode($fullNode);
-        $this->setSolidityNode($solidityNode);
-        $this->setEventServer($eventServer);
-
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
         }
 
+        $this->setManager(new TronManager($this, [
+            'fullNode'  =>  $fullNode,
+            'solidityNode'  =>  $solidityNode,
+            'eventServer'   =>  $eventServer
+        ]));
+
         $this->transactionBuilder = new TransactionBuilder($this);
+    }
+
+    /**
+     * Enter the link to the manager nodes
+     *
+     * @param $providers
+     */
+    public function setManager($providers) {
+        $this->manager = $providers;
+    }
+
+    /**
+     * Get provider manager
+     *
+     * @return TronManager
+    */
+    public function getManager() :TronManager {
+        return $this->manager;
     }
 
     /**
@@ -127,66 +121,6 @@ class Tron implements TronInterface
     public function isValidProvider($provider): bool
     {
         return ($provider instanceof HttpProviderInterface);
-    }
-
-    public function getFullNode() {
-        return $this->fullNode;
-    }
-
-    /**
-     * Enter the link to the full node
-     *
-     * @param $provider
-     *
-     * @return void | string
-     * @throws TronException
-     */
-    public function setFullNode($provider): void
-    {
-        if(!$this->isValidProvider($provider)) {
-            throw new TronException('Invalid full node provided');
-        }
-
-        $this->fullNode = $provider;
-        $this->fullNode->setStatusPage('wallet/getnowblock');
-    }
-
-    public function getSolidityNode() {
-        return $this->solidityNode;
-    }
-
-    /**
-     * Enter the link to the solidity node
-     * @param $provider
-     *
-     * @return void | string
-     * @throws TronException
-     */
-    public function setSolidityNode($provider): void
-    {
-        if(!$this->isValidProvider($provider)) {
-            throw new TronException('Invalid solidity node provided');
-        }
-
-        $this->solidityNode = $provider;
-        $this->solidityNode->setStatusPage('walletsolidity/getnowblock');
-    }
-
-    /**
-     * Enter the link to the event server
-     * @param $provider
-     *
-     * @return void | string
-     * @throws TronException
-     */
-    public function setEventServer($provider): void
-    {
-        if(!$this->isValidProvider($provider)) {
-            throw new TronException('Invalid event server provided');
-        }
-
-        $this->eventServer = $provider;
-        $this->eventServer->setStatusPage('healthcheck');
     }
 
     /**
@@ -255,22 +189,20 @@ class Tron implements TronInterface
      *
      * @return array
     */
-    public function currentProviders(): array
+    public function providers(): array
     {
-        return [
-            'fullNode'      =>  $this->fullNode,
-            'solidityNode'  =>  $this->solidityNode
-        ];
+        return $this->manager->isConnected();
     }
 
     /**
      * Last block number
      *
      * @return array
-    */
+     * @throws TronException
+     */
     public function getCurrentBlock(): array
     {
-        return $this->fullNode->request('wallet/getnowblock');
+        return $this->manager->request('wallet/getnowblock');
     }
 
     /**
@@ -285,7 +217,7 @@ class Tron implements TronInterface
      */
     public function getEventResult($contractAddress, int $sinceTimestamp = 0, string $eventName = null, int $blockNumber = 0)
     {
-        if (!$this->isValidProvider($this->eventServer)) {
+        if (!$this->isValidProvider($this->manager->eventServer())) {
             throw new TronException('No event server configured');
         }
 
@@ -308,7 +240,7 @@ class Tron implements TronInterface
         }
 
         $routeParams = implode('/', $routeParams);
-        return $this->eventServer->request("event/contract/{$routeParams}?since={$sinceTimestamp}");
+        return $this->manager->request("event/contract/{$routeParams}?since={$sinceTimestamp}");
     }
 
 
@@ -321,11 +253,10 @@ class Tron implements TronInterface
      */
     public function getEventByTransactionID(string $transactionID)
     {
-        if (!$this->isValidProvider($this->eventServer)) {
+        if (!$this->isValidProvider($this->manager->eventServer())) {
             throw new TronException('No event server configured');
         }
-
-        return $this->eventServer->request("event/transaction/{$transactionID}");
+        return $this->manager->request("event/transaction/{$transactionID}");
     }
 
     /**
@@ -362,12 +293,13 @@ class Tron implements TronInterface
      *
      * @param $hashBlock
      * @return array
+     * @throws TronException
      */
     public function getBlockByHash(string $hashBlock): array
     {
-        return $this->fullNode->request('wallet/getblockbyid', [
+        return $this->manager->request('wallet/getblockbyid', [
             'value' =>  $hashBlock
-        ],'post');
+        ]);
     }
 
     /**
@@ -383,9 +315,9 @@ class Tron implements TronInterface
             throw new TronException('Invalid block number provided');
         }
 
-        $response = $this->fullNode->request('wallet/getblockbynum', [
+        $response = $this->manager->request('wallet/getblockbynum', [
             'num'   =>  intval($blockID)
-        ],'post');
+        ]);
 
         if (empty($response)) {
             throw new TronException('Block not found');
@@ -441,9 +373,9 @@ class Tron implements TronInterface
      */
     public function getTransaction(string $transactionID): array
     {
-        $response = $this->fullNode->request('wallet/gettransactionbyid', [
+        $response = $this->manager->request('wallet/gettransactionbyid', [
             'value' =>  $transactionID
-        ],'post');
+        ]);
 
         if(!$response) {
             throw new TronException('Transaction not found');
@@ -457,12 +389,13 @@ class Tron implements TronInterface
      *
      * @param $transactionID
      * @return array
+     * @throws TronException
      */
     public function getTransactionInfo(string $transactionID): array
     {
-        return $this->solidityNode->request('walletsolidity/gettransactioninfobyid', [
+        return $this->manager->request('walletsolidity/gettransactioninfobyid', [
             'value' =>  $transactionID
-        ],'post');
+        ]);
     }
 
     /**
@@ -498,14 +431,15 @@ class Tron implements TronInterface
      *
      * @param $address
      * @return array
+     * @throws TronException
      */
     public function getAccount(string $address = null): array
     {
         $address = (!is_null($address) ? $address : $this->address);
 
-        return $this->fullNode->request('walletsolidity/getaccount', [
+        return $this->manager->request('walletsolidity/getaccount', [
             'address'   =>  $this->toHex($address)
-        ],'post');
+        ]);
     }
 
     /**
@@ -514,6 +448,7 @@ class Tron implements TronInterface
      * @param string $address
      * @param bool $fromTron
      * @return float
+     * @throws TronException
      */
     public function getBalance(string $address = null, bool $fromTron = false): float
     {
@@ -533,13 +468,14 @@ class Tron implements TronInterface
      *
      * @param $address
      * @return array
+     * @throws TronException
      */
     public function getBandwidth(string $address = null)
     {
         $address = (!is_null($address) ? $address : $this->address);
-        return $this->fullNode->request('wallet/getaccountnet', [
+        return $this->manager->request('wallet/getaccountnet', [
             'address'   =>  $this->toHex($address)
-        ],'post');
+        ]);
     }
 
     /**
@@ -566,11 +502,11 @@ class Tron implements TronInterface
             throw new TronException('Invalid offset provided');
         }
 
-        $response = $this->solidityNode->request(sprintf('walletextension/gettransactions%sthis', $direction), [
+        $response = $this->manager->request(sprintf('walletextension/gettransactions%sthis', $direction), [
             'account'   =>  ['address' => $this->toHex($address)],
             'limit'     =>  $limit,
             'offset'    =>  $offset
-        ],'post');
+        ]);
 
         return array_merge($response, ['direction' => $direction]);
     }
@@ -579,10 +515,11 @@ class Tron implements TronInterface
      * Count all transactions on the network
      *
      * @return integer
-    */
+     * @throws TronException
+     */
     public function getTransactionCount(): int
     {
-        $response = $this->fullNode->request('wallet/totaltransaction');
+        $response = $this->manager->request('wallet/totaltransaction');
         return $response['num'];
     }
 
@@ -637,10 +574,10 @@ class Tron implements TronInterface
             $transaction['raw_data']['data'] = $this->stringUtf8toHex($message);
         }
 
-        return $this->fullNode->request('wallet/gettransactionsign', [
+        return $this->manager->request('wallet/gettransactionsign', [
             'transaction'   => $transaction,
             'privateKey'    => $this->privateKey
-        ],'post');
+        ]);
     }
 
     /**
@@ -660,8 +597,8 @@ class Tron implements TronInterface
             throw new TronException('Transaction is not signed');
         }
 
-        return $this->fullNode->request('wallet/broadcasttransaction',
-            $signedTransaction,'post');
+        return $this->manager->request('wallet/broadcasttransaction',
+            $signedTransaction);
     }
 
     /**
@@ -677,10 +614,10 @@ class Tron implements TronInterface
     {
         $address = (!is_null($address) ? $address : $this->address);
 
-        $transaction = $this->fullNode->request('wallet/updateaccount', [
+        $transaction = $this->manager->request('wallet/updateaccount', [
             'account_name'  =>  $this->stringUtf8toHex($account_name),
             'owner_address' =>  $this->toHex($address)
-        ],'post');
+        ]);
 
         $signedTransaction = $this->signTransaction($transaction);
         $response = $this->sendRawTransaction($signedTransaction);
@@ -713,7 +650,7 @@ class Tron implements TronInterface
     /**
      * Creating a new token based on Tron
      *
-     *   @param array token {
+     * @param array token {
      *   "owner_address": "41e552f6487585c2b58bc2c9bb4492bc1f17132cd0",
      *   "name": "0x6173736574497373756531353330383934333132313538",
      *   "abbr": "0x6162627231353330383934333132313538",
@@ -729,10 +666,11 @@ class Tron implements TronInterface
      *   "frozen_supply": { "frozen_amount": 1, "frozen_days": 2 }
      *
      * @return array
+     * @throws TronException
      */
     public function createToken($token = [])
     {
-        return $this->fullNode->request('wallet/createassetissue', [
+        return $this->manager->request('wallet/createassetissue', [
             'owner_address'                 =>  $this->toHex($token['owner_address']),
             'name'                          =>  $this->stringUtf8toHex($token['name']),
             'abbr'                          =>  $this->stringUtf8toHex($token['abbr']),
@@ -746,7 +684,7 @@ class Tron implements TronInterface
             'free_asset_net_limit'          =>  $token['free_asset_net_limit'],
             'public_free_asset_net_limit'   => $token['public_free_asset_net_limit'],
             'frozen_supply'                 =>  $token['frozen_supply']
-        ],'post');
+        ]);
     }
 
     /**
@@ -756,13 +694,14 @@ class Tron implements TronInterface
      * @param $address
      * @param $newAccountAddress
      * @return array
+     * @throws TronException
      */
     public function registerAccount(string $address, string $newAccountAddress): array
     {
-        return $this->fullNode->request('wallet/createaccount', [
+        return $this->manager->request('wallet/createaccount', [
             'owner_address'     =>  $this->toHex($address),
             'account_address'   =>  $this->toHex($newAccountAddress)
-        ],'post');
+        ]);
     }
 
     /**
@@ -771,13 +710,14 @@ class Tron implements TronInterface
      * @param $address
      * @param $url
      * @return array
+     * @throws TronException
      */
     public function applyForSuperRepresentative(string $address, string $url)
     {
-        return $this->fullNode->request('wallet/createwitness', [
+        return $this->manager->request('wallet/createwitness', [
             'owner_address' =>  $this->toHex($address),
             'url'           =>  $this->stringUtf8toHex($url)
-        ],'post');
+        ]);
     }
 
     /**
@@ -923,13 +863,13 @@ class Tron implements TronInterface
      * Node list
      *
      * @return array
-    */
+     * @throws TronException
+     */
     public function listNodes(): array
     {
-        $nodes = $this->fullNode->request('wallet/listnodes');
+        $nodes = $this->manager->request('wallet/listnodes');
         return array_map(function($item) {
             $address = $item['address'];
-
             return sprintf('%s:%s', $this->toUtf8($address['host']), $address['port']);
         }, $nodes['nodes']);
     }
@@ -940,13 +880,14 @@ class Tron implements TronInterface
      *
      * @param string $address
      * @return array
+     * @throws TronException
      */
     public function getTokensIssuedByAddress(string $address = null)
     {
         $address = (!is_null($address) ? $address : $this->address);
-        return $this->fullNode->request('wallet/getassetissuebyaccount',[
+        return $this->manager->request('wallet/getassetissuebyaccount',[
             'address'   =>  $this->toHex($address)
-        ],'post');
+        ]);
     }
 
     /**
@@ -954,12 +895,13 @@ class Tron implements TronInterface
      *
      * @param $tokenID
      * @return array
+     * @throws TronException
      */
     public function getTokenFromID($tokenID = null)
     {
-        return $this->fullNode->request('wallet/getassetissuebyname', [
+        return $this->manager->request('wallet/getassetissuebyname', [
             'value' =>  $this->stringUtf8toHex($tokenID)
-        ],'post');
+        ]);
     }
 
     /**
@@ -980,10 +922,10 @@ class Tron implements TronInterface
             throw new TronException('Invalid end of range provided');
         }
 
-        return $this->fullNode->request('wallet/getblockbylimitnext', [
+        return $this->manager->request('wallet/getblockbylimitnext', [
             'startNum'  =>  intval($start),
             'endNum'    =>  intval($end) + 1
-        ],'post')['block'];
+        ])['block'];
     }
 
     /**
@@ -999,19 +941,20 @@ class Tron implements TronInterface
             throw new TronException('Invalid limit provided');
         }
 
-        return $this->fullNode->request('wallet/getblockbylatestnum', [
+        return $this->manager->request('wallet/getblockbylatestnum', [
             'num'   =>  $limit
-        ],'post')['block'];
+        ])['block'];
     }
 
     /**
      * Query the list of Super Representatives
      *
      * @return array
-    */
+     * @throws TronException
+     */
     public function listSuperRepresentatives(): array
     {
-        return $this->fullNode->request('wallet/listwitnesses')['witnesses'];
+        return $this->manager->request('wallet/listwitnesses')['witnesses'];
     }
 
     /**
@@ -1033,13 +976,13 @@ class Tron implements TronInterface
         }
 
         if(!$limit) {
-            return $this->fullNode->request('wallet/getassetissuelist')['assetIssue'];
+            return $this->manager->request('wallet/getassetissuelist')['assetIssue'];
         }
 
-        return $this->fullNode->request('wallet/getpaginatedassetissuelist', [
+        return $this->manager->request('wallet/getpaginatedassetissuelist', [
             'offset'    =>  intval($offset),
             'limit'     =>  intval($limit)
-        ],'post')['assetIssue'];
+        ])['assetIssue'];
     }
 
     /**
@@ -1050,7 +993,7 @@ class Tron implements TronInterface
      */
     public function timeUntilNextVoteCycle(): float
     {
-        $num = $this->fullNode->request('wallet/getnextmaintenancetime')['num'];
+        $num = $this->manager->request('wallet/getnextmaintenancetime')['num'];
 
         if($num == -1) {
             throw new TronException('Failed to get time until next vote cycle');
@@ -1065,6 +1008,7 @@ class Tron implements TronInterface
      * @param string $address
      * @param bool $hex
      * @return array
+     * @throws TronException
      */
     public function validateAddress(string $address = null, bool $hex = false): array
     {
@@ -1072,9 +1016,9 @@ class Tron implements TronInterface
         if($hex) {
             $address = $this->toHex($address);
         }
-        return $this->fullNode->request('wallet/validateaddress', [
+        return $this->manager->request('wallet/validateaddress', [
             'address'   =>  $address
-        ],'post');
+        ]);
     }
 
     /**
@@ -1111,24 +1055,25 @@ class Tron implements TronInterface
             throw new TronException('call_value can only equal to 0 if contract type isn‘t payable');
         }
 
-        return $this->fullNode->request('wallet/deploycontract', [
+        return $this->manager->request('wallet/deploycontract', [
             'owner_address' =>  $this->toHex($address),
             'fee_limit'     =>  $feeLimit,
             'call_value'    =>  $callValue,
             'consume_user_resource_percent' =>  $bandwidthLimit,
             'abi'           =>  $abi,
             'bytecode'      =>  $bytecode
-        ],'post');
+        ]);
     }
 
     /**
      * Get a list of exchanges
      *
      * @return array
-    */
+     * @throws TronException
+     */
     public function listExchanges()
     {
-        return $this->fullNode->request('/wallet/listexchanges', [], 'post');
+        return $this->manager->request('/wallet/listexchanges', []);
     }
 
     /**
@@ -1136,20 +1081,22 @@ class Tron implements TronInterface
      *
      * @param string $address
      * @return array
+     * @throws TronException
      */
     public function getAccountResources(string $address = null)
     {
         $address = (!is_null($address) ? $address : $this->address);
 
-        return $this->fullNode->request('/wallet/getaccountresource', [
+        return $this->manager->request('/wallet/getaccountresource', [
            'address' =>  $this->toHex($address)
-        ], 'post');
+        ]);
     }
 
     /**
      * Create a new account
      *
      * @return array
+     * @throws TronException
      */
     public function createAccount(): array
     {
@@ -1160,10 +1107,11 @@ class Tron implements TronInterface
      * Generate new address
      *
      * @return array
-    */
+     * @throws TronException
+     */
     public function generateAddress(): array
     {
-        return $this->fullNode->request('wallet/generateaddress');
+        return $this->manager->request('wallet/generateaddress');
     }
 
     /**
@@ -1174,18 +1122,5 @@ class Tron implements TronInterface
      */
     public function toUtf8($str): string {
         return pack('H*', $str);
-    }
-
-    /**
-     * Check all connected nodes
-     *
-     * @return array
-    */
-    public function isConnected(): array
-    {
-        return [
-            'fullNode'      =>  $this->fullNode->isConnected(),
-            'solidityNode'  =>  $this->solidityNode->isConnected()
-        ];
     }
 }

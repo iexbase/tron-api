@@ -101,7 +101,13 @@ class HttpProvider implements HttpProviderInterface
     public function isConnected() : bool
     {
         $response = $this->request($this->statusPage);
-        return (array_key_exists('blockID', $response) ? true : false);
+
+        if(array_key_exists('blockID', $response)) {
+            return true;
+        } elseif(array_key_exists('status', $response)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -166,7 +172,11 @@ class HttpProvider implements HttpProviderInterface
     {
         $decodedBody = json_decode($stream->getContents(),true);
 
-        if ($decodedBody == null or !is_array($decodedBody)) {
+        if((string)$stream == 'OK') {
+            $decodedBody = [
+                'status'    =>  1
+            ];
+        }elseif ($decodedBody == null or !is_array($decodedBody)) {
             $decodedBody = [];
         }
 

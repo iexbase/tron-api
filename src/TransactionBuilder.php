@@ -1,7 +1,6 @@
 <?php
 namespace IEXBase\TronAPI;
 
-
 use IEXBase\TronAPI\Exception\TronException;
 
 class TransactionBuilder
@@ -46,11 +45,11 @@ class TransactionBuilder
             throw new TronException('Cannot transfer TRX to the same account');
         }
 
-        $response = $this->tron->getFullNode()->request('wallet/createtransaction', [
+        $response = $this->tron->getManager()->request('wallet/createtransaction', [
             'to_address' => $to,
             'owner_address' => $from,
             'amount' => $this->tron->toTron($amount),
-        ], 'post');
+        ]);
 
         return $response;
     }
@@ -79,12 +78,12 @@ class TransactionBuilder
             throw new TronException('Cannot transfer tokens to the same account');
         }
 
-        $transfer = $this->tron->getFullNode()->request('wallet/transferasset', [
+        $transfer = $this->tron->getManager()->request('wallet/transferasset', [
             'owner_address' => $this->tron->toHex($from),
             'to_address' => $this->tron->toHex($to),
             'asset_name' => $this->tron->stringUtf8toHex($tokenID),
             'amount' => intval($amount)
-        ], 'post');
+        ]);
 
         if (array_key_exists('Error', $transfer)) {
             throw new TronException($transfer['Error']);
@@ -112,12 +111,12 @@ class TransactionBuilder
             throw new TronException('Invalid amount provided');
         }
 
-        $purchase = $this->tron->getFullNode()->request('wallet/participateassetissue', [
+        $purchase = $this->tron->getManager()->request('wallet/participateassetissue', [
             'to_address' => $this->tron->toHex($issuerAddress),
             'owner_address' => $this->tron->toHex($buyer),
             'asset_name' => $this->tron->stringUtf8toHex($tokenID),
             'amount' => $this->tron->toTron($amount)
-        ], 'post');
+        ]);
 
         if (array_key_exists('Error', $purchase)) {
             throw new TronException($purchase['Error']);
@@ -150,12 +149,12 @@ class TransactionBuilder
             throw new TronException('Invalid duration provided, minimum of 3 days');
         }
 
-        return $this->tron->getFullNode()->request('wallet/freezebalance', [
+        return $this->tron->getManager()->request('wallet/freezebalance', [
             'owner_address' => $this->tron->toHex($address),
             'frozen_balance' => $this->tron->toTron($amount),
             'frozen_duration' => $duration,
             'resource' => $resource
-        ], 'post');
+        ]);
     }
 
     /**
@@ -173,10 +172,10 @@ class TransactionBuilder
             throw new TronException('Invalid resource provided: Expected "BANDWIDTH" or "ENERGY"');
         }
 
-        return $this->tron->getFullNode()->request('wallet/unfreezebalance', [
+        return $this->tron->getManager()->request('wallet/unfreezebalance', [
             'owner_address' =>  $this->tron->toHex($owner_address),
             'resource' => $resource
-        ],'post');
+        ]);
     }
 
     /**
@@ -188,9 +187,9 @@ class TransactionBuilder
      */
     public function withdrawBlockRewards($owner_address = null)
     {
-        $withdraw =  $this->tron->getFullNode()->request('wallet/withdrawbalance', [
+        $withdraw =  $this->tron->getManager()->request('wallet/withdrawbalance', [
             'owner_address' =>  $this->tron->toHex($owner_address)
-        ],'post');
+        ]);
 
         if (array_key_exists('Error', $withdraw)) {
             throw new TronException($withdraw['Error']);
@@ -219,14 +218,12 @@ class TransactionBuilder
             throw new TronException('Invalid free bandwidth limit provided');
         }
 
-        return $this->tron->getFullNode()->request('wallet/updateasset', [
+        return $this->tron->getManager()->request('wallet/updateasset', [
             'owner_address'      =>  $this->tron->toHex($address),
             'description'        =>  $this->tron->stringUtf8toHex($description),
             'url'               =>  $this->tron->stringUtf8toHex($url),
             'new_limit'         =>  intval($freeBandwidth),
             'new_public_limit'  =>  intval($freeBandwidthLimit)
-        ],'post');
-
-
+        ]);
     }
 }
