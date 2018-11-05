@@ -779,11 +779,6 @@ class Tron implements TronInterface
             'amount'        =>  intval($amount)
         ],'post');
 
-        echo '<pre>';
-            print_r($transfer);
-        echo '</pre>';
-
-        exit;
         $signedTransaction = $this->signTransaction($transfer);
         $response = $this->sendRawTransaction($signedTransaction);
 
