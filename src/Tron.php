@@ -40,13 +40,6 @@ class Tron implements TronInterface
     protected $fullNode = 'https://api.trongrid.io';
 
     /**
-     * TRON Server Node
-     *
-     * @var HttpProviderInterface|string
-    */
-    protected $tronNode = 'https://server.tron.network';
-
-    /**
      * Solidity URL Node
      *
      * @var HttpProviderInterface|string
@@ -101,11 +94,9 @@ class Tron implements TronInterface
             $solidityNode = new HttpProvider((string)$this->solidityNode);
         }
 
-        $tronNode = new HttpProvider((string)$this->tronNode);
 
         $this->setFullNode($fullNode);
         $this->setSolidityNode($solidityNode);
-        $this->setTronNode($tronNode);
 
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
@@ -166,23 +157,6 @@ class Tron implements TronInterface
 
         $this->solidityNode = $provider;
         $this->solidityNode->setStatusPage('walletsolidity/getnowblock');
-    }
-
-    /**
-     * Enter the link to the server node
-     *
-     * @param $provider
-     *
-     * @return void | string
-     * @throws TronException
-     */
-    public function setTronNode($provider): void
-    {
-        if(!$this->isValidProvider($provider)) {
-            throw new TronException('Invalid tron node provided');
-        }
-
-        $this->tronNode = $provider;
     }
 
     /**
@@ -255,8 +229,7 @@ class Tron implements TronInterface
     {
         return [
             'fullNode'      =>  $this->fullNode,
-            'solidityNode'  =>  $this->solidityNode,
-            'tronNode'      =>  $this->tronNode
+            'solidityNode'  =>  $this->solidityNode
         ];
     }
 
@@ -1107,26 +1080,6 @@ class Tron implements TronInterface
     public function generateAddress(): array
     {
         return $this->fullNode->request('wallet/generateaddress');
-    }
-
-    /**
-     * Get Balance Info
-     *
-     * @return array
-     */
-    public function getBalanceInfo(): array
-    {
-        return $this->tronNode->request('api/v2/node/balance_info');
-    }
-
-    /**
-     * Get the node map
-     *
-     * @return array
-     */
-    public function getNodeMap(): array
-    {
-        return $this->tronNode->request('api/v2/node/nodemap');
     }
 
     /**
