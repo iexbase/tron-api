@@ -311,6 +311,22 @@ class Tron implements TronInterface
         return $this->eventServer->request("event/contract/{$routeParams}?since={$sinceTimestamp}");
     }
 
+
+    /**
+     * Will return all events within a transactionID.
+     *
+     * @param string $transactionID
+     * @return array
+     * @throws TronException
+     */
+    public function getEventByTransactionID(string $transactionID)
+    {
+        if (!$this->isValidProvider($this->eventServer)) {
+            throw new TronException('No event server configured');
+        }
+        return $this->eventServer->request("event/transaction/{$transactionID}");
+    }
+
     /**
      * Get block details using HashString or blockNumber
      *
