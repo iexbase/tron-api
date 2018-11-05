@@ -285,7 +285,7 @@ class Tron implements TronInterface
      */
     public function getEventResult($contractAddress, int $sinceTimestamp = 0, string $eventName = null, int $blockNumber = 0)
     {
-        if (!$this->eventServer) {
+        if (!$this->isValidProvider($this->eventServer)) {
             throw new TronException('No event server configured');
         }
 
@@ -324,6 +324,7 @@ class Tron implements TronInterface
         if (!$this->isValidProvider($this->eventServer)) {
             throw new TronException('No event server configured');
         }
+
         return $this->eventServer->request("event/transaction/{$transactionID}");
     }
 
