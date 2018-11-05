@@ -69,14 +69,13 @@ class Utils
     }
 
     /**
-     * isHex
+     * Check if the string is a 16th notation
      *
-     * @param string $value
+     * @param $str
      * @return bool
      */
-    public static function isHex($value)
-    {
-        return (is_string($value) && preg_match('/^(0x)?[a-f0-9]*$/', $value) === 1);
+    public static function isHex($str) : bool {
+        return is_string($str) && !is_nan(intval($str,16));
     }
 
     /**

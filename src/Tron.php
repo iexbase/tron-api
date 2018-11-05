@@ -354,7 +354,6 @@ class Tron implements TronInterface
         if(Utils::isHex($block)) {
             return $this->getBlockByHash($block);
         }
-
         return $this->getBlockByNumber($block);
     }
 
