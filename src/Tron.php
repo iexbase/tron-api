@@ -43,8 +43,15 @@ class Tron implements TronInterface
      * Solidity URL Node
      *
      * @var HttpProviderInterface|string
-    */
-    protected $solidityNode;
+     */
+    protected $solidityNode = 'https://api.trongrid.io';
+
+    /**
+     * Event Server Url
+     *
+     * @var HttpProviderInterface|string
+     */
+    protected $eventServer = 'https://api.trongrid.io';
 
     /**
      * Default Address
@@ -79,11 +86,13 @@ class Tron implements TronInterface
      *
      * @param HttpProviderInterface $fullNode
      * @param HttpProviderInterface $solidityNode
+     * @param HttpProviderInterface|null $eventServer
      * @param string $privateKey
      * @throws TronException
      */
     public function __construct(?HttpProviderInterface $fullNode = null,
                                 ?HttpProviderInterface $solidityNode = null,
+                                ?HttpProviderInterface $eventServer = null,
                                 string $privateKey = null)
     {
         if(!$fullNode instanceof HttpProviderInterface) {
@@ -94,9 +103,13 @@ class Tron implements TronInterface
             $solidityNode = new HttpProvider((string)$this->solidityNode);
         }
 
+        if(!$eventServer instanceof HttpProviderInterface) {
+            $eventServer = new HttpProvider((string)$this->eventServer);
+        }
 
         $this->setFullNode($fullNode);
         $this->setSolidityNode($solidityNode);
+        $this->setEventServer($eventServer);
 
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
@@ -157,6 +170,23 @@ class Tron implements TronInterface
 
         $this->solidityNode = $provider;
         $this->solidityNode->setStatusPage('walletsolidity/getnowblock');
+    }
+
+    /**
+     * Enter the link to the event server
+     * @param $provider
+     *
+     * @return void | string
+     * @throws TronException
+     */
+    public function setEventServer($provider): void
+    {
+        if(!$this->isValidProvider($provider)) {
+            throw new TronException('Invalid solidity node provided');
+        }
+
+        $this->eventServer = $provider;
+        $this->eventServer->setStatusPage('healthcheck');
     }
 
     /**
@@ -241,6 +271,44 @@ class Tron implements TronInterface
     public function getCurrentBlock(): array
     {
         return $this->fullNode->request('wallet/getnowblock');
+    }
+
+    /**
+     * Will return all events matching the filters.
+     *
+     * @param $contractAddress
+     * @param int $sinceTimestamp
+     * @param string|null $eventName
+     * @param int $blockNumber
+     * @return array
+     * @throws TronException
+     */
+    public function getEventResult($contractAddress, int $sinceTimestamp = 0, string $eventName = null, int $blockNumber = 0)
+    {
+        if (!$this->eventServer) {
+            throw new TronException('No event server configured');
+        }
+
+        $routeParams = [];
+        if($eventName && !$contractAddress) {
+            throw new TronException('Usage of event name filtering requires a contract address');
+        }
+
+        if($blockNumber && !$eventName)
+            throw new TronException('Usage of block number filtering requires an event name');
+
+        if($contractAddress) {
+            array_push($routeParams, $contractAddress);
+        }
+        if($eventName) {
+            array_push($routeParams, $eventName);
+        }
+        if($blockNumber) {
+            array_push($routeParams, $blockNumber);
+        }
+
+        $routeParams = implode('/', $routeParams);
+        return $this->eventServer->request("event/contract/{$routeParams}?since={$sinceTimestamp}");
     }
 
     /**
