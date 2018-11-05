@@ -544,7 +544,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    protected function createTransaction(string $from, string $to, float $amount): array
+    public function createTransaction(string $from, string $to, float $amount): array
     {
         if(!is_float($amount) || $amount < 0) {
             throw new TronException('Invalid amount provided');
@@ -575,7 +575,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    protected function signTransaction($transaction, string $message = null): array
+    public function signTransaction($transaction, string $message = null): array
     {
         if(!$this->privateKey) {
             throw new TronException('Missing private key');
@@ -606,7 +606,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    protected function sendRawTransaction($signedTransaction): array
+    public function sendRawTransaction($signedTransaction): array
     {
         if(!is_array($signedTransaction)) {
             throw new TronException('Invalid transaction provided');
