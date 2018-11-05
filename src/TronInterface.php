@@ -91,44 +91,6 @@ interface TronInterface
      */
     public function applyForSuperRepresentative(string $address, string $url);
 
-    /**
-     * Transfer Token
-     *
-     * @param $from
-     * @param $to
-     * @param $assetID
-     * @param $amount
-     * @return array
-     */
-    public function createSendAssetTransaction($from, $to, $assetID, $amount);
-
-    /**
-     * Create address from a specified password string (NOT PRIVATE KEY)
-     *
-     * @param $password
-     * @return array
-     */
-    public function createAddressWithPassword(string $password);
-
-    /**
-     * Freezes an amount of TRX.
-     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
-     *
-     * @param string $address
-     * @param float $amount
-     * @param int $duration
-     * @return array
-     */
-    public function createFreezeBalanceTransaction(string $address, float $amount, int $duration = 3);
-
-    /**
-     * Unfreeze TRX that has passed the minimum freeze duration.
-     * Unfreezing will remove bandwidth and TRON Power.
-     *
-     * @param $address
-     * @return array
-     */
-    public function createUnfreezeBalanceTransaction(string $address);
 
     /**
      * Get block details using HashString or blockNumber

@@ -75,6 +75,13 @@ class Tron implements TronInterface
     protected $defaultBlock = false;
 
     /**
+     * Transaction Builder
+     *
+     * @var TransactionBuilder
+    */
+    protected $transactionBuilder;
+
+    /**
      * Create a new Tron object
      *
      * @param HttpProviderInterface $fullNode
@@ -103,6 +110,8 @@ class Tron implements TronInterface
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
         }
+
+        $this->transactionBuilder = new TransactionBuilder($this);
     }
 
     /**
@@ -114,6 +123,10 @@ class Tron implements TronInterface
     public function isValidProvider($provider): bool
     {
         return ($provider instanceof HttpProviderInterface);
+    }
+
+    public function getFullNode() {
+        return $this->fullNode;
     }
 
     /**
@@ -132,6 +145,10 @@ class Tron implements TronInterface
 
         $this->fullNode = $provider;
         $this->fullNode->setStatusPage('wallet/getnowblock');
+    }
+
+    public function getSolidityNode() {
+        return $this->solidityNode;
     }
 
     /**
@@ -309,9 +326,14 @@ class Tron implements TronInterface
             throw new TronException('Invalid block number provided');
         }
 
-        return $this->fullNode->request('wallet/getblockbynum', [
+        $response = $this->fullNode->request('wallet/getblockbynum', [
             'num'   =>  intval($blockID)
         ],'post');
+
+        if (empty($response)) {
+            throw new TronException('Block not found');
+        }
+        return $response;
     }
 
     /**
@@ -324,7 +346,6 @@ class Tron implements TronInterface
     public function getBlockTransactionCount($block): int
     {
         $transaction = $this->getBlock($block)['transactions'];
-
         if(!$transaction) {
             return 0;
         }
@@ -425,7 +446,7 @@ class Tron implements TronInterface
     {
         $address = (!is_null($address) ? $address : $this->address);
 
-        return $this->fullNode->request('wallet/getaccount', [
+        return $this->fullNode->request('walletsolidity/getaccount', [
             'address'   =>  $this->toHex($address)
         ],'post');
     }
@@ -439,7 +460,6 @@ class Tron implements TronInterface
      */
     public function getBalance(string $address = null, bool $fromTron = false): float
     {
-        $address = (!is_null($address) ? $address : $this->address);
         $account = $this->getAccount($address);
 
         if(!array_key_exists('balance', $account)) {
@@ -460,7 +480,6 @@ class Tron implements TronInterface
     public function getBandwidth(string $address = null)
     {
         $address = (!is_null($address) ? $address : $this->address);
-
         return $this->fullNode->request('wallet/getaccountnet', [
             'address'   =>  $this->toHex($address)
         ],'post');
@@ -527,43 +546,11 @@ class Tron implements TronInterface
             $from = $this->address;
         }
 
-        $transaction = $this->createTransaction($from, $to, $amount);
+        $transaction = $this->transactionBuilder->sendTrx($to, $amount, $from);
         $signedTransaction = $this->signTransaction($transaction, $message);
         $response = $this->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
-    }
-
-    /**
-     * Creates a transaction of transfer.
-     * If the recipient address does not exist, a corresponding account will be created on the blockchain.
-     *
-     * @param string $from
-     * @param string $to
-     * @param float $amount
-     * @return array
-     * @throws TronException
-     */
-    public function createTransaction(string $from, string $to, float $amount): array
-    {
-        if(!is_float($amount) || $amount < 0) {
-            throw new TronException('Invalid amount provided');
-        }
-
-        $to = $this->toHex($to);
-        $from = $this->toHex($from);
-
-        if($from === $to) {
-            throw new TronException('Cannot transfer TRX to the same account');
-        }
-        
-        $response = $this->fullNode->request('wallet/createtransaction', [
-            'to_address'    =>  $to,
-            'owner_address' =>  $from,
-            'amount'        =>  $this->toTron($amount),
-        ], 'post');
-
-        return $response;
     }
 
     /**
@@ -642,17 +629,6 @@ class Tron implements TronInterface
         $response = $this->sendRawTransaction($signedTransaction);
 
         return $response;
-    }
-
-    /**
-     * Transfer Token (option 2)
-     *
-     * @param array $args
-     * @return array
-     * @throws TronException
-     */
-    public function sendToken(...$args): array  {
-        return $this->createSendAssetTransaction(...$args);
     }
 
     /**
@@ -757,28 +733,13 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function createSendAssetTransaction($to, $amount, $tokenID, $from = null)
+    public function sendToken($to, $amount, $tokenID, $from = null)
     {
         if($from == null) {
             $from = $this->address;
         }
 
-        if (!is_integer($amount) or $amount <= 0) {
-            throw new TronException('Invalid amount provided');
-        }
-
-        if (!is_string($tokenID)) {
-            throw new TronException('Invalid token ID provided');
-        }
-
-
-        $transfer =  $this->fullNode->request('wallet/transferasset', [
-            'owner_address' =>  $this->toHex($from),
-            'to_address'    =>  $this->toHex($to),
-            'asset_name'    =>  $this->stringUtf8toHex($tokenID),
-            'amount'        =>  intval($amount)
-        ],'post');
-
+        $transfer = $this->transactionBuilder->sendToken($to, $amount, $tokenID, $from);
         $signedTransaction = $this->signTransaction($transfer);
         $response = $this->sendRawTransaction($signedTransaction);
 
@@ -786,114 +747,119 @@ class Tron implements TronInterface
     }
 
     /**
-     * Create address from a specified password string (NOT PRIVATE KEY)
-     *
-     * @param $password
-     * @return array
-     */
-    public function createAddressWithPassword(string $password): array
-    {
-        return $this->fullNode->request('wallet/createaddress', [
-            'value' =>  $this->stringUtf8toHex($password)
-        ],'post');
-    }
-
-    /**
      * Purchase a Token
-     *
-     * @param $tokenIssuer
-     * @param $address
+     * @param $issuerAddress
+     * @param $tokenID
      * @param $amount
-     * @param $assetID
+     * @param null $buyer
      * @return array
+     * @throws TronException
      */
-    public function createPurchaseAssetTransaction($tokenIssuer, $address, $amount, $assetID)
+    public function purchaseToken($issuerAddress, $tokenID, $amount, $buyer = null)
     {
-        return $this->fullNode->request('wallet/participateassetissue', [
-            'to_address'    =>  $this->toHex($tokenIssuer),
-            'owner_address' =>  $this->toHex($address),
-            'asset_name'    =>  $this->stringUtf8toHex($assetID),
-            'amount'        =>  $this->toTron($amount)
-        ],'post');
+        if($buyer == null) {
+            $buyer = $this->address;
+        }
+
+        $purchase = $this->transactionBuilder->purchaseToken($issuerAddress, $tokenID, $amount, $buyer);
+        $signedTransaction = $this->signTransaction($purchase);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
     }
 
     /**
      * Freezes an amount of TRX.
      * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
      *
-     * @param string $address
      * @param float $amount
      * @param int $duration
+     * @param string $resource
+     * @param string $owner_address
      * @return array
+     * @throws TronException
      */
-    public function createFreezeBalanceTransaction(string $address, float $amount, int $duration = 3)
+    public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $owner_address = null)
     {
-        return $this->fullNode->request('wallet/freezebalance', [
-            'owner_address'     =>  $this->toHex($address),
-            'frozen_balance'    =>  $this->toTron($amount),
-            'frozen_duration'   =>  $duration
-        ],'post');
+        if($owner_address == null) {
+            $owner_address = $this->address;
+        }
+
+        $freeze = $this->transactionBuilder->freezeBalance($amount, $duration, $resource, $owner_address);
+        $signedTransaction = $this->signTransaction($freeze);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
     }
 
     /**
      * Unfreeze TRX that has passed the minimum freeze duration.
      * Unfreezing will remove bandwidth and TRON Power.
      *
-     * @param string $address
+     * @param string $resource
+     * @param string $owner_address
      * @return array
+     * @throws TronException
      */
-    public function createUnfreezeBalanceTransaction(string $address)
+    public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address = null)
     {
-        return $this->fullNode->request('wallet/unfreezebalance', [
-            'owner_address' =>  $this->toHex($address)
-        ],'post');
-    }
+        if($owner_address == null) {
+            $owner_address = $this->address;
+        }
 
-    /**
-     * Unfreeze a token that has passed the minimum freeze duration.
-     *
-     * @param $address
-     * @return array
-     */
-    public function createUnfreezeAssetTransaction(string $address)
-    {
-        return $this->fullNode->request('wallet/unfreezeasset', [
-            'owner_address' =>  $this->toHex($address)
-        ],'post');
+        $unfreeze = $this->transactionBuilder->unfreezeBalance($resource, $owner_address);
+        $signedTransaction = $this->signTransaction($unfreeze);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
     }
 
     /**
      * Withdraw Super Representative rewards, useable every 24 hours.
      *
-     * @param string $address
+     * @param string $owner_address
      * @return array
+     * @throws TronException
      */
-    public function createWithdrawBlockRewardTransaction(string $address)
+    public function withdrawBlockRewards(string $owner_address = null)
     {
-        return $this->fullNode->request('wallet/withdrawbalance', [
-            'owner_address' =>  $this->toHex($address)
-        ],'post');
+        if($owner_address == null) {
+            $owner_address = $this->address;
+        }
+
+        $withdraw = $this->transactionBuilder->withdrawBlockRewards($owner_address);
+        $signedTransaction = $this->signTransaction($withdraw);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
     }
 
     /**
      * Update a Token's information
      *
-     * @param $address
-     * @param $description
-     * @param $url
-     * @param int $bandwidthLimit
+     * @param string $description
+     * @param string $url
+     * @param int $freeBandwidth
      * @param int $freeBandwidthLimit
+     * @param $owner_address
      * @return array
+     * @throws TronException
      */
-    public function createUpdateAssetTransaction($address, $description, $url, $bandwidthLimit = 0, $freeBandwidthLimit = 0)
+    public function updateToken(string $description,
+                                string $url,
+                                int $freeBandwidth = 0,
+                                int $freeBandwidthLimit = 0,
+                                string $owner_address = null)
     {
-        return $this->fullNode->request('wallet/updateasset', [
-           'owner_address'      =>  $this->toHex($address),
-           'description'        =>  $this->stringUtf8toHex($description),
-            'url'               =>  $this->stringUtf8toHex($url),
-            'new_limit'         =>  $bandwidthLimit,
-            'new_public_limit'  =>  $freeBandwidthLimit
-        ],'post');
+        if($owner_address == null) {
+            $owner_address = $this->address;
+        }
+
+        $withdraw = $this->transactionBuilder->updateToken($description, $url, $freeBandwidth, $freeBandwidthLimit, $owner_address);
+        $signedTransaction = $this->signTransaction($withdraw);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
     }
 
     /**
@@ -904,7 +870,6 @@ class Tron implements TronInterface
     public function listNodes(): array
     {
         $nodes = $this->fullNode->request('wallet/listnodes');
-
         return array_map(function($item) {
             $address = $item['address'];
 
@@ -922,7 +887,6 @@ class Tron implements TronInterface
     public function getTokensIssuedByAddress(string $address = null)
     {
         $address = (!is_null($address) ? $address : $this->address);
-
         return $this->fullNode->request('wallet/getassetissuebyaccount',[
             'address'   =>  $this->toHex($address)
         ],'post');
@@ -1098,26 +1062,6 @@ class Tron implements TronInterface
             'abi'           =>  $abi,
             'bytecode'      =>  $bytecode
         ],'post');
-    }
-
-    /**
-     * Freezes an amount of TRX.
-     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
-     *
-     * @param string $owner_address
-     * @param float $frozen_balance
-     * @param int $frozen_duration
-     * @param string $resource
-     * @return array
-     */
-    public function freezeBalance($owner_address, $frozen_balance, $frozen_duration, $resource='BANDWIDTH')
-    {
-        return $this->fullNode->request('wallet/freezebalance', [
-            'owner_address'     =>  $this->toHex($owner_address),
-            'frozen_balance'    =>  $frozen_balance,
-            'frozen_duration'   =>  $frozen_duration,
-            'resource'          =>  $resource
-        ], 'post');
     }
 
     /**
