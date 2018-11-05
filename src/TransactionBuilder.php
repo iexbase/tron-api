@@ -6,8 +6,18 @@ use IEXBase\TronAPI\Exception\TronException;
 
 class TransactionBuilder
 {
+    /**
+     * Base Tron object
+     *
+     * @var Tron
+    */
     protected $tron;
 
+    /**
+     * Create an TransactionBuilder object
+     *
+     * @param Tron $tron
+     */
     public function __construct(Tron $tron)
     {
         $this->tron = $tron;
