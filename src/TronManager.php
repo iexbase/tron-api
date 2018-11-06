@@ -9,6 +9,17 @@ use IEXBase\TronAPI\Provider\HttpProviderInterface;
 class TronManager
 {
     /**
+     * Default Nodes
+     *
+     * @var array
+    */
+    protected $defaultNodes = [
+        'fullNode'  =>  'https://api.trongrid.io',
+        'solidityNode'  =>  'https://api.trongrid.io',
+        'eventServer'   =>  'https://api.trongrid.io'
+    ];
+
+    /**
      * Providers
      *
      * @var array
@@ -42,7 +53,12 @@ class TronManager
         foreach ($providers as $key => $value)
         {
             //Do not skip the supplier is empty
-            if ($value == null) continue;
+            if ($value == null)
+            {
+                $this->providers[$key] = new HttpProvider(
+                    $this->defaultNodes[$key]
+                );
+            };
 
             if(is_string($providers[$key]))
                 $this->providers[$key] = new HttpProvider($value);
