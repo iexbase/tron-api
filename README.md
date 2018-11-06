@@ -26,23 +26,26 @@ The following versions of PHP are supported by this version.
 ```php
 use IEXBase\TronAPI\Tron;
 
-$fullNode = new HttpProvider('https://api.trongrid.io');
-$solidityNode = new HttpProvider('https://api.trongrid.io');
-$privateKey = '....';
+$fullNode = new \IEXBase\TronAPI\Provider\HttpProvider('https://api.trongrid.io');
+$solidityNode = new \IEXBase\TronAPI\Provider\HttpProvider('https://api.trongrid.io');
+$eventServer = new \IEXBase\TronAPI\Provider\HttpProvider('https://api.trongrid.io');
 
-$tron - new Tron($fullNode, 
-                 $solidityNode,
-                 $privateKey);
+try {
+    $tron = new \IEXBase\TronAPI\Tron($fullNode, $solidityNode, $eventServer);
+} catch (\IEXBase\TronAPI\Exception\TronException $e) {
+    exit($e->getMessage());
+}
+
 
 $this->setAddress('..');
 //Balance
 $tron->getBalance(null, true);
 
 // Transfer Trx
-var_dump($tron->sendTransaction('from', 'to', 1.5));
+var_dump($tron->send('to', 1.5));
 
 //Generate Address
-var_dump($tron->generateAddress());
+var_dump($tron->createAccount());
 
 //Get Last Blocks
 var_dump($tron->getLatestBlocks(2));
