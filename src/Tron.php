@@ -110,9 +110,18 @@ class Tron implements TronInterface
      * Get provider manager
      *
      * @return TronManager
-    */
+     */
     public function getManager(): TronManager {
         return $this->manager;
+    }
+
+    /**
+     * Get Transaction Builder
+     *
+     * @return TransactionBuilder
+     */
+    public function getTransactionBuilder(): TransactionBuilder {
+        return $this->transactionBuilder;
     }
 
     /**
@@ -197,8 +206,18 @@ class Tron implements TronInterface
      * Get customized provider data
      *
      * @return array
-    */
+     */
     public function providers(): array
+    {
+        return $this->manager->getProviders();
+    }
+
+    /**
+     * Check Connection Providers
+     *
+     * @return array
+     */
+    public function isConnected(): array
     {
         return $this->manager->isConnected();
     }

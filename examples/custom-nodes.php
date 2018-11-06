@@ -6,12 +6,12 @@ use IEXBase\TronAPI\Tron;
 
 $fullNode = new HttpProvider('https://api.trongrid.io');
 $solidityNode = new HttpProvider('https://api.trongrid.io');
+$eventServer = new HttpProvider('https://api.trongrid.io');
 $privateKey = 'private_key';
 
 //Example 1
-$tron = new Tron($fullNode, $solidityNode, $privateKey);
-
-//Example 2
-$tron->setFullNode($fullNode);
-$tron->setSolidityNode($solidityNode);
-$tron->setPrivateKey($privateKey);
+try {
+    $tron = new Tron($fullNode, $solidityNode, $eventServer, $privateKey);
+} catch (\IEXBase\TronAPI\Exception\TronException $e) {
+    die($e->getMessage());
+}
