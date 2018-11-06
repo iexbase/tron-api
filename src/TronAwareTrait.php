@@ -58,6 +58,10 @@ trait TronAwareTrait
      */
     public function hexString2Address($sHexString)
     {
+        if(!ctype_xdigit($sHexString)) {
+            return $sHexString;
+        }
+
         if(strlen($sHexString) < 2 || (strlen($sHexString) & 1) != 0) {
             return '';
         }

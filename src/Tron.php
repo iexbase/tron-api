@@ -35,9 +35,12 @@ class Tron implements TronInterface
     /**
      * Default Address
      *
-     * @var string
+     * @var array
     */
-    protected $address;
+    protected $address = [
+        'base58'    =>  null,
+        'hex'       =>  null
+    ];
 
     /**
      * Private key
@@ -108,7 +111,7 @@ class Tron implements TronInterface
      *
      * @return TronManager
     */
-    public function getManager() :TronManager {
+    public function getManager(): TronManager {
         return $this->manager;
     }
 
@@ -171,15 +174,21 @@ class Tron implements TronInterface
      */
     public function setAddress(string $address): void
     {
-        $this->address = $address;
+        $_toHex = $this->address2HexString($address);
+        $_fromHex = $this->hexString2Address($address);
+
+        $this->address = [
+            'hex'       =>  $_toHex,
+            'base58'    =>  $_fromHex
+        ];
     }
 
     /**
      * Get account address
      *
-     * @return string
+     * @return array
     */
-    public function getAddress(): string
+    public function getAddress(): array
     {
         return $this->address;
     }
@@ -435,7 +444,7 @@ class Tron implements TronInterface
      */
     public function getAccount(string $address = null): array
     {
-        $address = (!is_null($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address['hex']);
 
         return $this->manager->request('walletsolidity/getaccount', [
             'address'   =>  $this->toHex($address)
@@ -472,7 +481,7 @@ class Tron implements TronInterface
      */
     public function getBandwidth(string $address = null)
     {
-        $address = (!is_null($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address['hex']);
         return $this->manager->request('wallet/getaccountnet', [
             'address'   =>  $this->toHex($address)
         ]);
@@ -537,7 +546,7 @@ class Tron implements TronInterface
     public function sendTransaction(string $to, float $amount, string $message= null, string $from = null): array
     {
         if (is_null($from)) {
-            $from = $this->address;
+            $from = $this->address['hex'];
         }
 
         $transaction = $this->transactionBuilder->sendTrx($to, $amount, $from);
@@ -612,7 +621,7 @@ class Tron implements TronInterface
      */
     public function changeAccountName(string $address = null, string $account_name)
     {
-        $address = (!is_null($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address['hex']);
 
         $transaction = $this->manager->request('wallet/updateaccount', [
             'account_name'  =>  $this->stringUtf8toHex($account_name),
@@ -730,10 +739,10 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendToken($to, $amount, $tokenID, $from = null)
+    public function sendToken(string $to, int $amount, string $tokenID, string $from = null)
     {
         if($from == null) {
-            $from = $this->address;
+            $from = $this->address['hex'];
         }
 
         $transfer = $this->transactionBuilder->sendToken($to, $amount, $tokenID, $from);
@@ -755,7 +764,7 @@ class Tron implements TronInterface
     public function purchaseToken($issuerAddress, $tokenID, $amount, $buyer = null)
     {
         if($buyer == null) {
-            $buyer = $this->address;
+            $buyer = $this->address['hex'];
         }
 
         $purchase = $this->transactionBuilder->purchaseToken($issuerAddress, $tokenID, $amount, $buyer);
@@ -779,7 +788,7 @@ class Tron implements TronInterface
     public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $owner_address = null)
     {
         if($owner_address == null) {
-            $owner_address = $this->address;
+            $owner_address = $this->address['hex'];
         }
 
         $freeze = $this->transactionBuilder->freezeBalance($amount, $duration, $resource, $owner_address);
@@ -801,7 +810,7 @@ class Tron implements TronInterface
     public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address = null)
     {
         if($owner_address == null) {
-            $owner_address = $this->address;
+            $owner_address = $this->address['hex'];
         }
 
         $unfreeze = $this->transactionBuilder->unfreezeBalance($resource, $owner_address);
@@ -821,7 +830,7 @@ class Tron implements TronInterface
     public function withdrawBlockRewards(string $owner_address = null)
     {
         if($owner_address == null) {
-            $owner_address = $this->address;
+            $owner_address = $this->address['hex'];
         }
 
         $withdraw = $this->transactionBuilder->withdrawBlockRewards($owner_address);
@@ -849,7 +858,7 @@ class Tron implements TronInterface
                                 string $owner_address = null)
     {
         if($owner_address == null) {
-            $owner_address = $this->address;
+            $owner_address = $this->address['hex'];
         }
 
         $withdraw = $this->transactionBuilder->updateToken($description, $url, $freeBandwidth, $freeBandwidthLimit, $owner_address);
@@ -884,7 +893,7 @@ class Tron implements TronInterface
      */
     public function getTokensIssuedByAddress(string $address = null)
     {
-        $address = (!is_null($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address['hex']);
         return $this->manager->request('wallet/getassetissuebyaccount',[
             'address'   =>  $this->toHex($address)
         ]);
@@ -1012,7 +1021,7 @@ class Tron implements TronInterface
      */
     public function validateAddress(string $address = null, bool $hex = false): array
     {
-        $address = (!is_null($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address['hex']);
         if($hex) {
             $address = $this->toHex($address);
         }
@@ -1085,7 +1094,7 @@ class Tron implements TronInterface
      */
     public function getAccountResources(string $address = null)
     {
-        $address = (!is_null($address) ? $address : $this->address);
+        $address = (!is_null($address) ? $address : $this->address['hex']);
 
         return $this->manager->request('/wallet/getaccountresource', [
            'address' =>  $this->toHex($address)

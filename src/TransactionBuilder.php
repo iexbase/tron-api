@@ -38,8 +38,8 @@ class TransactionBuilder
             throw new TronException('Invalid amount provided');
         }
 
-        $to = $this->tron->toHex($to);
-        $from = $this->tron->toHex($from);
+        $to = $this->tron->address2HexString($to);
+        $from = $this->tron->address2HexString($from);
 
         if ($from === $to) {
             throw new TronException('Cannot transfer TRX to the same account');
@@ -58,13 +58,13 @@ class TransactionBuilder
      * Transfer Token
      *
      * @param string $to
-     * @param float $amount
+     * @param int $amount
      * @param string $tokenID
      * @param string|null $from
      * @return array
      * @throws TronException
      */
-    public function sendToken(string $to, float $amount, string $tokenID, string $from)
+    public function sendToken(string $to, int $amount, string $tokenID, string $from)
     {
         if (!is_integer($amount) or $amount <= 0) {
             throw new TronException('Invalid amount provided');
@@ -79,8 +79,8 @@ class TransactionBuilder
         }
 
         $transfer = $this->tron->getManager()->request('wallet/transferasset', [
-            'owner_address' => $this->tron->toHex($from),
-            'to_address' => $this->tron->toHex($to),
+            'owner_address' => $this->tron->address2HexString($from),
+            'to_address' => $this->tron->address2HexString($to),
             'asset_name' => $this->tron->stringUtf8toHex($tokenID),
             'amount' => intval($amount)
         ]);
@@ -112,8 +112,8 @@ class TransactionBuilder
         }
 
         $purchase = $this->tron->getManager()->request('wallet/participateassetissue', [
-            'to_address' => $this->tron->toHex($issuerAddress),
-            'owner_address' => $this->tron->toHex($buyer),
+            'to_address' => $this->tron->address2HexString($issuerAddress),
+            'owner_address' => $this->tron->address2HexString($buyer),
             'asset_name' => $this->tron->stringUtf8toHex($tokenID),
             'amount' => $this->tron->toTron($amount)
         ]);
@@ -150,7 +150,7 @@ class TransactionBuilder
         }
 
         return $this->tron->getManager()->request('wallet/freezebalance', [
-            'owner_address' => $this->tron->toHex($address),
+            'owner_address' => $this->tron->address2HexString($address),
             'frozen_balance' => $this->tron->toTron($amount),
             'frozen_duration' => $duration,
             'resource' => $resource
@@ -173,7 +173,7 @@ class TransactionBuilder
         }
 
         return $this->tron->getManager()->request('wallet/unfreezebalance', [
-            'owner_address' =>  $this->tron->toHex($owner_address),
+            'owner_address' =>  $this->tron->address2HexString($owner_address),
             'resource' => $resource
         ]);
     }
@@ -188,7 +188,7 @@ class TransactionBuilder
     public function withdrawBlockRewards($owner_address = null)
     {
         $withdraw =  $this->tron->getManager()->request('wallet/withdrawbalance', [
-            'owner_address' =>  $this->tron->toHex($owner_address)
+            'owner_address' =>  $this->tron->address2HexString($owner_address)
         ]);
 
         if (array_key_exists('Error', $withdraw)) {
@@ -219,7 +219,7 @@ class TransactionBuilder
         }
 
         return $this->tron->getManager()->request('wallet/updateasset', [
-            'owner_address'      =>  $this->tron->toHex($address),
+            'owner_address'      =>  $this->tron->address2HexString($address),
             'description'        =>  $this->tron->stringUtf8toHex($description),
             'url'               =>  $this->tron->stringUtf8toHex($url),
             'new_limit'         =>  intval($freeBandwidth),
