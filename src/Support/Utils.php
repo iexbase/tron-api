@@ -106,11 +106,6 @@ class Utils
     {
         $decoded = Base58::decode($address);
 
-        echo '<pre>';
-            print_r($decoded);
-        echo '</pre>';
-        exit;
-
         $d1 = hash("sha256", substr($decoded,0,21), true);
         $d2 = hash("sha256", $d1, true);
 
