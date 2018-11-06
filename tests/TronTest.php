@@ -27,8 +27,8 @@ class TronTest extends TestCase
         $tron = new Tron();
         $tron->setAddress(self::ADDRESS_HEX);
 
-        $this->assertEquals($tron->getAddress(),self::ADDRESS_HEX);
-        $this->assertEquals($tron->fromHex($tron->getAddress()), self::ADDRESS_BASE58);
+        $this->assertEquals($tron->getAddress()['hex'],self::ADDRESS_HEX);
+        $this->assertEquals($tron->getAddress()['base58'], self::ADDRESS_BASE58);
     }
 
     public function test_setDefaultBlock()
