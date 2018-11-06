@@ -147,4 +147,39 @@ class Utils
         return $result;
     }
 
+    /**
+     *
+     * @throws Exception
+     */
+    public static function pubKeyToAddress($pubkey) {
+        return '41'. substr(Keccak::hash(substr(hex2bin($pubkey), 1), 256), 24);
+    }
+
+    /**
+     * Test if a string is prefixed with "0x".
+     *
+     * @param string $str
+     *   String to test prefix.
+     *
+     * @return bool
+     *   TRUE if string has "0x" prefix or FALSE.
+     */
+    public static function hasHexPrefix($str)
+    {
+        return substr($str, 0, 2) === '0x';
+    }
+
+    /**
+     * Remove Hex Prefix "0x".
+     *
+     * @param string $str
+     * @return string
+     */
+    public static function removeHexPrefix($str)
+    {
+        if (!self::hasHexPrefix($str)) {
+            return $str;
+        }
+        return substr($str, 2);
+    }
 }
