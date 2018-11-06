@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace IEXBase\TronAPI;
 
 use IEXBase\TronAPI\Support\Utils;
-use IEXBase\TronAPI\Provider\{HttpProvider, HttpProviderInterface};
+use IEXBase\TronAPI\Provider\HttpProviderInterface;
 use IEXBase\TronAPI\Exception\TronException;
 
 /**
@@ -54,7 +54,7 @@ class Tron implements TronInterface
      *
      * @var string|integer|bool
     */
-    protected $defaultBlock = false;
+    protected $defaultBlock = 'latest';
 
     /**
      * Transaction Builder

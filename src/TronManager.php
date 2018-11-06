@@ -3,8 +3,7 @@ namespace IEXBase\TronAPI;
 
 
 use IEXBase\TronAPI\Exception\TronException;
-use IEXBase\TronAPI\Provider\HttpProvider;
-use IEXBase\TronAPI\Provider\HttpProviderInterface;
+use IEXBase\TronAPI\Provider\{HttpProvider, HttpProviderInterface};
 
 class TronManager
 {

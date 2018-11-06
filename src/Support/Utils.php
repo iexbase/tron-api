@@ -1,6 +1,7 @@
 <?php
 namespace IEXBase\TronAPI\Support;
 
+use Exception;
 use InvalidArgumentException;
 
 class Utils
@@ -75,7 +76,7 @@ class Utils
      * @return bool
      */
     public static function isHex($str) : bool {
-        return is_string($str) && !is_nan(intval($str,16));
+        return is_string($str) and ctype_xdigit($str);
     }
 
     /**
@@ -94,6 +95,61 @@ class Utils
             $value = str_replace('0x', '', $value, $count);
         }
         return pack('H*', $value);
+    }
+
+    /**
+     * @param $address
+     * @return bool
+     * @throws Exception
+     */
+    public static function validate($address)
+    {
+        $decoded = Base58::decode($address);
+
+        echo '<pre>';
+            print_r($decoded);
+        echo '</pre>';
+        exit;
+
+        $d1 = hash("sha256", substr($decoded,0,21), true);
+        $d2 = hash("sha256", $d1, true);
+
+        if(substr_compare($decoded, $d2, 21, 4)){
+            throw new \Exception("bad digest");
+        }
+        return true;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function decodeBase58($input)
+    {
+        $alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+        $out = array_fill(0, 25, 0);
+        for($i=0;$i<strlen($input);$i++){
+            if(($p=strpos($alphabet, $input[$i]))===false){
+                throw new Exception("invalid character found");
+            }
+            $c = $p;
+            for ($j = 25; $j--; ) {
+                $c += (int)(58 * $out[$j]);
+                $out[$j] = (int)($c % 256);
+                $c /= 256;
+                $c = (int)$c;
+            }
+            if($c != 0){
+                throw new Exception("address too long");
+            }
+        }
+
+        $result = "";
+        foreach($out as $val){
+            $result .= chr($val);
+        }
+
+        return $result;
     }
 
 }
