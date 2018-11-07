@@ -12,7 +12,7 @@ try {
 }
 
 //option 1
-$tron->sendTransaction('to','to',0.1);
+$tron->sendTransaction('to',0.1, 'hello');
 
 //option 2
 $tron->send('to',0.1);
