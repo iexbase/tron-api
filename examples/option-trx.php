@@ -12,10 +12,10 @@ try {
 }
 
 //option 1
-$tron->sendTransaction('from','to',0.1);
+$tron->sendTransaction('to','to',0.1);
 
 //option 2
-$tron->send('from','to',0.1);
+$tron->send('to',0.1);
 
 //option 3
-$tron->sendTrx('from','to',0.1);
+$tron->sendTrx('to',0.1);
