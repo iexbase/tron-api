@@ -59,7 +59,7 @@ trait ManagesUniversal
      * @return array
      * @throws ErrorException
      */
-    public function sendOneToMany(string $from, array $to, $private_key = null, $isValid = false): array
+    public function sendOneToMany(array $to, $private_key = null, $isValid = false, string $from): array
     {
         if(!is_null($private_key)) {
             $this->privateKey = $private_key;
@@ -76,7 +76,8 @@ trait ManagesUniversal
             }
 
             array_push($this->attribute['one_to_many'],
-                $this->send($from, $item[0], $item[1]));
+                $this->send($item[0], $item[1], $from)
+            );
         }
 
         return $this->attribute['one_to_many'];
