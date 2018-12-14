@@ -463,10 +463,10 @@ class Tron implements TronInterface
      */
     public function getAccount(string $address = null): array
     {
-        $address = (!is_null($address) ? $address : $this->address['hex']);
+        $address = (!is_null($address) ? $this->toHex($address) : $this->address['hex']);
 
         return $this->manager->request('walletsolidity/getaccount', [
-            'address'   =>  $this->toHex($address)
+            'address'   =>  $address
         ]);
     }
 
@@ -500,9 +500,9 @@ class Tron implements TronInterface
      */
     public function getBandwidth(string $address = null)
     {
-        $address = (!is_null($address) ? $address : $this->address['hex']);
+        $address = (!is_null($address) ? $this->toHex($address) : $this->address['hex']);
         return $this->manager->request('wallet/getaccountnet', [
-            'address'   =>  $this->toHex($address)
+            'address'   =>  $address
         ]);
     }
 
@@ -912,9 +912,9 @@ class Tron implements TronInterface
      */
     public function getTokensIssuedByAddress(string $address = null)
     {
-        $address = (!is_null($address) ? $address : $this->address['hex']);
+        $address = (!is_null($address) ? $this->toHex($address) : $this->address['hex']);
         return $this->manager->request('wallet/getassetissuebyaccount',[
-            'address'   =>  $this->toHex($address)
+            'address'   =>  $address
         ]);
     }
 
