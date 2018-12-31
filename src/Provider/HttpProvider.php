@@ -74,6 +74,7 @@ class HttpProvider implements HttpProviderInterface
         $this->host = $host;
         $this->timeout = $timeout;
         $this->statusPage = $statusPage;
+        $this->headers = $headers;
 
         $this->httpClient = new Client([
             'base_uri'  =>  $host,
