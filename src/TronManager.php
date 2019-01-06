@@ -134,7 +134,7 @@ class TronManager
         if(in_array($split[0], ['walletsolidity', 'walletextension'])) {
             $response = $this->solidityNode()->request($url, $params, $method);
         } elseif(in_array($split[0], ['event'])) {
-            $response = $this->eventServer()->request($url, $params, $method);
+            $response = $this->eventServer()->request($url, $params, 'get');
         } else {
             $response = $this->fullNode()->request($url, $params, $method);
         }
