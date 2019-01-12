@@ -232,6 +232,56 @@ class TransactionBuilder
     }
 
     /**
+     * updateEnergyLimit
+     *
+     * @param string $contractAddress
+     * @param int $originEnergyLimit
+     * @param string $ownerAddress
+     * @return array
+     * @throws TronException
+     */
+    public function updateEnergyLimit(string $contractAddress, int $originEnergyLimit, string $ownerAddress)
+    {
+        $contractAddress = $this->tron->address2HexString($contractAddress);
+        $ownerAddress = $this->tron->address2HexString($ownerAddress);
+
+        if($originEnergyLimit < 0 || $originEnergyLimit > 10000000) {
+            throw new TronException('Invalid originEnergyLimit provided');
+        }
+
+        return $this->tron->getManager()->request('wallet/updateenergylimit', [
+            'owner_address' =>  $this->tron->address2HexString($ownerAddress),
+            'contract_address' => $this->tron->address2HexString($contractAddress),
+            'origin_energy_limit' => $originEnergyLimit
+        ]);
+    }
+
+    /**
+     * updateSetting
+     *
+     * @param string $contractAddress
+     * @param int $userFeePercentage
+     * @param string $ownerAddress
+     * @return array
+     * @throws TronException
+     */
+    public function updateSetting(string $contractAddress, int $userFeePercentage, string $ownerAddress)
+    {
+        $contractAddress = $this->tron->address2HexString($contractAddress);
+        $ownerAddress = $this->tron->address2HexString($ownerAddress);
+
+        if($userFeePercentage < 0 || $userFeePercentage > 1000) {
+            throw new TronException('Invalid userFeePercentage provided');
+        }
+
+        return $this->tron->getManager()->request('wallet/updatesetting', [
+            'owner_address' =>  $this->tron->address2HexString($ownerAddress),
+            'contract_address' => $this->tron->address2HexString($contractAddress),
+            'consume_user_resource_percent' => $userFeePercentage
+        ]);
+    }
+
+    /**
      * Triggers a contract
      *
      * @param mixed $abi
