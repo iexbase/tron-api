@@ -3,6 +3,10 @@ namespace IEXBase\TronAPI;
 
 use IEXBase\TronAPI\Exception\TronException;
 
+// Web3 plugin
+use Web3\Contracts\Ethabi;
+use Web3\Contracts\Types\{Address, Boolean, Bytes, DynamicBytes, Integer, Str, Uinteger};
+
 class TransactionBuilder
 {
     /**
@@ -225,5 +229,91 @@ class TransactionBuilder
             'new_limit'         =>  intval($freeBandwidth),
             'new_public_limit'  =>  intval($freeBandwidthLimit)
         ]);
+    }
+
+    /**
+     * Triggers a contract
+     *
+     * @param mixed $abi
+     * @param string $contract
+     * @param string $function
+     * @param array $params
+     * @param integer $feeLimit
+     * @param string $address
+     * @param int $callValue
+     * @param int $bandwidthLimit
+     *
+     * @return mixed
+     * @throws TronException
+     */
+    public function triggerSmartContract($abi,
+                                         $contract,
+                                         $function,
+                                         $params,
+                                         $feeLimit,
+                                         $address,
+                                         $callValue = 0,
+                                         $bandwidthLimit = 0)
+    {
+        $func_abi = [];
+        foreach($abi as $key =>$item) {
+            if($item['name'] === $function) {
+                $func_abi = $item;
+                break;
+            }
+        }
+
+        if(count($func_abi) === 0)
+            throw new TronException("Function $function not defined in ABI");
+
+        if(!is_array($params))
+            throw new TronException("Function params must be an array");
+
+        if(count($func_abi['inputs']) !== count($params))
+            throw new TronException("Count of params and abi inputs must be identical");
+
+        if($feeLimit > 1000000000)
+            throw new TronException('fee_limit must not be greater than 1000000000');
+
+
+        $inputs = array_map(function($item){ return $item['type']; },$func_abi['inputs']);
+        $signature = $func_abi['name'].'{';
+        if(count($inputs) > 0)
+            $signature .= implode(',',$inputs);
+        $signature .= '}';
+
+        $eth_abi = new Ethabi([
+            'address' => new Address,
+            'bool' => new Boolean,
+            'bytes' => new Bytes,
+            'dynamicBytes' => new DynamicBytes,
+            'int' => new Integer,
+            'string' => new Str,
+            'uint' => new Uinteger,
+        ]);
+        $parameters = substr($eth_abi->encodeParameters($func_abi, $params),2);
+
+        $result = $this->tron->getManager()->request('wallet/triggersmartcontract', [
+            'contract_address' => $contract,
+            'function_selector' => $signature,
+            'parameter' => $parameters,
+            'owner_address' =>  $address,
+            'fee_limit'     =>  $feeLimit,
+            'call_value'    =>  $callValue,
+            'consume_user_resource_percent' =>  $bandwidthLimit,
+        ]);
+
+        if(count($func_abi['outputs']) === 0) {
+            if($result['result']['result'])
+                return $result['transaction'];
+        }
+
+        if(!isset($result['constant_result']))
+        {
+            $message = isset($result['result']['message']) ?
+                $this->tron->hexString2Utf8($result['result']['message']) : '';
+            throw new TronException('Failed to execute. Error:'.$message);
+        }
+        return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
     }
 }
