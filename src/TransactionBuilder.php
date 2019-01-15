@@ -353,17 +353,13 @@ class TransactionBuilder
             'consume_user_resource_percent' =>  $bandwidthLimit,
         ]);
 
-        if(count($func_abi['outputs']) === 0) {
-            if($result['result']['result'])
-                return $result['transaction'];
+        if($result['result']['result']){
+            if(count($func_abi['outputs']) >= 0 && isset($result['constant_result'])){
+                return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
+            }
+            return $result['transaction'];
         }
-
-        if(!isset($result['constant_result']))
-        {
-            $message = isset($result['result']['message']) ?
-                $this->tron->hexString2Utf8($result['result']['message']) : '';
-            throw new TronException('Failed to execute. Error:'.$message);
-        }
-        return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
+        $message = isset($result['result']['message']) ? $this->hexString2Utf8($result['result']['message']) : '';
+        throw new TronException('Failed to execute. Error:'.$message);
     }
 }
