@@ -327,10 +327,10 @@ class TransactionBuilder
 
 
         $inputs = array_map(function($item){ return $item['type']; },$func_abi['inputs']);
-        $signature = $func_abi['name'].'{';
+        $signature = $func_abi['name']."(";
         if(count($inputs) > 0)
             $signature .= implode(',',$inputs);
-        $signature .= '}';
+        $signature .= ')';
 
         $eth_abi = new Ethabi([
             'address' => new Address,
