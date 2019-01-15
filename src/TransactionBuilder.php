@@ -359,7 +359,7 @@ class TransactionBuilder
             }
             return $result['transaction'];
         }
-        $message = isset($result['result']['message']) ? $this->hexString2Utf8($result['result']['message']) : '';
+        $message = isset($result['result']['message']) ? $this->tron->hexString2Utf8($result['result']['message']) : '';
         throw new TronException('Failed to execute. Error:'.$message);
     }
 }
