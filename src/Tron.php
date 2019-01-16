@@ -421,7 +421,9 @@ class Tron implements TronInterface
      */
     public function getTransactionInfo(string $transactionID): array
     {
-        return $this->manager->request("walletsolidity/gettransactioninfobyid?value={$transactionID}",[],'get');
+        return $this->manager->request('walletsolidity/gettransactioninfobyid', [
+            'value' =>  $transactionID
+        ]);
     }
 
     /**
