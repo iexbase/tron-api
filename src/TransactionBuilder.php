@@ -129,6 +129,116 @@ class TransactionBuilder
     }
 
     /**
+     * createToken
+     *
+     * @param array $options
+     * @param null $issuerAddress
+     * @return array
+     * @throws TronException
+     */
+    public function createToken($options = [], $issuerAddress = null)
+    {
+        $startDate = new \DateTime();
+        $startTimeStamp = $startDate->getTimestamp() * 1000;
+
+        // Create default parameters in case of their absence
+        if(!$options['totalSupply']) $options['totalSupply'] = 0;
+        if(!$options['trxRatio']) $options['trxRatio'] = 1;
+        if(!$options['tokenRatio']) $options['tokenRatio'] = 1;
+        if(!$options['freeBandwidth']) $options['freeBandwidth'] = 0;
+        if(!$options['freeBandwidthLimit']) $options['freeBandwidthLimit'] = 0;
+        if(!$options['frozenAmount']) $options['frozenAmount'] = 0;
+        if(!$options['frozenDuration']) $options['frozenDuration'] = 0;
+
+        if (is_null($issuerAddress)) {
+            $issuerAddress = $this->tron->address['hex'];
+        }
+
+        if(!$options['name'] or !is_string($options['name'])) {
+            throw new TronException('Invalid token name provided');
+        }
+
+        if(!$options['abbreviation'] or !is_string($options['abbreviation'])) {
+            throw new TronException('Invalid token abbreviation provided');
+        }
+
+        if(!is_integer($options['totalSupply']) or $options['totalSupply'] <= 0) {
+            throw new TronException('Invalid supply amount provided');
+        }
+
+        if(!is_integer($options['trxRatio']) or $options['trxRatio'] <= 0) {
+            throw new TronException('TRX ratio must be a positive integer');
+        }
+
+        if(!is_integer($options['saleStart']) or $options['saleStart'] <= $startTimeStamp) {
+            throw new TronException('Invalid sale start timestamp provided');
+        }
+
+        if(!is_integer($options['saleEnd']) or $options['saleEnd'] <= $options['saleStart']) {
+            throw new TronException('Invalid sale end timestamp provided');
+        }
+
+        if(!$options['description'] or !is_string($options['description'])) {
+            throw new TronException('Invalid token description provided');
+        }
+
+        if(!is_string($options['url']) || !filter_var($options['url'], FILTER_VALIDATE_URL)) {
+            throw new TronException('Invalid token url provided');
+        }
+
+        if(!is_integer($options['freeBandwidth']) || $options['freeBandwidth'] < 0) {
+            throw new TronException('Invalid free bandwidth amount provided');
+        }
+
+        if(!is_integer($options['freeBandwidthLimit']) || $options['freeBandwidthLimit '] < 0 ||
+            ($options['freeBandwidth'] && !$options['freeBandwidthLimit'])
+        ) {
+            throw new TronException('Invalid free bandwidth limit provided');
+        }
+
+        if(!is_integer($options['frozenAmount']) || $options['frozenAmount '] < 0 ||
+            (!$options['frozenDuration'] && $options['frozenAmount'])
+        ) {
+            throw new TronException('Invalid frozen supply provided');
+        }
+
+        if(!is_integer($options['frozenDuration']) || $options['frozenDuration '] < 0 ||
+            ($options['frozenDuration'] && !$options['frozenAmount'])
+        ) {
+            throw new TronException('Invalid frozen duration provided');
+        }
+
+        $data = [
+            'owner_address' => $this->tron->address2HexString($issuerAddress),
+            'name'  =>  $this->tron->stringUtf8toHex($options['name']),
+            'abbr'  =>   $this->tron->stringUtf8toHex($options['abbreviation']),
+            'description'   =>  $this->tron->stringUtf8toHex($options['description']),
+            'url'   =>  $this->tron->stringUtf8toHex($options['url']),
+            'total_supply'   =>  intval($options['totalSupply']),
+            'trx_num'   =>  intval($options['trxRatio']),
+            'num'   =>  intval($options['tokenRatio']),
+            'start_time'   =>  intval($options['saleStart']),
+            'end_time'   =>  intval($options['saleEnd']),
+            'free_asset_net_limit'  =>  intval($options['freeBandwidth']),
+            'public_free_asset_net_limit'   =>  intval($options['freeBandwidthLimit']),
+            'frozen_supply' =>  [
+                'frozen_amount' =>  intval($options['frozenAmount']),
+                'frozen_days' =>  intval($options['frozenDuration']),
+            ]
+        ];
+
+        if($options['precision'] && !is_nan(intval($options['precision']))) {
+            $data['precision'] = intval($options['precision']);
+        }
+
+        if($options['voteScore'] && !is_nan(intval($options['voteScore']))) {
+            $data['vote_score'] = intval($options['voteScore']);
+        }
+
+        return $this->tron->getManager()->request('wallet/createassetissue', $data);
+    }
+
+    /**
      * Freezes an amount of TRX.
      * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
      *
@@ -327,10 +437,10 @@ class TransactionBuilder
 
 
         $inputs = array_map(function($item){ return $item['type']; },$func_abi['inputs']);
-        $signature = $func_abi['name']."(";
+        $signature = $func_abi['name'].'{';
         if(count($inputs) > 0)
             $signature .= implode(',',$inputs);
-        $signature .= ')';
+        $signature .= '}';
 
         $eth_abi = new Ethabi([
             'address' => new Address,
@@ -353,13 +463,17 @@ class TransactionBuilder
             'consume_user_resource_percent' =>  $bandwidthLimit,
         ]);
 
-        if($result['result']['result']){
-            if(count($func_abi['outputs']) >= 0 && isset($result['constant_result'])){
-                return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
-            }
-            return $result['transaction'];
+        if(count($func_abi['outputs']) === 0) {
+            if($result['result']['result'])
+                return $result['transaction'];
         }
-        $message = isset($result['result']['message']) ? $this->tron->hexString2Utf8($result['result']['message']) : '';
-        throw new TronException('Failed to execute. Error:'.$message);
+
+        if(!isset($result['constant_result']))
+        {
+            $message = isset($result['result']['message']) ?
+                $this->tron->hexString2Utf8($result['result']['message']) : '';
+            throw new TronException('Failed to execute. Error:'.$message);
+        }
+        return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
     }
 }

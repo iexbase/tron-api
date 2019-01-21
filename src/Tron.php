@@ -37,7 +37,7 @@ class Tron implements TronInterface
      *
      * @var array
     */
-    protected $address = [
+    public $address = [
         'base58'    =>  null,
         'hex'       =>  null
     ];
