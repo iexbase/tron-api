@@ -395,11 +395,11 @@ class TransactionBuilder
      * Triggers a contract
      *
      * @param mixed $abi
-     * @param string $contract
+     * @param string $contract $tron->toHex('Txxxxx');
      * @param string $function
-     * @param array $params
+     * @param array $params array("0"=>$value);
      * @param integer $feeLimit
-     * @param string $address
+     * @param string $address $tron->toHex('Txxxxx');
      * @param int $callValue
      * @param int $bandwidthLimit
      *
@@ -437,10 +437,10 @@ class TransactionBuilder
 
 
         $inputs = array_map(function($item){ return $item['type']; },$func_abi['inputs']);
-        $signature = $func_abi['name'].'{';
+        $signature = $func_abi['name'].'(';
         if(count($inputs) > 0)
             $signature .= implode(',',$inputs);
-        $signature .= '}';
+        $signature .= ')';
 
         $eth_abi = new Ethabi([
             'address' => new Address,
