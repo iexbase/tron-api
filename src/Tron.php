@@ -1159,7 +1159,7 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getTokenByID(string $token_id)
+    public function getTokenByID(string $token_id): array
     {
         if(!is_string($token_id))
             throw new TronException('Invalid token ID provided');
