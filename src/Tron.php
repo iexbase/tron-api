@@ -1151,4 +1151,21 @@ class Tron implements TronInterface
     public function toUtf8($str): string {
         return pack('H*', $str);
     }
+
+    /**
+     * Query token by id.
+     *
+     * @param string $token_id
+     * @return array
+     * @throws TronException
+     */
+    public function getTokenByID(string $token_id): array
+    {
+        if(!is_string($token_id))
+            throw new TronException('Invalid token ID provided');
+
+        return $this->manager->request('/wallet/getassetissuebyid', [
+            'value' =>  $token_id
+        ]);
+    }
 }
