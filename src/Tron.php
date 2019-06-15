@@ -268,7 +268,7 @@ class Tron implements TronInterface
         }
 
         $routeParams = implode('/', $routeParams);
-        return $this->manager->request("event/contract/{$routeParams}?since={$sinceTimestamp}");
+        return $this->manager->request("event/contract/{$routeParams}?since={$sinceTimestamp}&_=".time());
     }
 
 
