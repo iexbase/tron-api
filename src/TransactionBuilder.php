@@ -417,7 +417,7 @@ class TransactionBuilder
     {
         $func_abi = [];
         foreach($abi as $key =>$item) {
-            if(isset($item['name']) && $item['name'] === $function) {
+            if($item['name'] === $function) {
                 $func_abi = $item;
                 break;
             }
@@ -463,7 +463,7 @@ class TransactionBuilder
             'consume_user_resource_percent' =>  $bandwidthLimit,
         ]);
 
-        if(isset($result['result']) && isset($result['result']['result'])) {
+        if($result['result']['result']) {
             if(count($func_abi['outputs']) >= 0 && isset($result['constant_result'])) {
                 return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
             }
