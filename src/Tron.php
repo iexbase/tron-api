@@ -585,9 +585,6 @@ class Tron implements TronInterface
             $signedTransaction = $this->signTransaction($transaction, $message);
         }
 
-        print_r($signedTransaction);
-
-        exit;
         $response = $this->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
