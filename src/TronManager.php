@@ -61,6 +61,10 @@ class TronManager
 
             if(is_string($providers[$key]))
                 $this->providers[$key] = new HttpProvider($value);
+
+            if($key == 'signServer')
+                continue;
+
             $this->providers[$key]->setStatusPage($this->statusPage[$key]);
         }
     }

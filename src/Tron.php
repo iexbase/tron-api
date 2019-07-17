@@ -98,7 +98,7 @@ class Tron implements TronInterface
         }
 
         $this->setManager(new TronManager($this, [
-            'fullNode'  =>  $fullNode,
+            'fullNode'      =>  $fullNode,
             'solidityNode'  =>  $solidityNode,
             'eventServer'   =>  $eventServer,
             'signServer'    =>  $signServer
@@ -584,6 +584,10 @@ class Tron implements TronInterface
         } else {
             $signedTransaction = $this->signTransaction($transaction, $message);
         }
+
+        print_r($signedTransaction);
+
+        exit;
         $response = $this->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
