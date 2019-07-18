@@ -61,6 +61,10 @@ class TronManager
 
             if(is_string($providers[$key]))
                 $this->providers[$key] = new HttpProvider($value);
+
+            if($key == 'signServer')
+                continue;
+
             $this->providers[$key]->setStatusPage($this->statusPage[$key]);
         }
     }
@@ -105,6 +109,21 @@ class TronManager
     }
 
     /**
+     * Sign server
+     *
+     * @throws TronException
+     * @return HttpProviderInterface
+     */
+    public function signServer(): HttpProviderInterface
+    {
+        if (!array_key_exists('signServer', $this->providers)) {
+            throw new TronException('Sign server is not activated.');
+        }
+
+        return $this->providers['signServer'];
+    }
+
+    /**
      * Event server
      *
      * @throws TronException
@@ -135,7 +154,9 @@ class TronManager
             $response = $this->solidityNode()->request($url, $params, $method);
         } elseif(in_array($split[0], ['event'])) {
             $response = $this->eventServer()->request($url, $params, 'get');
-        } else {
+        } elseif (in_array($split[0], ['trx-sign'])) {
+            $response = $this->signServer()->request($url, $params, 'post');
+        }else {
             $response = $this->fullNode()->request($url, $params, $method);
         }
 
