@@ -97,6 +97,7 @@ class Tron implements TronInterface
             $this->setPrivateKey($privateKey);
         }
 
+
         $this->setManager(new TronManager($this, [
             'fullNode'      =>  $fullNode,
             'solidityNode'  =>  $solidityNode,
