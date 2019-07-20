@@ -109,6 +109,25 @@ class Tron implements TronInterface
     }
 
     /**
+     * Create a new tron instance if the value isn't one already.
+     *
+     * @param HttpProviderInterface|null $fullNode
+     * @param HttpProviderInterface|null $solidityNode
+     * @param HttpProviderInterface|null $eventServer
+     * @param HttpProviderInterface|null $signServer
+     * @param string|null $privateKey
+     * @return static
+     * @throws TronException
+     */
+    public static function make(?HttpProviderInterface $fullNode = null,
+                                ?HttpProviderInterface $solidityNode = null,
+                                ?HttpProviderInterface $eventServer = null,
+                                ?HttpProviderInterface $signServer = null,
+                                string $privateKey = null) {
+        return new static($fullNode, $solidityNode, $eventServer, $signServer, $privateKey);
+    }
+
+    /**
      * Enter the link to the manager nodes
      *
      * @param $providers
