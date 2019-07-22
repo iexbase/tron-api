@@ -15,7 +15,8 @@ class TronManager
     protected $defaultNodes = [
         'fullNode'  =>  'https://api.trongrid.io',
         'solidityNode'  =>  'https://api.trongrid.io',
-        'eventServer'   =>  'https://api.trongrid.io'
+        'eventServer'   =>  'https://api.trongrid.io',
+        'signServer'    =>  ''
     ];
 
     /**
@@ -26,7 +27,8 @@ class TronManager
     protected $providers = [
         'fullNode'  =>  [],
         'solidityNode' => [],
-        'eventServer'   =>  []
+        'eventServer'   =>  [],
+        'signServer'    =>  []
     ];
 
     /**
@@ -52,8 +54,7 @@ class TronManager
         foreach ($providers as $key => $value)
         {
             //Do not skip the supplier is empty
-            if ($value == null)
-            {
+            if ($value == null) {
                 $this->providers[$key] = new HttpProvider(
                     $this->defaultNodes[$key]
                 );
