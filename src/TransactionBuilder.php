@@ -417,7 +417,7 @@ class TransactionBuilder
     {
         $func_abi = [];
         foreach($abi as $key =>$item) {
-            if($item['name'] === $function) {
+            if(isset($item['name']) && $item['name'] === $function) {
                 $func_abi = $item;
                 break;
             }
