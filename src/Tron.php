@@ -30,7 +30,8 @@ use IEXBase\TronAPI\Exception\TronException;
 class Tron implements TronInterface
 {
     use TronAwareTrait,
-        Concerns\ManagesUniversal;
+        Concerns\ManagesUniversal,
+        Concerns\ManagesTronscan;
 
     /**
      * Default Address
@@ -84,6 +85,7 @@ class Tron implements TronInterface
      * @param HttpProviderInterface $solidityNode
      * @param HttpProviderInterface|null $eventServer
      * @param HttpProviderInterface|null $signServer
+     * @param HttpProviderInterface|null $explorer
      * @param string $privateKey
      * @throws TronException
      */
@@ -91,6 +93,7 @@ class Tron implements TronInterface
                                 ?HttpProviderInterface $solidityNode = null,
                                 ?HttpProviderInterface $eventServer = null,
                                 ?HttpProviderInterface $signServer = null,
+                                ?HttpProviderInterface $explorer = null,
                                 string $privateKey = null)
     {
         if(!is_null($privateKey)) {
@@ -102,7 +105,8 @@ class Tron implements TronInterface
             'fullNode'      =>  $fullNode,
             'solidityNode'  =>  $solidityNode,
             'eventServer'   =>  $eventServer,
-            'signServer'    =>  $signServer
+            'signServer'    =>  $signServer,
+            'explorer'      =>  $explorer
         ]));
 
         $this->transactionBuilder = new TransactionBuilder($this);

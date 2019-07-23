@@ -13,9 +13,10 @@ class TronManager
      * @var array
     */
     protected $defaultNodes = [
-        'fullNode'  =>  'https://api.trongrid.io',
+        'fullNode'      =>  'https://api.trongrid.io',
         'solidityNode'  =>  'https://api.trongrid.io',
         'eventServer'   =>  'https://api.trongrid.io',
+        'explorer'      =>  'https://apilist.tronscan.org',
         'signServer'    =>  ''
     ];
 
@@ -25,9 +26,10 @@ class TronManager
      * @var array
     */
     protected $providers = [
-        'fullNode'  =>  [],
-        'solidityNode' => [],
+        'fullNode'      =>  [],
+        'solidityNode'  =>  [],
         'eventServer'   =>  [],
+        'explorer'      =>  [],
         'signServer'    =>  []
     ];
 
@@ -39,7 +41,8 @@ class TronManager
     protected $statusPage = [
         'fullNode'  =>  'wallet/getnowblock',
         'solidityNode'  =>  'walletsolidity/getnowblock',
-        'eventServer'   =>  'healthcheck'
+        'eventServer'   =>  'healthcheck',
+        'explorer'      =>  'api/system/status'
     ];
 
     /**
@@ -63,7 +66,7 @@ class TronManager
             if(is_string($providers[$key]))
                 $this->providers[$key] = new HttpProvider($value);
 
-            if($key == 'signServer')
+            if(in_array($key, ['signServer']))
                 continue;
 
             $this->providers[$key]->setStatusPage($this->statusPage[$key]);
@@ -125,6 +128,21 @@ class TronManager
     }
 
     /**
+     * TronScan server
+     *
+     * @throws TronException
+     * @return HttpProviderInterface
+     */
+    public function explorer(): HttpProviderInterface
+    {
+        if (!array_key_exists('explorer', $this->providers)) {
+            throw new TronException('explorer is not activated.');
+        }
+
+        return $this->providers['explorer'];
+    }
+
+    /**
      * Event server
      *
      * @throws TronException
@@ -157,6 +175,8 @@ class TronManager
             $response = $this->eventServer()->request($url, $params, 'get');
         } elseif (in_array($split[0], ['trx-sign'])) {
             $response = $this->signServer()->request($url, $params, 'post');
+        } elseif(in_array($split[0], ['api'])) {
+            $response = $this->explorer()->request($url, $params, 'get');
         }else {
             $response = $this->fullNode()->request($url, $params, $method);
         }
