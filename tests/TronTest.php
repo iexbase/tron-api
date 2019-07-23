@@ -16,7 +16,7 @@ class TronTest extends TestCase
 
     public function test_isValidProvider()
     {
-        $tron = new Tron(self::FULL_NODE_API, self::SOLIDITY_NODE_API);
+        $tron = new Tron(new HttpProvider(self::FULL_NODE_API), new HttpProvider(self::SOLIDITY_NODE_API));
         $provider = new HttpProvider(self::FULL_NODE_API);
 
         $this->assertEquals($tron->isValidProvider($provider), true);
@@ -24,7 +24,7 @@ class TronTest extends TestCase
 
     public function test_setAddress()
     {
-        $tron = new Tron(self::FULL_NODE_API, self::SOLIDITY_NODE_API);
+        $tron = new Tron(new HttpProvider(self::FULL_NODE_API), new HttpProvider(self::SOLIDITY_NODE_API));
         $tron->setAddress(self::ADDRESS_HEX);
 
         $this->assertEquals($tron->getAddress()['hex'],self::ADDRESS_HEX);
@@ -33,7 +33,7 @@ class TronTest extends TestCase
 
     public function test_setDefaultBlock()
     {
-        $tron = new Tron(self::FULL_NODE_API,self::SOLIDITY_NODE_API);
+        $tron = new Tron(new HttpProvider(self::FULL_NODE_API),new HttpProvider(self::SOLIDITY_NODE_API));
         $tron->setDefaultBlock(1);
         $this->assertEquals($tron->getDefaultBlock(), 1);
 
