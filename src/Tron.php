@@ -521,6 +521,36 @@ class Tron implements TronInterface
             $account['balance']);
     }
 
+
+    /**
+     * Get token balance
+     *
+     * @param string $address
+     * @param int $tokenId
+     * @param bool $fromTron
+     * @return array|int
+     * @throws TronException
+     */
+    public function getTokenBalance(string $address, int $tokenId, bool $fromTron = false)
+    {
+        $account = $this->getAccount($address);
+
+        if(isset($account['assetV2']) and !empty($account['assetV2']) ) {
+            $value = array_filter($account['assetV2'], function($item) use ($tokenId) {
+                return $item['key'] == $tokenId;
+            });
+
+            if(empty($value)) {
+                throw new TronException('Token id not found');
+            }
+
+            $first = array_shift($value);
+            return ($fromTron == true ? $this->fromTron($first['value']) : $first['value']);
+        }
+
+        return 0;
+    }
+
     /**
      * Query bandwidth information.
      *
