@@ -535,7 +535,8 @@ class Tron implements TronInterface
     {
         $account = $this->getAccount($address);
 
-        if(isset($account['assetV2']) and !empty($account['assetV2']) ) {
+        if(isset($account['assetV2']) and !empty($account['assetV2']) )
+        {
             $value = array_filter($account['assetV2'], function($item) use ($tokenId) {
                 return $item['key'] == $tokenId;
             });
@@ -633,6 +634,35 @@ class Tron implements TronInterface
             $signedTransaction = $this->signTransactionForServer($transaction);
         } else {
             $signedTransaction = $this->signTransaction($transaction, $message);
+        }
+
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
+    }
+
+    /**
+     * Send token transaction to Blockchain
+     *
+     * @param string $to
+     * @param float $amount
+     * @param int $tokenID
+     * @param string $from
+     *
+     * @return array
+     * @throws TronException
+     */
+    public function sendTokenTransaction(string $to, float $amount, int $tokenID = null, string $from = null): array
+    {
+        if (is_null($from)) {
+            $from = $this->address['hex'];
+        }
+
+        $transaction = $this->transactionBuilder->sendToken($to, $this->toTron($amount), (string)$tokenID, $from);
+        if($this->isSignServer == true) {
+            $signedTransaction = $this->signTransactionForServer($transaction);
+        } else {
+            $signedTransaction = $this->signTransaction($transaction);
         }
 
         $response = $this->sendRawTransaction($signedTransaction);
