@@ -535,7 +535,7 @@ class Tron implements TronInterface
      * @return array|int
      * @throws TronException
      */
-    public function getTokenBalance(string $address, int $tokenId, bool $fromTron = false)
+    public function getTokenBalance(int $tokenId, string $address, bool $fromTron = false)
     {
         $account = $this->getAccount($address);
 
