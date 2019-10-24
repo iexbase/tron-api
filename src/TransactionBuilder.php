@@ -463,7 +463,10 @@ class TransactionBuilder
             'consume_user_resource_percent' =>  $bandwidthLimit,
         ]);
 
-        if($result['result']['result']) {
+        if(!isset($result['result'])){
+            throw new TronException('No result field in response. Raw response:'.print_r($result,true));
+        }
+        if(isset($result['result']['result'])) {
             if(count($func_abi['outputs']) >= 0 && isset($result['constant_result'])) {
                 return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
             }
