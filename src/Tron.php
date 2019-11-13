@@ -78,6 +78,8 @@ class Tron implements TronInterface
     */
     protected $isSignServer = false;
 
+    protected $isLocalSigning;
+
     /**
      * Create a new Tron object
      *
@@ -87,6 +89,7 @@ class Tron implements TronInterface
      * @param HttpProviderInterface|null $signServer
      * @param HttpProviderInterface|null $explorer
      * @param string $privateKey
+     * @param bool $isLocalSigning
      * @throws TronException
      */
     public function __construct(?HttpProviderInterface $fullNode = null,
@@ -94,7 +97,8 @@ class Tron implements TronInterface
                                 ?HttpProviderInterface $eventServer = null,
                                 ?HttpProviderInterface $signServer = null,
                                 ?HttpProviderInterface $explorer = null,
-                                string $privateKey = null)
+                                string $privateKey = null,
+                                bool $isLocalSigning = false)
     {
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
@@ -110,6 +114,8 @@ class Tron implements TronInterface
         ]));
 
         $this->transactionBuilder = new TransactionBuilder($this);
+
+        $this->setIsLocalSigning($isLocalSigning);
     }
 
     /**
@@ -208,6 +214,16 @@ class Tron implements TronInterface
     public function setPrivateKey(string $privateKey): void
     {
         $this->privateKey = $privateKey;
+    }
+
+    public function getIsLocalSigning(): bool
+    {
+        return $this->isLocalSigning;
+    }
+
+    public function setIsLocalSigning(bool $isLocalSigning): void
+    {
+        $this->isLocalSigning = $isLocalSigning;
     }
 
     /**
@@ -701,10 +717,18 @@ class Tron implements TronInterface
             $transaction['raw_data']['data'] = $this->stringUtf8toHex($message);
         }
 
-        return $this->manager->request('wallet/gettransactionsign', [
-            'transaction'   => $transaction,
-            'privateKey'    => $this->privateKey
-        ]);
+        if (!$this->isLocalSigning) {
+            return $this->manager->request('wallet/gettransactionsign', [
+                'transaction'   => $transaction,
+                'privateKey'    => $this->privateKey
+            ]);
+        }
+
+        $signature = Support\Secp::sign($transaction['txID'], $this->privateKey);
+
+        $transaction['signature'] = [$signature];
+
+        return $transaction;
     }
 
     /**
