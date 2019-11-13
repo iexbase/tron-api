@@ -78,6 +78,7 @@ class Tron implements TronInterface
     */
     protected $isSignServer = false;
 
+    /** @var bool */
     protected $isLocalSigning;
 
     /**
