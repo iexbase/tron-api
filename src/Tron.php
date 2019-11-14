@@ -740,8 +740,6 @@ class Tron implements TronInterface
             ]);
         }
 
-        echo 'asd';
-        exit;
         $signature = Support\Secp::sign($transaction['txID'], $this->privateKey);
 
         $transaction['signature'] = [$signature];
