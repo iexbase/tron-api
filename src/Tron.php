@@ -72,14 +72,6 @@ class Tron implements TronInterface
     protected $manager;
 
     /**
-     * Custom sign
-     *
-     * @var boolean
-    */
-    protected $isSignServer = false;
-
-
-    /**
      * Online sign
      *
      * @var boolean
@@ -108,7 +100,6 @@ class Tron implements TronInterface
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
         }
-
 
         $this->setManager(new TronManager($this, [
             'fullNode'      =>  $fullNode,
@@ -655,11 +646,7 @@ class Tron implements TronInterface
         }
 
         $transaction = $this->transactionBuilder->sendTrx($to, $amount, $from);
-        if($this->isSignServer == true) {
-            $signedTransaction = $this->signTransactionForServer($transaction);
-        } else {
-            $signedTransaction = $this->signTransaction($transaction, $message);
-        }
+        $signedTransaction = $this->signTransaction($transaction, $message);
 
         $response = $this->sendRawTransaction($signedTransaction);
         return array_merge($response, $signedTransaction);
@@ -683,11 +670,7 @@ class Tron implements TronInterface
         }
 
         $transaction = $this->transactionBuilder->sendToken($to, $this->toTron($amount), (string)$tokenID, $from);
-        if($this->isSignServer == true) {
-            $signedTransaction = $this->signTransactionForServer($transaction);
-        } else {
-            $signedTransaction = $this->signTransaction($transaction);
-        }
+        $signedTransaction = $this->signTransaction($transaction);
 
         $response = $this->sendRawTransaction($signedTransaction);
 
@@ -739,37 +722,6 @@ class Tron implements TronInterface
         $transaction['signature'] = [$signature];
 
         return $transaction;
-    }
-
-    /**
-     * Custom sign transaction
-     *
-     * @param $transaction
-     * @return array
-     * @throws TronException
-     */
-    public function signTransactionForServer($transaction)
-    {
-        if(!$this->privateKey) {
-            throw new TronException('Missing private key');
-        }
-
-        if(!$this->isSignServer) {
-            throw new TronException('Missing Sign server');
-        }
-
-        if(!is_array($transaction)) {
-            throw new TronException('Invalid transaction provided');
-        }
-
-        if(isset($transaction['signature'])) {
-            throw new TronException('Transaction is already signed');
-        }
-
-        return $this->manager->request('trx-sign', [
-            'transaction'   => $transaction,
-            'privateKey'    => $this->privateKey
-        ]);
     }
 
     /**
@@ -1331,14 +1283,5 @@ class Tron implements TronInterface
         return $this->manager->request('/wallet/getassetissuebyid', [
             'value' =>  $token_id
         ]);
-    }
-
-    /**
-     * Status sign server
-     *
-     * @param bool $value
-     */
-    public function setIsSignServer(bool $value) {
-        $this->isSignServer = $value;
     }
 }
