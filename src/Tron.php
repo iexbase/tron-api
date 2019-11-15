@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace IEXBase\TronAPI;
 
+use IEXBase\TronAPI\Support\Base58Check;
+use IEXBase\TronAPI\Support\Hash;
 use IEXBase\TronAPI\Support\Utils;
 use IEXBase\TronAPI\Provider\HttpProviderInterface;
 use IEXBase\TronAPI\Exception\TronException;
@@ -32,6 +34,10 @@ class Tron implements TronInterface
     use TronAwareTrait,
         Concerns\ManagesUniversal,
         Concerns\ManagesTronscan;
+
+    const ADDRESS_SIZE = 34;
+    const ADDRESS_PREFIX = "41";
+    const ADDRESS_PREFIX_BYTE = 0x41;
 
     /**
      * Default Address
@@ -79,6 +85,13 @@ class Tron implements TronInterface
     protected $isOnlineSign = false;
 
     /**
+     * Object Result
+     *
+     * @var bool
+    */
+    protected $isObject = false;
+
+    /**
      * Create a new Tron object
      *
      * @param HttpProviderInterface $fullNode
@@ -95,7 +108,7 @@ class Tron implements TronInterface
                                 ?HttpProviderInterface $eventServer = null,
                                 ?HttpProviderInterface $signServer = null,
                                 ?HttpProviderInterface $explorer = null,
-                                string $privateKey = null)
+                                ?string $privateKey = null)
     {
         if(!is_null($privateKey)) {
             $this->setPrivateKey($privateKey);
@@ -106,7 +119,6 @@ class Tron implements TronInterface
             'solidityNode'  =>  $solidityNode,
             'eventServer'   =>  $eventServer,
             'signServer'    =>  $signServer,
-            'explorer'      =>  $explorer
         ]));
 
         $this->transactionBuilder = new TransactionBuilder($this);
@@ -150,11 +162,24 @@ class Tron implements TronInterface
     }
 
     /**
+     * Set is object
+     *
+     * @param bool $value
+     * @return Tron
+     */
+    public function setIsObject(bool $value)
+    {
+        $this->isObject = boolval($value);
+        return $this;
+    }
+
+    /**
      * Get Transaction Builder
      *
      * @return TransactionBuilder
      */
-    public function getTransactionBuilder(): TransactionBuilder {
+    public function getTransactionBuilder(): TransactionBuilder
+    {
         return $this->transactionBuilder;
     }
 
@@ -1163,6 +1188,32 @@ class Tron implements TronInterface
         return $this->manager->request('wallet/validateaddress', [
             'address'   =>  $address
         ]);
+    }
+
+    /**
+     * Validate Tron Address (Locale)
+     *
+     * @param string|null $address
+     * @return bool
+     */
+    public function isAddress(string $address = null)
+    {
+        $address = Base58Check::decode($address, 0, 0, false);
+        $utf8 = hex2bin($address);
+
+        if (strlen($utf8) !== 25 or strpos($utf8, self::ADDRESS_PREFIX_BYTE) !== 0)
+            return false;
+
+        $checkSum = substr($utf8, 21);
+        $address = substr($utf8, 0, 21);
+
+        $hash0 = Hash::SHA256($address);
+        $hash1 = Hash::SHA256($hash0);
+        $checkSum1 = substr($hash1, 0, 4);
+
+        if ($checkSum === $checkSum1)
+            return true;
+        return false;
     }
 
     /**
