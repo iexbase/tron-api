@@ -392,7 +392,7 @@ class TransactionBuilder
     }
 
     /**
-     * Triggers a contract
+     * Triggers smart contract
      *
      * @param mixed $abi
      * @param string $contract $tron->toHex('Txxxxx');
@@ -461,6 +461,81 @@ class TransactionBuilder
             'fee_limit'     =>  $feeLimit,
             'call_value'    =>  $callValue,
             'consume_user_resource_percent' =>  $bandwidthLimit,
+        ]);
+
+        if(!isset($result['result'])){
+            throw new TronException('No result field in response. Raw response:'.print_r($result,true));
+        }
+        if(isset($result['result']['result'])) {
+            if(count($func_abi['outputs']) >= 0 && isset($result['constant_result'])) {
+                return $eth_abi->decodeParameters($func_abi, $result['constant_result'][0]);
+            }
+            return $result['transaction'];
+        }
+        $message = isset($result['result']['message']) ?
+            $this->tron->hexString2Utf8($result['result']['message']) : '';
+
+        throw new TronException('Failed to execute. Error:'.$message);
+    }
+
+    /**
+     * Triggers constant contract
+     *
+     * @param mixed $abi
+     * @param string $contract $tron->toHex('Txxxxx');
+     * @param string $function
+     * @param array $params array("0"=>$value);
+     * @param string $address $tron->toHex('Txxxxx');
+     *
+     * @return mixed
+     * @throws TronException
+     */
+    public function triggerConstantContract($abi,
+                                         $contract,
+                                         $function,
+                                         $params = [],
+                                         $address = '410000000000000000000000000000000000000000')
+    {
+        $func_abi = [];
+        foreach($abi as $key =>$item) {
+            if(isset($item['name']) && $item['name'] === $function) {
+                $func_abi = $item + ['inputs' => []];
+                break;
+            }
+        }
+
+        if(count($func_abi) === 0)
+            throw new TronException("Function $function not defined in ABI");
+
+        if(!is_array($params))
+            throw new TronException("Function params must be an array");
+
+        if(count($func_abi['inputs']) !== count($params))
+            throw new TronException("Count of params and abi inputs must be identical");
+
+
+        $inputs = array_map(function($item){ return $item['type']; },$func_abi['inputs']);
+        $signature = $func_abi['name'].'(';
+        if(count($inputs) > 0)
+            $signature .= implode(',',$inputs);
+        $signature .= ')';
+
+        $eth_abi = new Ethabi([
+            'address' => new Address,
+            'bool' => new Boolean,
+            'bytes' => new Bytes,
+            'dynamicBytes' => new DynamicBytes,
+            'int' => new Integer,
+            'string' => new Str,
+            'uint' => new Uinteger,
+        ]);
+        $parameters = substr($eth_abi->encodeParameters($func_abi, $params),2);
+
+        $result = $this->tron->getManager()->request('wallet/triggerconstantcontract', [
+            'contract_address' => $contract,
+            'function_selector' => $signature,
+            'parameter' => $parameters,
+            'owner_address' =>  $address,
         ]);
 
         if(!isset($result['result'])){
