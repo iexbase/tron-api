@@ -20,7 +20,8 @@
 
     "require": {
         "php": "^7.1",
-        "guzzlehttp/guzzle": "^6.3",
+        "guzzlehttp/guzzle": "^6.3 | ^7.0",
+        "ionux/phactor": "^1.0",
         "kornrunner/secp256k1": "^0.1.2",
         "sc0vu/web3.php": "^0.1.4",
         "simplito/elliptic-php": "^1.0"
