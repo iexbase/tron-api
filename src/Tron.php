@@ -16,8 +16,12 @@ declare(strict_types=1);
 
 namespace IEXBase\TronAPI;
 
+use Elliptic\EC;
+use IEXBase\TronAPI\Support\Base58;
 use IEXBase\TronAPI\Support\Base58Check;
+use IEXBase\TronAPI\Support\Crypto;
 use IEXBase\TronAPI\Support\Hash;
+use IEXBase\TronAPI\Support\Keccak;
 use IEXBase\TronAPI\Support\Utils;
 use IEXBase\TronAPI\Provider\HttpProviderInterface;
 use IEXBase\TronAPI\Exception\TronException;
@@ -1201,7 +1205,10 @@ class Tron implements TronInterface
         $address = Base58Check::decode($address, 0, 0, false);
         $utf8 = hex2bin($address);
 
-        if (strlen($utf8) !== 25 or strpos($utf8, chr(self::ADDRESS_PREFIX_BYTE)) !== 0)
+        if(strlen($address) !== self::ADDRESS_SIZE)
+            return false;
+
+        if (strlen($utf8) !== 25 or strpos($utf8, self::ADDRESS_PREFIX_BYTE) !== 0)
             return false;
 
         $checkSum = substr($utf8, 21);
@@ -1298,6 +1305,27 @@ class Tron implements TronInterface
         return $this->generateAddress();
     }
 
+    public function getAddressHex(string $pubKeyBin): string
+    {
+        if (strlen($pubKeyBin) == 65) {
+            $pubKeyBin = substr($pubKeyBin, 1);
+        }
+
+        $hash = Keccak::hash($pubKeyBin, 256);
+
+        return self::ADDRESS_PREFIX . substr($hash, 24);
+    }
+
+    public function getBase58CheckAddress(string $addressBin): string
+    {
+        $hash0 = Hash::SHA256($addressBin);
+        $hash1 = Hash::SHA256($hash0);
+        $checksum = substr($hash1, 0, 4);
+        $checksum = $addressBin . $checksum;
+
+        return Base58::encode(Crypto::bin2bc($checksum));
+    }
+
     /**
      * Generate new address
      *
@@ -1306,6 +1334,23 @@ class Tron implements TronInterface
      */
     public function generateAddress(): array
     {
+//        $ec = new EC('secp256k1');
+//
+//        // Generate keys
+//        $key = $ec->genKeyPair();
+//        $priv = $ec->keyFromPrivate($key->priv, 'hex');
+//        $pubKeyHex = $priv->getPublic(true, "hex");
+//
+//        $pubKeyBin = hex2bin($pubKeyHex);
+//        $addressHex = $this->getAddressHex($pubKeyBin);
+//        $addressBin = hex2bin($addressHex);
+//        $addressBase58 = $this->getBase58CheckAddress($addressBin);
+//
+//        return [
+//            'private_key' => $priv->getPrivate('hex'),
+//            'address_hex' => $addressHex,
+//            'address_base58' => $addressBase58
+//        ];
         return $this->manager->request('wallet/generateaddress');
     }
 
