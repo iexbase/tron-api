@@ -1329,29 +1329,29 @@ class Tron implements TronInterface
     /**
      * Generate new address
      *
-     * @return array
+     * @return TronAddress
      * @throws TronException
      */
-    public function generateAddress(): array
+    public function generateAddress(): TronAddress
     {
-//        $ec = new EC('secp256k1');
-//
-//        // Generate keys
-//        $key = $ec->genKeyPair();
-//        $priv = $ec->keyFromPrivate($key->priv, 'hex');
-//        $pubKeyHex = $priv->getPublic(true, "hex");
-//
-//        $pubKeyBin = hex2bin($pubKeyHex);
-//        $addressHex = $this->getAddressHex($pubKeyBin);
-//        $addressBin = hex2bin($addressHex);
-//        $addressBase58 = $this->getBase58CheckAddress($addressBin);
-//
-//        return [
-//            'private_key' => $priv->getPrivate('hex'),
-//            'address_hex' => $addressHex,
-//            'address_base58' => $addressBase58
-//        ];
-        return $this->manager->request('wallet/generateaddress');
+        $ec = new EC('secp256k1');
+
+        // Generate keys
+        $key = $ec->genKeyPair();
+        $priv = $ec->keyFromPrivate($key->priv);
+        $pubKeyHex = $priv->getPublic(false, "hex");
+
+        $pubKeyBin = hex2bin($pubKeyHex);
+        $addressHex = $this->getAddressHex($pubKeyBin);
+        $addressBin = hex2bin($addressHex);
+        $addressBase58 = $this->getBase58CheckAddress($addressBin);
+
+        return new TronAddress([
+            'private_key' => $priv->getPrivate('hex'),
+            'public_key'    => $pubKeyHex,
+            'address_hex' => $addressHex,
+            'address_base58' => $addressBase58
+        ]);
     }
 
     /**
