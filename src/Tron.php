@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace IEXBase\TronAPI;
 
+use BN\BN;
 use Elliptic\EC;
 use IEXBase\TronAPI\Support\Base58;
 use IEXBase\TronAPI\Support\Base58Check;
@@ -25,6 +26,7 @@ use IEXBase\TronAPI\Support\Keccak;
 use IEXBase\TronAPI\Support\Utils;
 use IEXBase\TronAPI\Provider\HttpProviderInterface;
 use IEXBase\TronAPI\Exception\TronException;
+use kornrunner\Secp256k1;
 
 /**
  * A PHP API for interacting with the Tron (TRX)
@@ -80,13 +82,6 @@ class Tron implements TronInterface
      * @var TronManager
     */
     protected $manager;
-
-    /**
-     * Online sign
-     *
-     * @var boolean
-    */
-    protected $isOnlineSign = false;
 
     /**
      * Object Result
@@ -145,6 +140,15 @@ class Tron implements TronInterface
                                 ?HttpProviderInterface $signServer = null,
                                 string $privateKey = null) {
         return new static($fullNode, $solidityNode, $eventServer, $signServer, $privateKey);
+    }
+
+    /**
+     * Фасад для Laravel
+     *
+     * @return Tron
+    */
+    public function getFacade(): Tron {
+        return $this;
     }
 
     /**
@@ -237,18 +241,6 @@ class Tron implements TronInterface
     public function setPrivateKey(string $privateKey): void
     {
         $this->privateKey = $privateKey;
-    }
-
-    /**
-     * Set online sign
-     *
-     * @param bool $sign
-     * @return Tron
-     */
-    public function setIsOnlineSign(bool $sign): Tron
-    {
-        $this->isOnlineSign = $sign;
-        return $this;
     }
 
     /**
@@ -677,6 +669,7 @@ class Tron implements TronInterface
         $transaction = $this->transactionBuilder->sendTrx($to, $amount, $from);
         $signedTransaction = $this->signTransaction($transaction, $message);
 
+
         $response = $this->sendRawTransaction($signedTransaction);
         return array_merge($response, $signedTransaction);
     }
@@ -737,17 +730,8 @@ class Tron implements TronInterface
             $transaction['raw_data']['data'] = $this->stringUtf8toHex($message);
         }
 
-        // Online sign tx
-        if ($this->isOnlineSign == true)
-        {
-            return $this->manager->request('wallet/gettransactionsign', [
-                'transaction'   => $transaction,
-                'privateKey'    => $this->privateKey
-            ]);
-        }
 
         $signature = Support\Secp::sign($transaction['txID'], $this->privateKey);
-
         $transaction['signature'] = [$signature];
 
         return $transaction;
@@ -1297,10 +1281,10 @@ class Tron implements TronInterface
     /**
      * Create a new account
      *
-     * @return array
+     * @return TronAddress
      * @throws TronException
      */
-    public function createAccount(): array
+    public function createAccount(): TronAddress
     {
         return $this->generateAddress();
     }

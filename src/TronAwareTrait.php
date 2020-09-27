@@ -3,7 +3,6 @@
 namespace IEXBase\TronAPI;
 
 use IEXBase\TronAPI\Support\{Base58Check, BigInteger, Keccak};
-
 trait TronAwareTrait
 {
     /**

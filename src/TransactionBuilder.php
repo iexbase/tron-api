@@ -36,10 +36,14 @@ class TransactionBuilder
      * @return array
      * @throws TronException
      */
-    public function sendTrx($to, $amount, $from)
+    public function sendTrx($to, $amount, string $from = null)
     {
         if (!is_float($amount) || $amount < 0) {
             throw new TronException('Invalid amount provided');
+        }
+
+        if(!is_null($from)) {
+            $from = $this->tron->address['hex'];
         }
 
         $to = $this->tron->address2HexString($to);
