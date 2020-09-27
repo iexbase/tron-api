@@ -42,7 +42,7 @@ class TransactionBuilder
             throw new TronException('Invalid amount provided');
         }
 
-        if(!is_null($from)) {
+        if(is_null($from)) {
             $from = $this->tron->address['hex'];
         }
 
