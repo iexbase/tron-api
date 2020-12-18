@@ -1186,13 +1186,13 @@ class Tron implements TronInterface
      */
     public function isAddress(string $address = null)
     {
+        if(strlen($address) !== self::ADDRESS_SIZE)
+            return false;
+        
         $address = Base58Check::decode($address, 0, 0, false);
         $utf8 = hex2bin($address);
 
-        if(strlen($address) !== self::ADDRESS_SIZE)
-            return false;
-
-        if (strlen($utf8) !== 25 or strpos($utf8, self::ADDRESS_PREFIX_BYTE) !== 0)
+        if (strlen($utf8) !== 25 or strpos($utf8, chr(self::ADDRESS_PREFIX_BYTE)) !== 0)
             return false;
 
         $checkSum = substr($utf8, 21);
