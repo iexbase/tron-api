@@ -402,7 +402,7 @@ class TransactionBuilder
      * @param string $contract $tron->toHex('Txxxxx');
      * @param string $function
      * @param array $params array("0"=>$value);
-     * @param integer $feeLimit
+     * @param int $feeLimit
      * @param string $address $tron->toHex('Txxxxx');
      * @param int $callValue
      * @param int $bandwidthLimit
