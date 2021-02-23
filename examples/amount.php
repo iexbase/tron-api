@@ -9,5 +9,5 @@ $tron = new \IEXBase\TronAPI\Tron();
  * P.S: In the process of payment are automatically converted
 */
 
-$from = $tron->toTron(1.15); //11500000
-$to = $tron->fromTron(11500000); //1.15000000
+$from = $tron->toTron(1.15); //1150000
+$to = $tron->fromTron(11500000); //11.5000000
