@@ -435,11 +435,24 @@ public function contractbalance($adres)
   }
 return $trc20;
 }
-    
+    /**
+     * Abi For contract
+     *
+     * @param string $contractaddress $tron->toHex('Txxxxx');
+     *
+     * @return abi
+     * @throws TronException
+     */
+    public function AbiForContract($contractaddress)
+    {
+        $result = $this->tron->getManager()->request('wallet/getcontract', [
+            'value' =>  $contractaddress,
+        ]);
+        return json_encode($result["abi"]);
+    }
     /**
      * Triggers smart contract
      *
-     * @param mixed $abi
      * @param string $contract $tron->toHex('Txxxxx');
      * @param string $function
      * @param array $params array("0"=>$value);
@@ -451,8 +464,7 @@ return $trc20;
      * @return mixed
      * @throws TronException
      */
-    public function triggerSmartContract($abi,
-                                         $contract,
+    public function triggerSmartContract($contract,
                                          $function,
                                          $params,
                                          $feeLimit,
@@ -460,6 +472,7 @@ return $trc20;
                                          $callValue = 0,
                                          $bandwidthLimit = 0)
     {
+        $abi=$this->AbiForContract($contract);
         $func_abi = [];
         foreach($abi as $key =>$item) {
             if(isset($item['name']) && $item['name'] === $function) {
@@ -526,7 +539,6 @@ return $trc20;
     /**
      * Triggers constant contract
      *
-     * @param mixed $abi
      * @param string $contract $tron->toHex('Txxxxx');
      * @param string $function
      * @param array $params array("0"=>$value);
@@ -535,12 +547,12 @@ return $trc20;
      * @return mixed
      * @throws TronException
      */
-    public function triggerConstantContract($abi,
-                                            $contract,
+    public function triggerConstantContract($contract,
                                             $function,
                                             $params = [],
                                             $address = '410000000000000000000000000000000000000000')
     {
+        $abi=$this->AbiForContract($contract);
         $func_abi = [];
         foreach($abi as $key =>$item) {
             if(isset($item['name']) && $item['name'] === $function) {
