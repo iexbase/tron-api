@@ -12,16 +12,16 @@ class TransactionBuilder
     /**
      * Base Tron object
      *
-     * @var Tron
+     * @var TronInterface
     */
     protected $tron;
 
     /**
      * Create an TransactionBuilder object
      *
-     * @param Tron $tron
+     * @param TronInterface $tron
      */
-    public function __construct(Tron $tron)
+    public function __construct(TronInterface $tron)
     {
         $this->tron = $tron;
     }
