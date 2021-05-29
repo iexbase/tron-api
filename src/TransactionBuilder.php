@@ -38,7 +38,7 @@ class TransactionBuilder
      */
     public function sendTrx($to, $amount, string $from = null)
     {
-        if (!is_float($amount) || $amount < 0) {
+        if ($amount < 0) {
             throw new TronException('Invalid amount provided');
         }
 

@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace IEXBase\TronAPI;
 
-use BN\BN;
 use Elliptic\EC;
+use IEXBase\TronAPI\Exception\TRC20Exception;
 use IEXBase\TronAPI\Support\Base58;
 use IEXBase\TronAPI\Support\Base58Check;
 use IEXBase\TronAPI\Support\Crypto;
@@ -26,7 +26,6 @@ use IEXBase\TronAPI\Support\Keccak;
 use IEXBase\TronAPI\Support\Utils;
 use IEXBase\TronAPI\Provider\HttpProviderInterface;
 use IEXBase\TronAPI\Exception\TronException;
-use kornrunner\Secp256k1;
 
 /**
  * A PHP API for interacting with the Tron (TRX)
@@ -46,7 +45,10 @@ class Tron implements TronInterface
     const ADDRESS_PREFIX_BYTE = 0x41;
 
     /**
-     * Default Address
+     * Default Address:
+     * Example:
+     *      - base58:   T****
+     *      - hex:      41****
      *
      * @var array
     */
@@ -73,8 +75,15 @@ class Tron implements TronInterface
      * Transaction Builder
      *
      * @var TransactionBuilder
-    */
+     */
     protected $transactionBuilder;
+
+    /**
+     * Transaction Builder
+     *
+     * @var TransactionBuilder
+     */
+    protected $trc20Contract;
 
     /**
      * Provider manager
@@ -167,6 +176,19 @@ class Tron implements TronInterface
      */
     public function getManager(): TronManager {
         return $this->manager;
+    }
+
+
+    /**
+     * Contract module
+     *
+     * @param string $contractAddress
+     * @param string|null $abi
+     * @return TRC20Contract
+     */
+    public function contract(string $contractAddress, string $abi = null)
+    {
+        return new TRC20Contract($this, $contractAddress, $abi);
     }
 
     /**
@@ -1184,16 +1206,16 @@ class Tron implements TronInterface
      * @param string|null $address
      * @return bool
      */
-    public function isAddress(string $address = null)
+    public function isAddress(string $address = null): bool
     {
-        $address = Base58Check::decode($address, 0, 0, false);
-        $utf8 = hex2bin($address);
-
         if(strlen($address) !== self::ADDRESS_SIZE)
             return false;
 
-        if (strlen($utf8) !== 25 or strpos($utf8, self::ADDRESS_PREFIX_BYTE) !== 0)
-            return false;
+        $address = Base58Check::decode($address, 0, 0, false);
+        $utf8 = hex2bin($address);
+
+        if(strlen($utf8) !== 25) return false;
+        if(strpos($utf8 , self::ADDRESS_PREFIX_BYTE) !== 0) return false;
 
         $checkSum = substr($utf8, 21);
         $address = substr($utf8, 0, 21);
