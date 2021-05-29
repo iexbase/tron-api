@@ -75,7 +75,7 @@ class TRC20Contract
      *
      * @var Tron
      */
-    protected Tron $tron;
+    protected Tron $_tron;
 
     /**
      * Total Supply
@@ -93,7 +93,7 @@ class TRC20Contract
      */
     public function __construct(Tron $tron, string $contractAddress, string $abi = null)
     {
-        $this->tron = $tron;
+        $this->_tron = $tron;
 
         // If abi is absent, then it takes by default
         if(is_null($abi)) {
@@ -248,9 +248,9 @@ class TRC20Contract
     public function balanceOf(string $address = null, bool $scaled = true): string
     {
         if(is_null($address))
-            $address = $this->tron->address['base58'];
+            $address = $this->_tron->address['base58'];
 
-        $addr = str_pad($this->tron->address2HexString($address), 64, "0", STR_PAD_LEFT);
+        $addr = str_pad($this->_tron->address2HexString($address), 64, "0", STR_PAD_LEFT);
         $result = $this->trigger('balanceOf', $address, [$addr]);
         $balance = $result[0]->toString();
 
@@ -276,7 +276,7 @@ class TRC20Contract
     public function transfer(string $to, string $amount, string $from = null): array
     {
         if($from == null) {
-            $from = $this->tron->address['base58'];
+            $from = $this->_tron->address['base58'];
         }
 
         $feeLimitInSun = bcmul((string)$this->feeLimit, (string)self::TRX_TO_SUN);
@@ -289,18 +289,18 @@ class TRC20Contract
 
         $tokenAmount = bcmul($amount, bcpow("10", (string)$this->decimals(), 0), 0);
 
-        $transfer = $this->tron->getTransactionBuilder()
+        $transfer = $this->_tron->getTransactionBuilder()
             ->triggerSmartContract(
                 $this->abiData,
-                $this->tron->address2HexString($this->contractAddress),
+                $this->_tron->address2HexString($this->contractAddress),
                 'transfer',
-                [$this->tron->address2HexString($to), $tokenAmount],
+                [$this->_tron->address2HexString($to), $tokenAmount],
                 $feeLimitInSun,
-                $this->tron->address2HexString($from)
+                $this->_tron->address2HexString($from)
             );
 
-        $signedTransaction = $this->tron->signTransaction($transfer);
-        $response = $this->tron->sendRawTransaction($signedTransaction);
+        $signedTransaction = $this->_tron->signTransaction($transfer);
+        $response = $this->_tron->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
     }
@@ -316,8 +316,30 @@ class TRC20Contract
      */
     public function getTransactions(string $address, int $limit = 100): array
     {
-        return $this->tron->getManager()
+        return $this->_tron->getManager()
             ->request("v1/accounts/{$address}/transactions/trc20?limit={$limit}&contract_address={$this->contractAddress}", [], 'get');
+    }
+
+    /**
+     * Get transaction info by contract address
+     *
+     * @throws TronException
+     */
+    public function getTransactionInfoByContract(array $options = []): array
+    {
+        return $this->_tron->getManager()
+            ->request("v1/contracts/{$this->contractAddress}/transactions?".http_build_query($options), [],'get');
+    }
+
+    /**
+     * Get TRC20 token holder balances
+     *
+     * @throws TronException
+     */
+    public function getTRC20TokenHolderBalance(array $options = []): array
+    {
+        return $this->_tron->getManager()
+            ->request("v1/contracts/{$this->contractAddress}/tokens?".http_build_query($options), [],'get');
     }
 
     /**
@@ -329,7 +351,7 @@ class TRC20Contract
      */
     public function getTransaction(string $transaction_id): array
     {
-        return $this->tron->getManager()
+        return $this->_tron->getManager()
             ->request('/wallet/gettransactioninfobyid', ['value' => $transaction_id], 'post');
     }
 
@@ -344,10 +366,10 @@ class TRC20Contract
      */
     private function trigger($function, $address = null, array $params = [])
     {
-        $owner_address = is_null($address) ? '410000000000000000000000000000000000000000' : $this->tron->address2HexString($address);
+        $owner_address = is_null($address) ? '410000000000000000000000000000000000000000' : $this->_tron->address2HexString($address);
 
-        return $this->tron->getTransactionBuilder()
-            ->triggerConstantContract($this->abiData, $this->tron->address2HexString($this->contractAddress), $function, $params, $owner_address);
+        return $this->_tron->getTransactionBuilder()
+            ->triggerConstantContract($this->abiData, $this->_tron->address2HexString($this->contractAddress), $function, $params, $owner_address);
     }
 
     /**
