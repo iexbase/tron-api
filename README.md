@@ -52,6 +52,13 @@ var_dump($tron->getLatestBlocks(2));
 
 //Change account name (only once)
 var_dump($tron->changeAccountName('address', 'NewName'));
+
+
+// Contract
+$tron->contract('Contract Address');
+
+
+
 ```
 
 ## Testing
