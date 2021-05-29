@@ -1215,7 +1215,7 @@ class Tron implements TronInterface
         $utf8 = hex2bin($address);
 
         if(strlen($utf8) !== 25) return false;
-        if(strpos($utf8 , self::ADDRESS_PREFIX_BYTE) !== 0) return false;
+        if(strpos($utf8 , chr(self::ADDRESS_PREFIX_BYTE)) !== 0) return false;
 
         $checkSum = substr($utf8, 21);
         $address = substr($utf8, 0, 21);
