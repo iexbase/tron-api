@@ -4,8 +4,6 @@ A PHP API for interacting with the Tron Protocol
 [![Latest Stable Version](https://poser.pugx.org/iexbase/tron-api/version)](https://packagist.org/packages/iexbase/tron-api)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 [![Build Status](https://api.travis-ci.com/iexbase/tron-api.svg?branch=master)](https://travis-ci.com/iexbase/tron-api)
-[![Issues](https://img.shields.io/github/issues/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/pulls)
 [![Contributors](https://img.shields.io/github/contributors/iexbase/tron-api.svg)](https://github.com/iexbase/tron-api/graphs/contributors)
 [![Total Downloads](https://img.shields.io/packagist/dt/iexbase/tron-api.svg?style=flat-square)](https://packagist.org/packages/iexbase/tron-api)
 
