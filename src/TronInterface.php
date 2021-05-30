@@ -123,4 +123,12 @@ interface TronInterface
      * @return array
      */
     public function generateAddress();
+
+    /**
+     * Check the address before converting to Hex
+     *
+     * @param $sHexAddress
+     * @return string
+     */
+    public function address2HexString($sHexAddress);
 }
