@@ -12,7 +12,6 @@ try {
 }
 
 
-$tron->setAddress('address');
 $contract = $tron->contract('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t');
-$usdtBalance = $contract->balanceOf($this->payment->tronData->address_base_58);
+$usdtBalance = $contract->balanceOf('address');
 echo $usdtBalance;
