@@ -253,8 +253,11 @@ class TransactionBuilder
      * @return array
      * @throws TronException
      */
-    public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $address)
+    public function freezeBalance(float $amount, int $duration, string $resource, string $address)
     {
+        $resource = $resource ?: 'BANDWIDTH';
+        $duration = $duration ?: 3;
+
         if (!in_array($resource, ['BANDWIDTH', 'ENERGY'])) {
             throw new TronException('Invalid resource provided: Expected "BANDWIDTH" or "ENERGY"');
         }
@@ -284,8 +287,10 @@ class TransactionBuilder
      * @return array
      * @throws TronException
      */
-    public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address)
+    public function unfreezeBalance(string $resource, string $owner_address)
     {
+        $resource = $resource ?: 'BANDWIDTH';
+
         if (!in_array($resource, ['BANDWIDTH', 'ENERGY'])) {
             throw new TronException('Invalid resource provided: Expected "BANDWIDTH" or "ENERGY"');
         }
@@ -326,7 +331,7 @@ class TransactionBuilder
      * @return array
      * @throws TronException
      */
-    public function updateToken(string $description, string $url, int $freeBandwidth = 0, int $freeBandwidthLimit = 0, $address)
+    public function updateToken(string $description, string $url, int $freeBandwidth, int $freeBandwidthLimit, $address)
     {
         if (!is_integer($freeBandwidth) || $freeBandwidth < 0) {
             throw new TronException('Invalid free bandwidth amount provided');
@@ -435,7 +440,7 @@ public function contractbalance($adres)
   }
 return $trc20;
 }
-    
+
     /**
      * Triggers smart contract
      *

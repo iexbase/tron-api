@@ -379,7 +379,7 @@ class TRC20Contract
      */
     protected function decimalValue(string $int, int $scale = 18): string
     {
-        return (new BcNumber($int))->divide(pow(10, $scale), $scale)->value();
+        return bcdiv($int, pow(10, $scale), $scale);
     }
 
     /**
