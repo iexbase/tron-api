@@ -4,8 +4,8 @@ namespace IEXBase\TronAPI;
 use IEXBase\TronAPI\Exception\TronException;
 
 // Web3 plugin
-use Web3\Contracts\Ethabi;
-use Web3\Contracts\Types\{Address, Boolean, Bytes, DynamicBytes, Integer, Str, Uinteger};
+use IEXBase\TronAPI\Web3\Contracts\Ethabi;
+use IEXBase\TronAPI\Web3\Contracts\Types\{Address, Boolean, Bytes, DynamicBytes, Integer, Str, Uinteger};
 
 class TransactionBuilder
 {

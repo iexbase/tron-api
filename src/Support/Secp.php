@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace IEXBase\TronAPI\Support;
 
-use kornrunner\Secp256k1;
-use kornrunner\Signature\Signature;
+use IEXBase\TronAPI\Secp256k1\Secp256k1;
+use IEXBase\TronAPI\Secp256k1\Signature\Signature;
 
 class Secp
 {
