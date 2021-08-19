@@ -250,10 +250,11 @@ class TransactionBuilder
      * @param int $duration
      * @param string $resource
      * @param string|null $address
+     * @param string|null $receiver_address
      * @return array
      * @throws TronException
      */
-    public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $address)
+    public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $address, string $receiver_address)
     {
         if (!in_array($resource, ['BANDWIDTH', 'ENERGY'])) {
             throw new TronException('Invalid resource provided: Expected "BANDWIDTH" or "ENERGY"');
@@ -269,6 +270,7 @@ class TransactionBuilder
 
         return $this->tron->getManager()->request('wallet/freezebalance', [
             'owner_address' => $this->tron->address2HexString($address),
+	    'receiver_address' => ($receiver_address === "")?$receiver_address:$this->tron->address2HexString($receiver_address),
             'frozen_balance' => $this->tron->toTron($amount),
             'frozen_duration' => $duration,
             'resource' => $resource
@@ -281,10 +283,11 @@ class TransactionBuilder
      *
      * @param string $resource
      * @param string $owner_address
+     * @param string $receiver_address
      * @return array
      * @throws TronException
      */
-    public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address)
+    public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address, string $receiver_address)
     {
         if (!in_array($resource, ['BANDWIDTH', 'ENERGY'])) {
             throw new TronException('Invalid resource provided: Expected "BANDWIDTH" or "ENERGY"');
@@ -292,6 +295,7 @@ class TransactionBuilder
 
         return $this->tron->getManager()->request('wallet/unfreezebalance', [
             'owner_address' =>  $this->tron->address2HexString($owner_address),
+	    'receiver_address' => ($receiver_address === "")?$receiver_address:$this->tron->address2HexString($receiver_address),
             'resource' => $resource
         ]);
     }
