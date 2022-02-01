@@ -1,0 +1,13 @@
+- name: PHP Composer
+  # You may pin to the exact commit or the version.
+  # uses: baschny/php-composer-action@93b5aef92179c5ebba8824db8d34748301c6a70e
+  uses: baschny/php-composer-action@v1
+  with:
+    # What version of Composer to use
+    composer_version: # optional, default is latest
+    # Composer command to run (or get_config to just get the output vars)
+    command: # default is install
+    # Command line arguments to composer
+    args: # optional, default is --optimize-autoloader --no-progress
+    # OAuth token for accessing github private resources
+    github_oauth: # optional, default is 
