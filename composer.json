@@ -24,6 +24,7 @@
         "iexbase/data-types": "^1.0|^1.1",
         "kornrunner/secp256k1": "^0.1.2",
         "simplito/elliptic-php": "^1.0",
+        "web3p/web3.php": "dev-master",
         "ext-json": "*",
         "ext-bcmath": "*"
     },
