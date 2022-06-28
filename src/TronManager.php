@@ -12,7 +12,7 @@ class TronManager
      *
      * @var array
     */
-    protected $defaultNodes = [
+    protected array $defaultNodes = [
         'fullNode'      =>  'https://api.trongrid.io',
         'solidityNode'  =>  'https://api.trongrid.io',
         'eventServer'   =>  'https://api.trongrid.io',
@@ -25,7 +25,7 @@ class TronManager
      *
      * @var array
     */
-    protected $providers = [
+    protected array $providers = [
         'fullNode'      =>  [],
         'solidityNode'  =>  [],
         'eventServer'   =>  [],
@@ -38,8 +38,8 @@ class TronManager
      *
      * @var array
     */
-    protected $statusPage = [
-        'fullNode'  =>  'wallet/getnowblock',
+    protected array $statusPage = [
+        'fullNode'      =>  'wallet/getnowblock',
         'solidityNode'  =>  'walletsolidity/getnowblock',
         'eventServer'   =>  'healthcheck',
         'explorer'      =>  'api/system/status'
@@ -161,12 +161,12 @@ class TronManager
      * Basic query to nodes
      *
      * @param $url
-     * @param $params
+     * @param array $params
      * @param string $method
      * @return array
      * @throws TronException
      */
-    public function request($url, $params = [], $method = 'post')
+    public function request($url, array $params = [], string $method = 'post')
     {
         $split = explode('/', $url);
         if(in_array($split[0], ['walletsolidity', 'walletextension'])) {
@@ -189,13 +189,13 @@ class TronManager
      *
      * @return array
     */
-    public function isConnected()
+    public function isConnected(): array
     {
         $array = [];
         foreach ($this->providers as $key => $value) {
-            array_push($array, [
+            $array[] = [
                 $key => boolval($value->isConnected())
-            ]);
+            ];
         }
 
         return $array;
