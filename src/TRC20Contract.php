@@ -390,4 +390,16 @@ class TRC20Contract
     {
         return preg_replace('/[^\w.-]/', '', trim($str));
     }
+
+    /**
+     * Set fee limit
+     *
+     * @param int $fee_limit
+     * @return TRC20Contract
+     */
+    public function setFeeLimit(int $fee_limit) : TRC20Contract
+    {
+        $this->feeLimit = $fee_limit;
+        return $this;
+    }
 }
