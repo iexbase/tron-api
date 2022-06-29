@@ -952,16 +952,21 @@ class Tron implements TronInterface
      * @param int $duration
      * @param string $resource
      * @param string $owner_address
+     * @param string $receiver_address
      * @return array
      * @throws TronException
      */
-    public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $owner_address = null)
+    public function freezeBalance(float $amount = 0, int $duration = 3, string $resource = 'BANDWIDTH', string $owner_address = null, string $receiver_address = null)
     {
         if($owner_address == null) {
             $owner_address = $this->address['hex'];
         }
+        
+        if($receiver_address == null){
+            $receiver_address = "";
+        }
 
-        $freeze = $this->transactionBuilder->freezeBalance($amount, $duration, $resource, $owner_address);
+        $freeze = $this->transactionBuilder->freezeBalance($amount, $duration, $resource, $owner_address, $receiver_address);
         $signedTransaction = $this->signTransaction($freeze);
         $response = $this->sendRawTransaction($signedTransaction);
 
@@ -974,16 +979,21 @@ class Tron implements TronInterface
      *
      * @param string $resource
      * @param string $owner_address
+     * @param string $receiver_address
      * @return array
      * @throws TronException
      */
-    public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address = null)
+    public function unfreezeBalance(string $resource = 'BANDWIDTH', string $owner_address = null, string $receiver_address = null)
     {
         if($owner_address == null) {
             $owner_address = $this->address['hex'];
         }
+        
+        if($receiver_address == null){
+            $receiver_address = "";
+        }
 
-        $unfreeze = $this->transactionBuilder->unfreezeBalance($resource, $owner_address);
+        $unfreeze = $this->transactionBuilder->unfreezeBalance($resource, $owner_address, $receiver_address);
         $signedTransaction = $this->signTransaction($unfreeze);
         $response = $this->sendRawTransaction($signedTransaction);
 
