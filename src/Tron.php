@@ -688,7 +688,7 @@ class Tron implements TronInterface
             $from = $this->address['hex'];
         }
 
-        $transaction = $this->transactionBuilder->sendTrx($to, $amount, $from);
+        $transaction = $this->transactionBuilder->sendTrx($to, $amount, $from, $message);
         $signedTransaction = $this->signTransaction($transaction, $message);
 
 

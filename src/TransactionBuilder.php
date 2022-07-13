@@ -36,7 +36,7 @@ class TransactionBuilder
      * @return array
      * @throws TronException
      */
-    public function sendTrx($to, $amount, string $from = null)
+    public function sendTrx($to, $amount, string $from = null, string $message = null)
     {
         if ($amount < 0) {
             throw new TronException('Invalid amount provided');
@@ -53,11 +53,17 @@ class TransactionBuilder
             throw new TronException('Cannot transfer TRX to the same account');
         }
 
-        $response = $this->tron->getManager()->request('wallet/createtransaction', [
+        $params = [
             'to_address' => $to,
             'owner_address' => $from,
             'amount' => $this->tron->toTron($amount),
-        ]);
+        ];
+
+        if(!is_null($message)) {
+            $params['extra_data'] = $this->tron->stringUtf8toHex($message);
+        }
+
+        $response = $this->tron->getManager()->request('wallet/createtransaction', $params);
 
         return $response;
     }
