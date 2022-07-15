@@ -675,14 +675,14 @@ class Tron implements TronInterface
      * Send transaction to Blockchain
      *
      * @param string $to
-     * @param float $amount
+     * @param string $amount
      * @param string|null $message
      * @param string $from
      *
      * @return array
      * @throws TronException
      */
-    public function sendTransaction(string $to, float $amount, string $message= null, string $from = null): array
+    public function sendTransaction(string $to, string $amount, string $message= null, string $from = null): array
     {
         if (is_null($from)) {
             $from = $this->address['hex'];

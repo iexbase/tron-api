@@ -60,7 +60,7 @@ interface TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendTransaction(string $to, float $amount, string $from = null);
+    public function sendTransaction(string $to, string $amount, string $from = null);
 
     /**
      * Modify account name
