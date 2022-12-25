@@ -437,7 +437,8 @@ public function contractbalance($adres)
   	0,
   	0);
     $balance_hex=$result["0"];
-    $balance=0+(float)number_format($balance_hex->value/pow(10,$item["decimals"]),$item["decimals"],".","");
+    $balance = (float)($balance_hex->value/pow(10,$item["decimals"]));
+    $balance=0+(float)number_format($balance,$item["decimals"],".","");
     if($balance>0)
   	{
       $trc20[]=array(
