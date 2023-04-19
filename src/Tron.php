@@ -1101,10 +1101,15 @@ class Tron implements TronInterface
             throw new TronException('Invalid end of range provided');
         }
 
-        return $this->manager->request('wallet/getblockbylimitnext', [
+        $data = $this->manager->request('wallet/getblockbylimitnext', [
             'startNum'  =>  intval($start),
             'endNum'    =>  intval($end) + 1
-        ])['block'];
+        ]);
+        if(isset($data['block'])){
+            return $data['block'];
+        }else{
+            return $data;
+        }
     }
 
     /**
