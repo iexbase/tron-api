@@ -114,10 +114,10 @@ trait TronAwareTrait
      * Convert float to trx format
      *
      * @param $double
-     * @return int
+     * @return double
      */
-    public function toTron($double): int {
-        return (int) bcmul((string)$double, (string)1e6,0);
+    public function toTron($double) {
+        return $double;
     }
 
     /**
