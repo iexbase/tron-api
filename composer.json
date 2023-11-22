@@ -1,6 +1,7 @@
 {
     "name": "maliuk/tron-api",
     "description": "A PHP API for interacting with Tron (Trx)",
+    "version": 1.0.0,
     "license": "MIT",
     "type":   "library",
     "homepage": "https://github.com/iexbase/tron-api",
