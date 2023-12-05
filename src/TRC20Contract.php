@@ -56,7 +56,6 @@ class TRC20Contract
     */
     protected string $contractAddress;
 
-
     /**
      * ABI Data
      *
