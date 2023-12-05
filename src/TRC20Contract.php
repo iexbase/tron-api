@@ -54,7 +54,7 @@ class TRC20Contract
      *
      * @var string
     */
-    private string $contractAddress;
+    protected string $contractAddress;
 
     /**
      * ABI Data
