@@ -1,13 +1,14 @@
 {
-    "name": "iexbase/tron-api",
+    "name": "maliuk/tron-api",
     "description": "A PHP API for interacting with Tron (Trx)",
+    "version": "1.0.0",
     "license": "MIT",
     "type":   "library",
     "homepage": "https://github.com/iexbase/tron-api",
     "authors": [
         {
-            "name": "Shamsudin Serderov",
-            "email": "steein.shamsudin@gmail.com"
+            "name": "Oleynikov Dima",
+            "email": "oleynikov.dima@gmail.com"
         }
     ],
     "keywords": [
@@ -19,7 +20,7 @@
     ],
 
     "require": {
-        "php": ">=8.0",
+        "php": ">=7.4.0",
         "comely-io/data-types": "^1.0",
         "guzzlehttp/guzzle": "^7.2",
         "iexbase/web3.php": "^2.0.1",

@@ -10,7 +10,7 @@ A PHP API for interacting with the Tron Protocol
 ## Install
 
 ```bash
-> composer require iexbase/tron-api --ignore-platform-reqs
+> composer require maliuk/tron-api
 ```
 ## Requirements
 
@@ -65,4 +65,4 @@ $ vendor/bin/phpunit
 ```
 
 ## Donations
-**Tron(TRX)**: TRWBqiqoFZysoAeyR1J35ibuyc8EvhUAoY
+**Tron(TRX)**: TWygca1CdMMrjrQYuo9wTCkKPyjpPTe1tR
