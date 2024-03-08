@@ -284,6 +284,47 @@ class TransactionBuilder
     }
 
     /**
+     * Freezes an amount of TRX.
+     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
+     *
+     * @param string $owner_address
+     * @param string $resource
+     * @param string $receiver_address
+     * @param int $balance
+     * @param bool $lock
+     * @param int $lock_period
+     * @return array
+     * @throws TronException
+     */
+    public function delegateResource(string $owner_address = null, string $resource = 'BANDWIDTH', string $receiver_address = null,int $balance = 0, bool $lock = false, int $lock_period = 0)
+    {
+        if(empty($owner_address) or empty($receiver_address)) {
+            throw new TronException('Address not specified');
+        }
+        if (!in_array($resource, ['BANDWIDTH', 'ENERGY'])) {
+            throw new TronException('Invalid resource provided: Expected "BANDWIDTH" or "ENERGY"');
+        }
+        if (!is_int($balance) or !is_int($lock_period)) {
+            throw new TronException('Invalid balance or lock_period provided');
+        }
+        if(!is_bool($lock)) {
+            throw new TronException('Invalid lock value provided');
+        }
+
+        return $this->tron->getManager()->request(
+            'wallet/delegateresource',
+            [
+            'owner_address' => $this->tron->address2HexString($owner_address),
+            'resource' => $resource,
+            'receiver_address' => $this->tron->address2HexString($receiver_address),
+            'balance' => $this->tron->toTron($balance),
+            'lock' => $lock,
+            'lock_period' => $lock_period,
+            ],
+        );
+    }
+
+    /**
      * Unfreeze TRX that has passed the minimum freeze duration.
      * Unfreezing will remove bandwidth and TRON Power.
      *

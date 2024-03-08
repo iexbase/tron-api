@@ -969,6 +969,32 @@ class Tron implements TronInterface
     }
 
     /**
+     * Delegate bandwidth or energy resources to other accounts in Stake2.0.
+     * Will delegate bandwidth OR Energy resources to other accounts.
+     *
+     * @param string|null $owner_address
+     * @param string $resource
+     * @param string|null $receiver_address
+     * @param int $balance
+     * @param bool $lock
+     * @param int $lock_period
+     * @return array
+     * @throws TronException
+     */
+    public function delegateResource(string $owner_address = null, string $resource = 'BANDWIDTH', string $receiver_address = null,int $balance = 0, bool $lock = false, int $lock_period = 0)
+    {
+        if($owner_address == null) {
+            $owner_address = $this->address['hex'];
+        }
+
+        $freeze = $this->transactionBuilder->delegateResource($owner_address, $resource, $receiver_address, $balance, $lock, $lock_period);
+        $signedTransaction = $this->signTransaction($freeze);
+        $response = $this->sendRawTransaction($signedTransaction);
+
+        return array_merge($response, $signedTransaction);
+    }
+
+    /**
      * Unfreeze TRX that has passed the minimum freeze duration.
      * Unfreezing will remove bandwidth and TRON Power.
      *
