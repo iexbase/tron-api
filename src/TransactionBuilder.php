@@ -284,8 +284,8 @@ class TransactionBuilder
     }
 
     /**
-     * Freezes an amount of TRX.
-     * Will give bandwidth OR Energy and TRON Power(voting rights) to the owner of the frozen tokens.
+     * Delegate bandwidth or energy resources to other accounts in Stake2.0.
+     * Will delegate bandwidth OR Energy resources to other accounts.
      *
      * @param string $owner_address
      * @param string $resource
