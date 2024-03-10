@@ -2,6 +2,8 @@ language: php
 
 php:
     - 7.4
+    - 8.0
+    - 8.1
 
 matrix:
     fast_finish: true
