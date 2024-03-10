@@ -987,8 +987,8 @@ class Tron implements TronInterface
             $owner_address = $this->address['hex'];
         }
 
-        $freeze = $this->transactionBuilder->delegateResource($owner_address, $resource, $receiver_address, $balance, $lock, $lock_period);
-        $signedTransaction = $this->signTransaction($freeze);
+        $delegate = $this->transactionBuilder->delegateResource($owner_address, $resource, $receiver_address, $balance, $lock, $lock_period);
+        $signedTransaction = $this->signTransaction($delegate);
         $response = $this->sendRawTransaction($signedTransaction);
 
         return array_merge($response, $signedTransaction);
