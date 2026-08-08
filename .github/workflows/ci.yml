@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: PHP 8.4 / Guzzle ${{ matrix.guzzle }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        guzzle:
+          - ^7.15
+          - ^8.0
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          extensions: bcmath, ctype, curl, filter, gmp, hash, json, mbstring
+          tools: composer:v2
+
+      - name: Validate Composer metadata
+        run: composer validate --strict
+
+      - name: Install dependencies for the selected Guzzle line
+        run: composer update "guzzlehttp/guzzle:${{ matrix.guzzle }}" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+
+      - name: Audit dependencies
+        run: composer audit
+
+      - name: Run quality checks
+        run: composer check

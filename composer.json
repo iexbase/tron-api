@@ -1,53 +1,72 @@
 {
     "name": "iexbase/tron-api",
-    "description": "A PHP API for interacting with Tron (Trx)",
+    "description": "A strictly typed PHP 8.4 SDK for TRON FullNode, SolidityNode, TronGrid, JSON-RPC, transactions, staking, events, and smart contracts.",
+    "type": "library",
     "license": "MIT",
-    "type":   "library",
     "homepage": "https://github.com/iexbase/tron-api",
+    "keywords": [
+        "iexbase",
+        "tron",
+        "tron-api",
+        "tron-php",
+        "trongrid",
+        "trc10",
+        "trc20",
+        "trc721",
+        "trc1155"
+    ],
     "authors": [
         {
             "name": "Shamsudin Serderov",
             "email": "steein.shamsudin@gmail.com"
         }
     ],
-    "keywords": [
-        "iexbase",
-        "tron-lib",
-        "tron-php",
-        "tron-api",
-        "tron-rest-api"
-    ],
-
-    "require": {
-        "php": ">=8.0",
-        "comely-io/data-types": "^1.0",
-        "guzzlehttp/guzzle": "^7.2",
-        "iexbase/web3.php": "^2.0.1",
-        "kornrunner/secp256k1": "^0.2",
-        "simplito/elliptic-php": "^1.0",
-        "ext-json": "*",
-        "ext-bcmath": "*"
+    "support": {
+        "issues": "https://github.com/iexbase/tron-api/issues",
+        "source": "https://github.com/iexbase/tron-api"
     },
-
+    "require": {
+        "php": "^8.4",
+        "ext-bcmath": "*",
+        "ext-ctype": "*",
+        "ext-curl": "*",
+        "ext-filter": "*",
+        "ext-gmp": "*",
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "guzzlehttp/guzzle": "^7.15 || ^8.0",
+        "kornrunner/keccak": "^1.1",
+        "nyra/bip39": "^1.0",
+        "simplito/elliptic-php": "^1.0.12"
+    },
     "require-dev": {
-        "phpunit/phpunit": "^6.0"
+        "phpstan/phpstan": "^2.2",
+        "phpunit/phpunit": "^13.3"
     },
     "autoload": {
         "psr-4": {
-            "IEXBase\\TronAPI\\": "src"
+            "IEXBase\\TronAPI\\": "src/"
         }
     },
-
     "autoload-dev": {
         "psr-4": {
-            "IEXBase\\TronAPI\\Test\\": "tests"
+            "IEXBase\\TronAPI\\Tests\\": "tests/"
         }
     },
-
+    "scripts": {
+        "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress --memory-limit=1G",
+        "check": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ],
+        "lint": "find src tests examples -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "test": "phpunit --configuration=phpunit.xml.dist"
+    },
     "config": {
+        "allow-plugins": false,
         "sort-packages": true
     },
-
-    "minimum-stability": "dev",
     "prefer-stable": true
 }
