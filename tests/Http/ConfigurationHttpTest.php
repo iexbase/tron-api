@@ -57,19 +57,43 @@ final class ConfigurationHttpTest extends TestCase
         self::assertSame('http://solidity-node:8091', $configuration->baseUri(NodeRole::SolidityNode));
         self::assertSame('https://indexer.example', $configuration->baseUri(NodeRole::Indexer));
         self::assertSame('http://json-rpc:8545', $configuration->baseUri(NodeRole::JsonRpc));
+        self::assertSame(
+            'http://json-rpc:8545',
+            $configuration->requestUri(NodeRole::JsonRpc, Endpoint::JsonRpc->value),
+        );
     }
 
     /**
-     * Rejects an absent optional indexer instead of silently falling back to TronGrid.
+     * Rejects absent optional providers instead of silently choosing a vendor or port.
      */
-    public function testCustomTopologyDoesNotAssumeIndexer(): void
+    public function testCustomTopologyDoesNotAssumeOptionalProviders(): void
     {
         $configuration = NodeConfiguration::custom('http://localhost:8090');
 
         self::assertFalse($configuration->hasEndpoint(NodeRole::Indexer));
-        $this->expectException(ConfigurationException::class);
+        self::assertFalse($configuration->hasEndpoint(NodeRole::JsonRpc));
 
-        $configuration->baseUri(NodeRole::Indexer);
+        foreach ([NodeRole::Indexer, NodeRole::JsonRpc] as $role) {
+            try {
+                $configuration->baseUri($role);
+                self::fail(sprintf('An absent %s provider was silently resolved.', $role->value));
+            } catch (ConfigurationException) {
+                self::addToAssertionCount(1);
+            }
+        }
+    }
+
+    /**
+     * Keeps the hosted JSON-RPC path in public profiles without imposing it on custom nodes.
+     */
+    public function testPublicJsonRpcUsesTheTronGridGatewayEndpoint(): void
+    {
+        $configuration = NodeConfiguration::forNetwork(Network::Shasta);
+
+        self::assertSame(
+            'https://api.shasta.trongrid.io/jsonrpc',
+            $configuration->requestUri(NodeRole::JsonRpc, Endpoint::JsonRpc->value),
+        );
     }
 
     /**
@@ -186,12 +210,66 @@ final class ConfigurationHttpTest extends TestCase
     }
 
     /**
-     * Prevents both broadcast routes from retrying after an ambiguous failure by default.
+     * Exposes self-hosted java-tron network aliases and monitor routes as GET requests.
+     */
+    public function testSelfHostedNodeDiagnosticsUseRegisteredRoutes(): void
+    {
+        self::assertSame('/net/listnodes', Endpoint::ListNodesNetworkAlias->request()->path);
+        self::assertSame('/monitor/getnodeinfo', Endpoint::GetMonitorNodeInfo->request()->path);
+        self::assertSame('/monitor/getstatsinfo', Endpoint::GetMonitorStatistics->request()->path);
+        self::assertSame(HttpMethod::Get, Endpoint::ListNodes->httpMethod());
+        self::assertSame(HttpMethod::Get, Endpoint::GetMonitorStatistics->httpMethod());
+        self::assertSame(NodeRole::FullNode, Endpoint::GetMonitorStatistics->nodeRole());
+    }
+
+    /**
+     * Matches every GET route currently declared by the official TRON HTTP reference.
+     */
+    public function testDocumentedNativeReadRoutesUseGet(): void
+    {
+        foreach ([
+            Endpoint::GetChainParameters,
+            Endpoint::GetEnergyPrices,
+            Endpoint::GetBandwidthPrices,
+            Endpoint::GetBurnedTrx,
+            Endpoint::ListAssets,
+            Endpoint::ListWitnesses,
+            Endpoint::ListWitnessesPaginated,
+            Endpoint::GetNextMaintenanceTime,
+            Endpoint::GetConfirmedLatestBlock,
+            Endpoint::GetConfirmedBurnedTrx,
+            Endpoint::ListConfirmedAssets,
+            Endpoint::ListConfirmedWitnesses,
+            Endpoint::ListConfirmedWitnessesPaginated,
+        ] as $endpoint) {
+            self::assertSame(HttpMethod::Get, $endpoint->httpMethod(), $endpoint->value);
+        }
+    }
+
+    /**
+     * Keeps all current TronGrid v1 paths available through the low-level catalog.
+     */
+    public function testCurrentIndexerRoutesAreRegistered(): void
+    {
+        self::assertSame('/v1/assets/{name}/list', Endpoint::GetIndexedAssetsByName->value);
+        self::assertSame(
+            '/v1/contracts/{contractAddress}/internal-transactions',
+            Endpoint::GetIndexedContractInternalTransactions->value,
+        );
+        self::assertSame(
+            '/v1/contracts/{contractAddress}/transactions',
+            Endpoint::GetIndexedContractTransactions->value,
+        );
+    }
+
+    /**
+     * Prevents broadcasts and stateful JSON-RPC methods from hidden retries.
      */
     public function testBroadcastEndpointsAreNotRetryableByDefault(): void
     {
         self::assertFalse(Endpoint::BroadcastTransaction->request()->retryable);
         self::assertFalse(Endpoint::BroadcastHex->request()->retryable);
+        self::assertFalse(Endpoint::JsonRpc->request()->retryable);
         self::assertTrue(Endpoint::GetNodeInfo->request()->retryable);
     }
 

@@ -16,7 +16,10 @@ namespace IEXBase\TronAPI\JsonRpc;
 
 use IEXBase\TronAPI\Api\ApiClient;
 use IEXBase\TronAPI\Api\Endpoint;
+use IEXBase\TronAPI\Encoding\Hex;
+use IEXBase\TronAPI\Exception\JsonRpcException;
 use IEXBase\TronAPI\Exception\ResponseDecodingException;
+use IEXBase\TronAPI\Exception\ValidationException;
 use IEXBase\TronAPI\Value\Address;
 use IEXBase\TronAPI\Value\Amount;
 use IEXBase\TronAPI\Value\ByteString;
@@ -26,6 +29,8 @@ use IEXBase\TronAPI\Value\ByteString;
  */
 final class JsonRpcClient
 {
+    private const LATEST_BLOCK = 'latest';
+
     private int $nextRequestId = 1;
 
     /**
@@ -38,12 +43,20 @@ final class JsonRpcClient
     /**
      * Calls any current or future JSON-RPC method and validates its envelope ID.
      *
-     * @param list<mixed> $parameters Ordered JSON-RPC parameters.
+     * @param array<mixed> $parameters JSON-RPC parameters to validate as an ordered list.
      */
     public function request(string $method, array $parameters = []): mixed
     {
-        if ($method === '' || preg_match('/^[A-Za-z][A-Za-z0-9_]*$/D', $method) !== 1) {
-            throw new ResponseDecodingException('A JSON-RPC method name is invalid.');
+        if ($method === ''
+            || preg_match('//u', $method) !== 1
+            || preg_match('/[\x00-\x20\x7F]/', $method) === 1
+        ) {
+            throw new ValidationException(
+                'A JSON-RPC method name must be non-empty text without whitespace or control bytes.',
+            );
+        }
+        if (!array_is_list($parameters)) {
+            throw new ValidationException('TRON JSON-RPC parameters must be an ordered list.');
         }
 
         $requestId = $this->nextRequestId++;
@@ -57,21 +70,63 @@ final class JsonRpcClient
             throw new ResponseDecodingException('The JSON-RPC response version or request ID does not match.');
         }
         $data = $response->data();
-        if (!array_key_exists('result', $data)) {
-            throw new ResponseDecodingException('The JSON-RPC response does not contain a result field.');
+        $hasResult = array_key_exists('result', $data);
+        $hasError = array_key_exists('error', $data);
+        if ($hasResult === $hasError) {
+            throw new ResponseDecodingException('A JSON-RPC response must contain exactly one result or error field.');
+        }
+        if ($hasError) {
+            $error = $data['error'];
+            if (!is_array($error)
+                || !is_int($error['code'] ?? null)
+                || !is_string($error['message'] ?? null)
+            ) {
+                throw new ResponseDecodingException('The JSON-RPC response contains a malformed error object.');
+            }
+
+            throw new JsonRpcException(
+                $error['code'],
+                $error['message'],
+                $error['data'] ?? null,
+            );
+        }
+        return $data['result'];
+    }
+
+    /**
+     * Returns every account address owned by the configured JSON-RPC node.
+     *
+     * @return list<Address>
+     */
+    public function accounts(): array
+    {
+        $result = $this->request('eth_accounts');
+        if (!is_array($result) || !array_is_list($result)) {
+            throw new ResponseDecodingException('JSON-RPC method `eth_accounts` did not return a list.');
         }
 
-        return $data['result'];
+        $addresses = [];
+        foreach ($result as $value) {
+            if (!is_string($value)) {
+                throw new ResponseDecodingException('JSON-RPC method `eth_accounts` returned a non-string address.');
+            }
+            $addresses[] = self::address($value, 'eth_accounts');
+        }
+
+        return $addresses;
     }
 
     /**
      * Returns an account TRX balance in exact sun units.
      */
-    public function balance(Address $address, BlockTag|Quantity $block = BlockTag::Latest): Amount
+    public function balance(
+        Address $address,
+        BlockTag|Quantity $block = BlockTag::Latest,
+    ): Amount
     {
         return Amount::fromAtomic($this->quantityResult('eth_getBalance', [
             $address->toEvmHex(),
-            JsonRpcParameter::block($block),
+            self::latestStateBlock($block, 'eth_getBalance'),
         ])->decimal());
     }
 
@@ -105,6 +160,14 @@ final class JsonRpcClient
     public function blockReceipts(BlockTag|Quantity $block): mixed
     {
         return $this->request('eth_getBlockReceipts', [JsonRpcParameter::block($block)]);
+    }
+
+    /**
+     * Returns every receipt in a block selected by its 32-byte hash.
+     */
+    public function blockReceiptsByHash(string $hash): mixed
+    {
+        return $this->request('eth_getBlockReceipts', [JsonRpcParameter::hash32($hash)]);
     }
 
     /**
@@ -168,9 +231,15 @@ final class JsonRpcClient
      *
      * @param array<string, mixed> $call Call fields using hexadecimal addresses/quantities.
      */
-    public function call(array $call, BlockTag|Quantity $block = BlockTag::Latest): ByteString
+    public function call(
+        array $call,
+        BlockTag|Quantity|CallBlockReference $block = BlockTag::Latest,
+    ): ByteString
     {
-        return ByteString::fromHex($this->stringResult('eth_call', [$call, JsonRpcParameter::block($block)]));
+        return ByteString::fromHex($this->stringResult('eth_call', [
+            $call,
+            self::callBlock($block),
+        ]));
     }
 
     /**
@@ -184,13 +253,16 @@ final class JsonRpcClient
     }
 
     /**
-     * Returns deployed bytecode at an address and block reference.
+     * Returns deployed bytecode at an address using java-tron's latest state.
      */
-    public function code(Address $address, BlockTag|Quantity $block = BlockTag::Latest): ByteString
+    public function code(
+        Address $address,
+        BlockTag|Quantity $block = BlockTag::Latest,
+    ): ByteString
     {
         return ByteString::fromHex($this->stringResult('eth_getCode', [
             $address->toEvmHex(),
-            JsonRpcParameter::block($block),
+            self::latestStateBlock($block, 'eth_getCode'),
         ]));
     }
 
@@ -205,7 +277,7 @@ final class JsonRpcClient
         return ByteString::fromHex($this->stringResult('eth_getStorageAt', [
             $address->toEvmHex(),
             $position->hex(),
-            JsonRpcParameter::block($block),
+            self::latestStateBlock($block, 'eth_getStorageAt'),
         ]));
     }
 
@@ -232,6 +304,8 @@ final class JsonRpcClient
      */
     public function createLogFilter(LogFilter $filter): Quantity
     {
+        $filter->assertStatefulCompatibility();
+
         return $this->quantityResult('eth_newFilter', [$filter->toArray()]);
     }
 
@@ -288,7 +362,7 @@ final class JsonRpcClient
      */
     public function coinbase(): Address
     {
-        return Address::fromEvmHex($this->stringResult('eth_coinbase'));
+        return self::address($this->stringResult('eth_coinbase'), 'eth_coinbase');
     }
 
     /**
@@ -387,4 +461,60 @@ final class JsonRpcClient
         return $result;
     }
 
+    /**
+     * Returns java-tron's only supported scalar state selector.
+     */
+    private static function latestStateBlock(BlockTag|Quantity $block, string $method): string
+    {
+        if ($block !== BlockTag::Latest) {
+            throw new ValidationException(sprintf(
+                'TRON JSON-RPC method `%s` supports only the latest state.',
+                $method,
+            ));
+        }
+
+        return self::LATEST_BLOCK;
+    }
+
+    /**
+     * Returns the documented eth_call scalar or object block selector.
+     *
+     * @return string|array{blockNumber: string}|array{blockHash: string}
+     */
+    private static function callBlock(BlockTag|Quantity|CallBlockReference $block): string|array
+    {
+        if ($block instanceof CallBlockReference) {
+            return $block->toArray();
+        }
+        if ($block instanceof Quantity) {
+            return CallBlockReference::forNumber($block)->toArray();
+        }
+        if ($block !== BlockTag::Latest) {
+            throw new ValidationException('TRON eth_call supports only `latest` as a scalar block tag.');
+        }
+
+        return self::LATEST_BLOCK;
+    }
+
+    /**
+     * Parses a 20-byte EVM or 21-byte TRON hexadecimal JSON-RPC address.
+     */
+    private static function address(string $value, string $method): Address
+    {
+        try {
+            $hex = Hex::canonicalize($value);
+
+            return match (strlen($hex)) {
+                Address::EVM_BYTES * 2 => Address::fromEvmHex($hex),
+                Address::PAYLOAD_BYTES * 2 => Address::fromHex($hex),
+                default => throw new ValidationException('The address has an unsupported byte length.'),
+            };
+        } catch (ValidationException $exception) {
+            throw new ResponseDecodingException(
+                sprintf('JSON-RPC method `%s` returned an invalid address.', $method),
+                0,
+                $exception,
+            );
+        }
+    }
 }

@@ -219,14 +219,17 @@ final class ContractWorkflowTest extends TestCase
     {
         $owner = (new LocalPrivateKeySigner(self::OWNER_KEY))->address();
         $abi = new Abi([new AbiEntry('constructor', '', [
-            new AbiParameter('initialValue', 'uint256'),
+            new AbiParameter('settings', 'tuple', [
+                new AbiParameter('initialValue', 'uint256'),
+                new AbiParameter('administrator', 'address'),
+            ]),
         ], [], 'nonpayable')]);
         $request = new DeploymentRequest(
             $owner,
             'Counter',
             $abi,
             ByteString::fromHex('60006000'),
-            ['7'],
+            [['initialValue' => '7', 'administrator' => $owner]],
             Amount::fromDecimal('100'),
             originEnergyLimit: 10_000,
         );
@@ -248,6 +251,29 @@ final class ContractWorkflowTest extends TestCase
             $request->deploymentBytecode()->toHex(false),
             $transport->request()->parameters['bytecode'],
         );
+        $rawData = $data['raw_data'] ?? null;
+        self::assertIsArray($rawData);
+        $contracts = $rawData['contract'] ?? null;
+        self::assertIsArray($contracts);
+        $contract = $contracts[0] ?? null;
+        self::assertIsArray($contract);
+        $parameter = $contract['parameter'] ?? null;
+        self::assertIsArray($parameter);
+        $value = $parameter['value'] ?? null;
+        self::assertIsArray($value);
+        $newContract = $value['new_contract'] ?? null;
+        self::assertIsArray($newContract);
+        $protocolAbi = $newContract['abi'] ?? null;
+        self::assertIsArray($protocolAbi);
+        $entries = $protocolAbi['entrys'] ?? null;
+        self::assertIsArray($entries);
+        $constructor = $entries[0] ?? null;
+        self::assertIsArray($constructor);
+        $inputs = $constructor['inputs'] ?? null;
+        self::assertIsArray($inputs);
+        $settings = $inputs[0] ?? null;
+        self::assertIsArray($settings);
+        self::assertArrayNotHasKey('components', $settings);
         self::assertSame(100_000_000, $transport->request()->parameters['fee_limit']);
     }
 

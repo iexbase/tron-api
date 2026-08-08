@@ -82,6 +82,10 @@ Stake 1.0 freeze/unfreeze/delegation routes are isolated in
 
 - Latest/confirmed node information.
 - Peer list and synchronization health/lag.
+- Self-hosted FullNode `/net/listnodes` compatibility and `/monitor` diagnostic
+  routes through the endpoint catalog.
+- Official GET semantics for parameter, price, burn, asset-list, witness, and
+  maintenance queries.
 - Chain parameters without lossy numeric conversion.
 - Energy/Bandwidth price histories, memo fee, confirmed burned TRX.
 
@@ -96,6 +100,7 @@ Stake 1.0 freeze/unfreeze/delegation routes are isolated in
 `AbiCodec` supports the Solidity ABI data types used by TVM:
 
 - `uint<M>` and `int<M>` with exact bounds;
+- canonical `uint`, `int`, `fixed`, and `ufixed` alias expansion;
 - `bool`, `address`, `string`, `bytes`, and `bytes<M>`;
 - fixed and dynamic arrays of static or dynamic values;
 - nested tuples and tuple arrays using component schemas;
@@ -103,7 +108,13 @@ Stake 1.0 freeze/unfreeze/delegation routes are isolated in
 - constructors, function returns, events, and custom errors.
 
 Selectors/topics use Keccak-256. Address values use 20-byte ABI form and are
-restored to checksum-verified TRON addresses at the boundary.
+restored to checksum-verified TRON addresses at the boundary. Complex indexed
+event values remain their irreversible topic hash, and recursive static/dynamic
+widths and aggregate traversal work are bounded before allocation or offset
+traversal.
+
+`Abi` accepts a standard ABI list, the `abi` list inside a compiler artifact, or
+java-tron's on-chain `{ "entrys": [...] }` container.
 
 ## JSON-RPC coverage
 
@@ -115,14 +126,30 @@ TRON JSON-RPC set:
   `eth_gasPrice`;
 - `eth_newFilter`, `eth_newBlockFilter`, filter changes/logs/uninstall, and
   `eth_getLogs`;
-- `eth_chainId`, `eth_coinbase`, `eth_protocolVersion`, `eth_syncing`;
+- `eth_accounts`, `eth_chainId`, `eth_coinbase`, `eth_protocolVersion`,
+  `eth_syncing`;
 - `net_listening`, `net_peerCount`, `net_version`, `web3_clientVersion`, and
   `web3_sha3`;
 - TRON's `buildTransaction` extension.
 
 `Quantity`, `BlockTag`, `ByteString`, and `LogFilter` enforce JSON-RPC hex and
-address conventions. `request()` remains available for a newly introduced
+address conventions. Block queries support `latest`, `earliest`, exact
+quantities, and `finalized`; state reads deliberately require `latest`.
+`eth_call` additionally accepts a typed block-number or block-hash object that
+java-tron validates before still executing against latest state. Stateful
+filters accept only their documented numeric/latest range and reject
+`blockHash`; stateless log queries also accept `earliest`, `finalized`, and an
+exclusive block hash. JSON-RPC error objects raise `JsonRpcException` with their
+original code/message/data. `request()` remains available for a newly introduced
 method while retaining envelope/version/request-ID validation.
+
+`BlockTag::Pending` remains present only for 6.0 source compatibility and is
+rejected locally because java-tron does not implement pending-state queries.
+
+Public profiles send JSON-RPC to TronGrid's `/jsonrpc` path. Custom profiles use
+the configured endpoint verbatim, including the root of a self-hosted JSON-RPC
+port. The endpoint catalog also includes all current TronGrid v1 paths without
+making native services depend on the built-in adapter.
 
 ## Indexed-data coverage
 

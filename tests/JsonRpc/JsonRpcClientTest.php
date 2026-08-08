@@ -16,9 +16,11 @@ namespace IEXBase\TronAPI\Tests\JsonRpc;
 
 use IEXBase\TronAPI\Api\ApiClient;
 use IEXBase\TronAPI\Configuration\NodeConfiguration;
+use IEXBase\TronAPI\Exception\JsonRpcException;
 use IEXBase\TronAPI\Exception\ResponseDecodingException;
 use IEXBase\TronAPI\Exception\ValidationException;
 use IEXBase\TronAPI\JsonRpc\BlockTag;
+use IEXBase\TronAPI\JsonRpc\CallBlockReference;
 use IEXBase\TronAPI\JsonRpc\JsonRpcClient;
 use IEXBase\TronAPI\JsonRpc\JsonRpcParameter;
 use IEXBase\TronAPI\JsonRpc\LogFilter;
@@ -33,6 +35,8 @@ use PHPUnit\Framework\TestCase;
  * Verifies JSON-RPC quantities, envelopes, IDs, filters, and exact balances.
  */
 #[CoversClass(JsonRpcClient::class)]
+#[CoversClass(JsonRpcException::class)]
+#[CoversClass(CallBlockReference::class)]
 #[CoversClass(JsonRpcParameter::class)]
 #[CoversClass(Quantity::class)]
 #[CoversClass(LogFilter::class)]
@@ -54,7 +58,7 @@ final class JsonRpcClientTest extends TestCase
         self::assertSame('16', $client->blockNumber()->decimal());
         self::assertSame(
             '9007199254740993',
-            $client->balance(Address::fromBase58(self::ACCOUNT), BlockTag::Latest)->atomicValue(),
+            $client->balance(Address::fromBase58(self::ACCOUNT))->atomicValue(),
         );
         self::assertSame([
             'jsonrpc' => '2.0',
@@ -68,7 +72,25 @@ final class JsonRpcClientTest extends TestCase
             'method' => 'eth_getBalance',
             'params' => [Address::fromBase58(self::ACCOUNT)->toEvmHex(), 'latest'],
         ], $transport->request(1)->parameters);
-        self::assertSame('https://rpc.example/jsonrpc', $transport->request()->uri);
+        self::assertSame('https://rpc.example', $transport->request()->uri);
+    }
+
+    /**
+     * Parses every node-owned account into the canonical TRON address value.
+     */
+    public function testNodeOwnedAccountsAreTypedAddresses(): void
+    {
+        $address = Address::fromBase58(self::ACCOUNT);
+        $client = $this->client(new QueueTransport(HttpResponseFactory::json([
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'result' => [$address->toEvmHex()],
+        ])));
+
+        $accounts = $client->accounts();
+
+        self::assertCount(1, $accounts);
+        self::assertTrue($address->equals($accounts[0]));
     }
 
     /**
@@ -84,6 +106,145 @@ final class JsonRpcClientTest extends TestCase
         $this->expectException(ResponseDecodingException::class);
 
         $client->blockNumber();
+    }
+
+    /**
+     * Preserves the code, message, and data from a valid JSON-RPC error response.
+     */
+    public function testStructuredJsonRpcErrorIsExposed(): void
+    {
+        $client = $this->client(new QueueTransport(HttpResponseFactory::json([
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'error' => [
+                'code' => -32602,
+                'message' => 'invalid block tag',
+                'data' => ['field' => 'block'],
+            ],
+        ])));
+
+        try {
+            $client->blockNumber();
+            self::fail('A JSON-RPC error response was returned as a result.');
+        } catch (JsonRpcException $exception) {
+            self::assertSame(-32602, $exception->rpcCode);
+            self::assertSame('invalid block tag', $exception->getMessage());
+            self::assertSame(['field' => 'block'], $exception->rpcData);
+        }
+    }
+
+    /**
+     * Sends the current finalized tag for block queries that support it.
+     */
+    public function testFinalizedBlockTagIsAvailableForBlockQueries(): void
+    {
+        $transport = new QueueTransport(HttpResponseFactory::json([
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'result' => null,
+        ]));
+        $client = $this->client($transport);
+
+        self::assertNull($client->blockByNumber(BlockTag::Finalized));
+        self::assertSame(
+            ['finalized', false],
+            $transport->request()->parameters['params'],
+        );
+    }
+
+    /**
+     * Keeps the legacy enum case source-compatible without sending an invalid tag.
+     */
+    public function testPendingBlockTagIsRejectedLocally(): void
+    {
+        $client = $this->client(new QueueTransport());
+        $this->expectException(ValidationException::class);
+
+        $client->blockByNumber(BlockTag::Pending);
+    }
+
+    /**
+     * Uses eth_call's documented object form without claiming historical execution.
+     */
+    public function testCallAcceptsNumberAndHashReferenceObjects(): void
+    {
+        $transport = new QueueTransport(
+            HttpResponseFactory::json(['jsonrpc' => '2.0', 'id' => 1, 'result' => '0x']),
+            HttpResponseFactory::json(['jsonrpc' => '2.0', 'id' => 2, 'result' => '0x']),
+        );
+        $client = $this->client($transport);
+        $hash = str_repeat('ab', 32);
+
+        $client->call([], Quantity::fromDecimal(16));
+        $client->call([], CallBlockReference::forHash($hash));
+
+        self::assertSame([[], ['blockNumber' => '0x10']], $transport->request(0)->parameters['params']);
+        self::assertSame([[], ['blockHash' => '0x' . $hash]], $transport->request(1)->parameters['params']);
+    }
+
+    /**
+     * Rejects unsupported historical selectors for state-query methods locally.
+     */
+    public function testStateReadsAcceptOnlyLatest(): void
+    {
+        $client = $this->client(new QueueTransport());
+        $this->expectException(ValidationException::class);
+
+        $client->balance(Address::fromBase58(self::ACCOUNT), BlockTag::Finalized);
+    }
+
+    /**
+     * Rejects stateless-only block selectors when creating a stateful filter.
+     */
+    public function testStatefulFilterRejectsUnsupportedBlockSelectors(): void
+    {
+        $client = $this->client(new QueueTransport());
+
+        foreach ([
+            new LogFilter(BlockTag::Earliest),
+            new LogFilter(BlockTag::Finalized),
+            new LogFilter(blockHash: str_repeat('ab', 32)),
+        ] as $filter) {
+            try {
+                $client->createLogFilter($filter);
+                self::fail('An unsupported eth_newFilter block selector was accepted.');
+            } catch (ValidationException) {
+                self::addToAssertionCount(1);
+            }
+        }
+    }
+
+    /**
+     * Allows future namespace-style method names while retaining positional parameters.
+     */
+    public function testGenericRequestAcceptsDottedMethodNames(): void
+    {
+        $transport = new QueueTransport(HttpResponseFactory::json([
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'result' => true,
+        ]));
+        $client = $this->client($transport);
+
+        self::assertTrue($client->request('vendor.health'));
+        self::assertSame('vendor.health', $transport->request()->parameters['method']);
+    }
+
+    /**
+     * Selects block receipts by a validated 32-byte hash when requested.
+     */
+    public function testBlockReceiptsCanBeSelectedByHash(): void
+    {
+        $transport = new QueueTransport(HttpResponseFactory::json([
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'result' => [],
+        ]));
+        $hash = str_repeat('ab', 32);
+        $client = $this->client($transport);
+
+        self::assertSame([], $client->blockReceiptsByHash($hash));
+        self::assertSame(['0x' . $hash], $transport->request()->parameters['params']);
     }
 
     /**
@@ -127,6 +288,28 @@ final class JsonRpcClientTest extends TestCase
             'address' => $account->toEvmHex(),
             'topics' => ['0x' . $topic, null],
         ], $filter->toArray());
+    }
+
+    /**
+     * Rejects more topic positions than the JSON-RPC log protocol permits.
+     */
+    public function testLogFilterEnforcesTopicPositionLimit(): void
+    {
+        $topic = str_repeat('ab', 32);
+        $this->expectException(ValidationException::class);
+
+        new LogFilter(topics: [$topic, $topic, $topic, $topic, $topic]);
+    }
+
+    /**
+     * Rejects redundant address filters before issuing a remote request.
+     */
+    public function testLogFilterRejectsDuplicateAddresses(): void
+    {
+        $account = Address::fromBase58(self::ACCOUNT);
+        $this->expectException(ValidationException::class);
+
+        new LogFilter(addresses: [$account, $account]);
     }
 
     /**

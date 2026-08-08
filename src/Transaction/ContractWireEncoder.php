@@ -426,24 +426,13 @@ final class ContractWireEncoder
             return $value->toNodeData();
         }
         if ($value instanceof Abi) {
-            return ['entrys' => $value->entries()];
+            return $value->protocolFields();
         }
         if ($value instanceof AbiEntry) {
-            return [
-                'anonymous' => $value->anonymous,
-                'name' => $value->name,
-                'inputs' => $value->inputs(),
-                'outputs' => $value->outputs(),
-                'type' => $value->type,
-                'state_mutability' => $value->stateMutability,
-            ];
+            return $value->protocolFields();
         }
         if ($value instanceof AbiParameter) {
-            return [
-                'indexed' => $value->indexed,
-                'name' => $value->name,
-                'type' => $value->type,
-            ];
+            return $value->protocolFields();
         }
         if (!is_array($value)) {
             throw new TransactionException(sprintf('The `%s` field must contain a `%s` message.', $label, $schemaName));

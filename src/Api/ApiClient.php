@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace IEXBase\TronAPI\Api;
 
 use IEXBase\TronAPI\Configuration\NodeConfiguration;
+use IEXBase\TronAPI\Enum\NodeRole;
 use IEXBase\TronAPI\Exception\HttpException;
 use IEXBase\TronAPI\Exception\NodeException;
 use IEXBase\TronAPI\Exception\RateLimitException;
@@ -77,7 +78,7 @@ final readonly class ApiClient
     {
         $httpResponse = $this->transport->send(new HttpRequest(
             $request->method,
-            $this->configuration->baseUri($request->nodeRole) . $request->path,
+            $this->configuration->requestUri($request->nodeRole, $request->path),
             $this->configuration->requestHeaders($request->nodeRole),
             $request->parameters,
             $this->configuration->connectTimeoutSeconds,
@@ -114,7 +115,9 @@ final readonly class ApiClient
         }
 
         $data = $this->decodeJson($httpResponse);
-        $this->throwForEmbeddedError($data);
+        if ($request->nodeRole !== NodeRole::JsonRpc) {
+            $this->throwForEmbeddedError($data);
+        }
 
         return new ApiResponse($data, $httpResponse->statusCode, $httpResponse->headers());
     }
@@ -144,7 +147,7 @@ final readonly class ApiClient
     }
 
     /**
-     * Converts HTTP-200 error envelopes used by nodes and JSON-RPC to exceptions.
+     * Converts HTTP-200 native-node error envelopes to exceptions.
      *
      * @param array<mixed> $data Decoded response data.
      */

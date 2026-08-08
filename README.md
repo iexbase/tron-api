@@ -79,6 +79,10 @@ $tron = Tron::create(
 );
 ```
 
+`jsonRpcUri` is the complete endpoint. Use the dedicated port root for a
+self-hosted java-tron node (for example `http://full-node.internal:8545`) or the
+provider's exact path when it exposes JSON-RPC through a gateway.
+
 See [Node providers](docs/node-providers.md) for role routing and custom adapter
 contracts.
 
@@ -187,8 +191,10 @@ serialization. See [Security model](docs/security-model.md).
 The ABI subsystem supports overloaded functions, constructors, nested tuples,
 fixed/dynamic arrays, signed and unsigned integers, bytes, strings, addresses,
 return values, custom errors, revert reasons, anonymous events, and indexed log
-topics. Complete calldata can be resolved by its four-byte selector and decoded
-with `ContractService::decodeFunctionCall()`.
+topics. Solidity aliases are expanded to their canonical types before selector
+hashing, and recursive encoded data is bounded before allocation. Complete
+calldata can be resolved by its four-byte selector and decoded with
+`ContractService::decodeFunctionCall()`.
 
 Typed contract services provide:
 

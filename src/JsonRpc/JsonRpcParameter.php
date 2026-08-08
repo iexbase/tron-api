@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace IEXBase\TronAPI\JsonRpc;
 
 use IEXBase\TronAPI\Encoding\Hex;
+use IEXBase\TronAPI\Exception\ValidationException;
 
 /**
  * Encodes shared JSON-RPC block references and fixed-width hashes consistently.
@@ -26,6 +27,10 @@ final class JsonRpcParameter
      */
     public static function block(BlockTag|Quantity $block): string
     {
+        if ($block === BlockTag::Pending) {
+            throw new ValidationException('TRON java-tron does not support the `pending` block tag.');
+        }
+
         return $block instanceof BlockTag ? $block->value : $block->hex();
     }
 

@@ -33,8 +33,6 @@ final class AbiCodec
 {
     private const WORD_BYTES = 32;
     private const WORD_HEX_LENGTH = 64;
-    private const MAX_ARRAY_ELEMENTS = 100_000;
-    private const MAX_DATA_BYTES = 16_777_216;
 
     /**
      * Encodes ordered or parameter-name-indexed arguments without a selector.
@@ -47,7 +45,7 @@ final class AbiCodec
         $types = $this->types($parameters);
         $values = $this->orderedValues($arguments, $this->names($parameters));
 
-        return $this->encodeSequence($types, $values);
+        return $this->encodeSequence($types, $values, new AbiTraversalBudget());
     }
 
     /**
@@ -62,7 +60,10 @@ final class AbiCodec
             throw new ContractException('Only a function ABI entry can encode function call data.');
         }
 
-        return $function->selector() . $this->encodeParameters($function->inputs(), $arguments);
+        $parameters = $this->encodeParameters($function->inputs(), $arguments);
+        $this->checkedByteSum(4, $this->encodedByteLength($parameters));
+
+        return $function->selector() . $parameters;
     }
 
     /**
@@ -95,7 +96,12 @@ final class AbiCodec
     public function decodeParameters(array $parameters, string $encoded): DecodedValues
     {
         $data = $this->dataHex($encoded);
-        $values = $this->decodeSequence($this->types($parameters), $data, 0);
+        $values = $this->decodeSequence(
+            $this->types($parameters),
+            $data,
+            0,
+            new AbiTraversalBudget(),
+        );
 
         return new DecodedValues($values, $this->names($parameters));
     }
@@ -158,10 +164,10 @@ final class AbiCodec
             }
 
             $topicHex = Hex::canonicalize($topic, 32);
-            $type = AbiType::fromParameter($parameter);
+            $type = $parameter->typeDescriptor();
             $values[] = $type->isHashedInEventTopic()
                 ? ByteString::fromHex($topicHex)
-                : $this->decodeStaticValue($type, $topicHex, 0);
+                : $this->decodeStaticValue($type, $topicHex, 0, new AbiTraversalBudget());
         }
 
         if ($indexedPosition !== count($topics)) {
@@ -247,7 +253,7 @@ final class AbiCodec
     private function types(array $parameters): array
     {
         return array_map(
-            static fn (AbiParameter $parameter): AbiType => AbiType::fromParameter($parameter),
+            static fn (AbiParameter $parameter): AbiType => $parameter->typeDescriptor(),
             $parameters,
         );
     }
@@ -306,35 +312,42 @@ final class AbiCodec
      * @param list<AbiType> $types Ordered ABI types.
      * @param list<mixed>   $values Ordered values.
      */
-    private function encodeSequence(array $types, array $values): string
+    private function encodeSequence(array $types, array $values, AbiTraversalBudget $budget): string
     {
         if (count($types) !== count($values)) {
             throw new ContractException('ABI types and values must have equal lengths.');
         }
+        $budget->consume(count($types));
 
-        $headBytes = array_sum(array_map(
-            static fn (AbiType $type): int => $type->isDynamic() ? self::WORD_BYTES : $type->staticByteLength(),
-            $types,
-        ));
+        $headBytes = $this->sequenceHeadByteLength($types);
         $head = '';
         $tail = '';
 
         foreach ($types as $position => $type) {
             if ($type->isDynamic()) {
-                $head .= $this->encodeUnsignedInteger($headBytes + intdiv(strlen($tail), 2), 256);
-                $tail .= $this->encodeValue($type, $values[$position]);
+                $tailBytes = $this->encodedByteLength($tail);
+                $head .= $this->encodeUnsignedInteger($this->checkedByteSum($headBytes, $tailBytes), 256);
+                $encodedValue = $this->encodeValue($type, $values[$position], $budget);
+                $this->checkedByteSum(
+                    $headBytes,
+                    $this->checkedByteSum($tailBytes, $this->encodedByteLength($encodedValue)),
+                );
+                $tail .= $encodedValue;
             } else {
-                $head .= $this->encodeValue($type, $values[$position]);
+                $head .= $this->encodeValue($type, $values[$position], $budget);
             }
         }
 
-        return $head . $tail;
+        $encoded = $head . $tail;
+        $this->encodedByteLength($encoded);
+
+        return $encoded;
     }
 
     /**
      * Encodes one elementary or recursive ABI value.
      */
-    private function encodeValue(AbiType $type, mixed $value): string
+    private function encodeValue(AbiType $type, mixed $value, AbiTraversalBudget $budget): string
     {
         return match ($type->kind) {
             'address' => $this->encodeAddress($value),
@@ -353,8 +366,8 @@ final class AbiCodec
                 $this->requiredSize($type),
             ),
             'string' => $this->encodeString($value),
-            'array' => $this->encodeArray($type, $value),
-            'tuple' => $this->encodeTuple($type, $value),
+            'array' => $this->encodeArray($type, $value, $budget),
+            'tuple' => $this->encodeTuple($type, $value, $budget),
             default => throw new ContractException(sprintf('ABI encoder has no implementation for `%s`.', $type->kind)),
         };
     }
@@ -396,11 +409,13 @@ final class AbiCodec
      */
     private function encodeDynamicBytes(string $bytes): string
     {
+        $byteLength = strlen($bytes);
+        $paddedByteLength = $this->paddedByteLength($byteLength);
+        $this->checkedByteSum(self::WORD_BYTES, $paddedByteLength);
         $hex = bin2hex($bytes);
-        $paddedHexLength = (int) (ceil(strlen($bytes) / self::WORD_BYTES) * self::WORD_HEX_LENGTH);
 
-        return $this->encodeUnsignedInteger(strlen($bytes), 256)
-            . str_pad($hex, $paddedHexLength, '0');
+        return $this->encodeUnsignedInteger($byteLength, 256)
+            . str_pad($hex, $paddedByteLength * 2, '0');
     }
 
     /**
@@ -430,14 +445,14 @@ final class AbiCodec
     /**
      * Encodes a fixed or dynamic array using one shared sequence implementation.
      */
-    private function encodeArray(AbiType $type, mixed $value): string
+    private function encodeArray(AbiType $type, mixed $value, AbiTraversalBudget $budget): string
     {
         if (!is_array($value) || !array_is_list($value)) {
             throw new ContractException('An ABI array argument must be a PHP list.');
         }
 
         $count = count($value);
-        if ($count > self::MAX_ARRAY_ELEMENTS) {
+        if ($count > AbiType::MAX_ARRAY_ELEMENTS) {
             throw new ContractException('The ABI array exceeds the configured safety limit.');
         }
 
@@ -446,7 +461,7 @@ final class AbiCodec
         }
 
         $types = array_fill(0, $count, $type->requiredElementType());
-        $encoded = $this->encodeSequence($types, $value);
+        $encoded = $this->encodeSequence($types, $value, $budget);
 
         return $type->arrayLength === null
             ? $this->encodeUnsignedInteger($count, 256) . $encoded
@@ -456,7 +471,7 @@ final class AbiCodec
     /**
      * Encodes tuple values supplied as a list or as unique component names.
      */
-    private function encodeTuple(AbiType $type, mixed $value): string
+    private function encodeTuple(AbiType $type, mixed $value, AbiTraversalBudget $budget): string
     {
         if (!is_array($value)) {
             throw new ContractException('An ABI tuple argument must be a PHP array.');
@@ -465,6 +480,7 @@ final class AbiCodec
         return $this->encodeSequence(
             $type->components(),
             $this->orderedValues($value, $type->componentNames()),
+            $budget,
         );
     }
 
@@ -583,8 +599,16 @@ final class AbiCodec
      * @param list<AbiType> $types Ordered expected types.
      * @return list<mixed>
      */
-    private function decodeSequence(array $types, string $data, int $sequenceOffset): array
+    private function decodeSequence(
+        array $types,
+        string $data,
+        int $sequenceOffset,
+        AbiTraversalBudget $budget,
+    ): array
     {
+        $budget->consume(count($types));
+        $headBytes = $this->sequenceHeadByteLength($types);
+        $this->readHex($data, $sequenceOffset, $headBytes);
         $cursor = $sequenceOffset;
         $values = [];
 
@@ -594,10 +618,18 @@ final class AbiCodec
                 if ($relativeOffset % self::WORD_BYTES !== 0) {
                     throw new ContractException('An ABI dynamic offset must be aligned to a 32-byte word.');
                 }
-                $values[] = $this->decodeValue($type, $data, $sequenceOffset + $relativeOffset);
+                if ($relativeOffset < $headBytes) {
+                    throw new ContractException('An ABI dynamic offset points inside its sequence head.');
+                }
+                $values[] = $this->decodeValue(
+                    $type,
+                    $data,
+                    $this->checkedByteSum($sequenceOffset, $relativeOffset),
+                    $budget,
+                );
                 $cursor += self::WORD_BYTES;
             } else {
-                $values[] = $this->decodeStaticValue($type, $data, $cursor);
+                $values[] = $this->decodeStaticValue($type, $data, $cursor, $budget);
                 $cursor += $type->staticByteLength();
             }
         }
@@ -608,15 +640,29 @@ final class AbiCodec
     /**
      * Decodes one dynamic or static ABI value from a byte offset.
      */
-    private function decodeValue(AbiType $type, string $data, int $offset): mixed
+    private function decodeValue(
+        AbiType $type,
+        string $data,
+        int $offset,
+        AbiTraversalBudget $budget,
+    ): mixed
     {
         if (!$type->isDynamic()) {
-            return $this->decodeStaticValue($type, $data, $offset);
+            return $this->decodeStaticValue($type, $data, $offset, $budget);
         }
 
         if ($type->kind === 'bytes' || $type->kind === 'string') {
             $length = $this->wordInteger($this->readWord($data, $offset));
-            $hex = $this->readHex($data, $offset + self::WORD_BYTES, $length);
+            $paddedLength = $this->paddedByteLength($length);
+            $paddedHex = $this->readHex(
+                $data,
+                $this->checkedByteSum($offset, self::WORD_BYTES),
+                $paddedLength,
+            );
+            $hex = substr($paddedHex, 0, $length * 2);
+            if (trim(substr($paddedHex, $length * 2), '0') !== '') {
+                throw new ContractException('Decoded dynamic ABI bytes contain invalid padding.');
+            }
             $bytes = $hex === '' ? '' : Hex::toBytes($hex);
 
             if ($type->kind === 'string') {
@@ -631,7 +677,7 @@ final class AbiCodec
         }
 
         if ($type->kind === 'array' || $type->kind === 'tuple') {
-            return $this->decodeComposite($type, $data, $offset);
+            return $this->decodeComposite($type, $data, $offset, $budget);
         }
 
         throw new ContractException(sprintf('ABI decoder has no dynamic implementation for `%s`.', $type->kind));
@@ -640,10 +686,15 @@ final class AbiCodec
     /**
      * Decodes one statically placed ABI value at a byte offset.
      */
-    private function decodeStaticValue(AbiType $type, string $data, int $offset): mixed
+    private function decodeStaticValue(
+        AbiType $type,
+        string $data,
+        int $offset,
+        AbiTraversalBudget $budget,
+    ): mixed
     {
         if ($type->kind === 'array' || $type->kind === 'tuple') {
-            return $this->decodeComposite($type, $data, $offset);
+            return $this->decodeComposite($type, $data, $offset, $budget);
         }
 
         $word = $this->readWord($data, $offset);
@@ -672,10 +723,15 @@ final class AbiCodec
      *
      * @return list<mixed>
      */
-    private function decodeComposite(AbiType $type, string $data, int $offset): array
+    private function decodeComposite(
+        AbiType $type,
+        string $data,
+        int $offset,
+        AbiTraversalBudget $budget,
+    ): array
     {
         if ($type->kind === 'tuple') {
-            return $this->decodeSequence($type->components(), $data, $offset);
+            return $this->decodeSequence($type->components(), $data, $offset, $budget);
         }
 
         $length = $type->arrayLength;
@@ -685,7 +741,7 @@ final class AbiCodec
             $sequenceOffset += self::WORD_BYTES;
         }
 
-        if ($length > self::MAX_ARRAY_ELEMENTS) {
+        if ($length > AbiType::MAX_ARRAY_ELEMENTS) {
             throw new ContractException('Decoded ABI array length exceeds the safety limit.');
         }
 
@@ -693,6 +749,7 @@ final class AbiCodec
             array_fill(0, $length, $type->requiredElementType()),
             $data,
             $sequenceOffset,
+            $budget,
         );
     }
 
@@ -830,7 +887,7 @@ final class AbiCodec
         }
 
         $data = Hex::canonicalize($withoutPrefix);
-        if (intdiv(strlen($data), 2) > self::MAX_DATA_BYTES) {
+        if (intdiv(strlen($data), 2) > AbiType::MAX_ENCODED_BYTES) {
             throw new ContractException('ABI data exceeds the configured decoder safety limit.');
         }
 
@@ -859,6 +916,67 @@ final class AbiCodec
         }
 
         return $type->precision;
+    }
+
+    /**
+     * Returns the complete in-place head width of a tuple-like sequence.
+     *
+     * @param list<AbiType> $types Ordered ABI types.
+     */
+    private function sequenceHeadByteLength(array $types): int
+    {
+        $bytes = 0;
+        foreach ($types as $type) {
+            $bytes = $this->checkedByteSum(
+                $bytes,
+                $type->isDynamic() ? self::WORD_BYTES : $type->staticByteLength(),
+            );
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * Returns a word-aligned byte width without integer overflow.
+     */
+    private function paddedByteLength(int $length): int
+    {
+        if ($length < 0 || $length > AbiType::MAX_ENCODED_BYTES) {
+            throw new ContractException('ABI byte data exceeds the configured encoding safety limit.');
+        }
+
+        $padding = (self::WORD_BYTES - ($length % self::WORD_BYTES)) % self::WORD_BYTES;
+
+        return $this->checkedByteSum($length, $padding);
+    }
+
+    /**
+     * Adds encoded byte lengths without overflow or oversized allocations.
+     */
+    private function checkedByteSum(int $left, int $right): int
+    {
+        if ($left < 0 || $right < 0 || $right > AbiType::MAX_ENCODED_BYTES - $left) {
+            throw new ContractException('ABI data exceeds the configured encoding safety limit.');
+        }
+
+        return $left + $right;
+    }
+
+    /**
+     * Validates internal hexadecimal output and returns its byte width.
+     */
+    private function encodedByteLength(string $encoded): int
+    {
+        if (strlen($encoded) % 2 !== 0) {
+            throw new ContractException('The ABI encoder produced an invalid hexadecimal length.');
+        }
+
+        $bytes = intdiv(strlen($encoded), 2);
+        if ($bytes > AbiType::MAX_ENCODED_BYTES) {
+            throw new ContractException('ABI data exceeds the configured encoding safety limit.');
+        }
+
+        return $bytes;
     }
 
     /**

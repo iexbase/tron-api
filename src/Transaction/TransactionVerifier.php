@@ -20,7 +20,6 @@ use IEXBase\TronAPI\Exception\TransactionException;
 use IEXBase\TronAPI\Encoding\Hex;
 use IEXBase\TronAPI\Value\Address;
 use IEXBase\TronAPI\Value\ByteString;
-use JsonException;
 
 /**
  * Verifies every user-controlled field before a node-built transaction is signed.
@@ -140,7 +139,7 @@ final class TransactionVerifier
             }
 
             try {
-                return hash_equals($this->abiJson($expected), $this->abiJson(Abi::fromArray($actual)));
+                return $expected->protocolFields() === Abi::fromArray($actual)->protocolFields();
             } catch (\Throwable) {
                 return false;
             }
@@ -185,15 +184,5 @@ final class TransactionVerifier
         }
 
         return $actual === $expected;
-    }
-
-    /**
-     * Serializes a parsed ABI into one deterministic semantic comparison string.
-     *
-     * @throws JsonException When an internally constructed ABI cannot be encoded.
-     */
-    private function abiJson(Abi $abi): string
-    {
-        return json_encode($abi, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 }

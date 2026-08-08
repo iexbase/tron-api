@@ -25,13 +25,15 @@ final readonly class AbiParameter implements JsonSerializable
     /** @var list<self> */
     private array $components;
 
+    private AbiType $descriptor;
+
     /**
      * Validates a parameter and its recursively declared tuple components.
      *
-     * @param string     $name Parameter name, which may be empty in valid ABI.
-     * @param string     $type Canonical ABI type expression.
-     * @param list<self> $components Tuple component definitions.
-     * @param bool       $indexed Whether an event parameter is indexed.
+     * @param string       $name Parameter name, which may be empty in valid ABI.
+     * @param string       $type Canonical ABI type expression.
+     * @param array<mixed> $components Tuple component definitions to validate.
+     * @param bool         $indexed Whether an event parameter is indexed.
      */
     public function __construct(
         public string $name,
@@ -39,6 +41,10 @@ final readonly class AbiParameter implements JsonSerializable
         array $components = [],
         public bool $indexed = false,
     ) {
+        if (!array_is_list($components)) {
+            throw new ContractException('ABI tuple components must be a list.');
+        }
+
         if ($type === '' || preg_match('/\s/', $type) === 1) {
             throw new ContractException('An ABI parameter requires a non-empty type without whitespace.');
         }
@@ -47,7 +53,22 @@ final readonly class AbiParameter implements JsonSerializable
             throw new ContractException('Only tuple ABI parameters may declare components.');
         }
 
-        $this->components = $components;
+        $checkedComponents = [];
+        foreach ($components as $component) {
+            if (!$component instanceof self) {
+                throw new ContractException('Every ABI tuple component must be an AbiParameter.');
+            }
+            if ($component->indexed) {
+                throw new ContractException('Nested ABI tuple components cannot be indexed.');
+            }
+            $checkedComponents[] = $component;
+        }
+
+        $this->components = $checkedComponents;
+        $this->descriptor = AbiType::fromParameter($this);
+        if (!$this->descriptor->isDynamic()) {
+            $this->descriptor->staticByteLength();
+        }
     }
 
     /**
@@ -95,21 +116,57 @@ final readonly class AbiParameter implements JsonSerializable
     }
 
     /**
+     * Returns the validated recursive descriptor used by the ABI codec.
+     */
+    public function typeDescriptor(): AbiType
+    {
+        return $this->descriptor;
+    }
+
+    /**
      * Returns the canonical signature type, expanding tuple component types.
      */
     public function canonicalType(): string
     {
-        if (!str_starts_with($this->type, 'tuple')) {
-            return $this->type;
+        return $this->descriptor->canonicalType();
+    }
+
+    /**
+     * Returns fields represented by java-tron's on-chain ABI protobuf.
+     *
+     * Tuple components are intentionally absent because the TRON protocol ABI
+     * parameter message stores only indexed, name, and type.
+     *
+     * @return array{indexed: bool, name: string, type: string}
+     */
+    public function protocolFields(): array
+    {
+        return [
+            'indexed' => $this->indexed,
+            'name' => $this->name,
+            'type' => $this->descriptor->jsonType(),
+        ];
+    }
+
+    /**
+     * Returns one standard ABI JSON parameter record.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(bool $includeIndexed = false): array
+    {
+        $data = [
+            'name' => $this->name,
+            'type' => $this->descriptor->jsonType(),
+        ];
+        if (str_starts_with($this->type, 'tuple')) {
+            $data['components'] = $this->components;
+        }
+        if ($includeIndexed) {
+            $data['indexed'] = $this->indexed;
         }
 
-        $suffix = substr($this->type, strlen('tuple'));
-        $types = array_map(
-            static fn (self $component): string => $component->canonicalType(),
-            $this->components,
-        );
-
-        return '(' . implode(',', $types) . ')' . $suffix;
+        return $data;
     }
 
     /**
@@ -119,15 +176,7 @@ final readonly class AbiParameter implements JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        $data = ['name' => $this->name, 'type' => $this->type];
-        if ($this->components !== []) {
-            $data['components'] = $this->components;
-        }
-        if ($this->indexed) {
-            $data['indexed'] = true;
-        }
-
-        return $data;
+        return $this->toArray();
     }
 
     /**

@@ -8,10 +8,29 @@ All notable changes to TronAPI are documented in this file.
 
 - Dedicated examples for retrieving account transactions and receipts, sending
   verified TRX and TRC-20 transactions, and querying individual token standards.
+- Self-hosted java-tron monitor routes and the `/net/listnodes` compatibility
+  route in the provider-neutral endpoint catalog.
+- Structured JSON-RPC exceptions, node-owned account discovery, typed eth_call
+  block references, and hash-selected block receipt queries.
+- Every current TronGrid v1 reference path in the low-level endpoint catalog.
 
 ### Fixed
 
 - Corrected the public `Amount` method names used by the README quick-start code.
+- Canonicalized Solidity ABI aliases before selector hashing, rejected invalid
+  fixed-point type spellings, and retained hashes for all complex indexed event
+  values.
+- Bounded recursive ABI sizes, aggregate traversal work, and offsets; required
+  dynamic-byte padding; and matched deployment verification to the
+  tuple-component limits of TRON's ABI protobuf.
+- Aligned JSON-RPC block tags and latest-state reads with current java-tron
+  behavior, and pinned CI actions to immutable revisions.
+- Kept custom JSON-RPC requests on the exact configured self-hosted endpoint,
+  aligned native read routes with documented GET semantics, and narrowed
+  stateful filters to their supported selectors. The legacy `pending` enum case
+  remains source-compatible but is rejected before transport.
+- Disabled implicit JSON-RPC retries so stateful filter creation and change
+  polling cannot be duplicated or consumed after an ambiguous response.
 
 ## [6.0.1] - 2026-08-08
 

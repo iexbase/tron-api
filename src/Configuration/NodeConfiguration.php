@@ -21,14 +21,15 @@ use IEXBase\TronAPI\Exception\ConfigurationException;
 /**
  * Stores explicit node topology, provider headers, timeouts, and retry behaviour.
  *
- * Each data source has its own base URI so an application can combine a local
+ * Each data source has its own URI so an application can combine a local
  * FullNode, a separate SolidityNode, any compatible indexer, and JSON-RPC.
- * Public network factories route all roles through the official hosted URI.
+ * Native/indexer values are base URIs, while JSON-RPC stores the complete
+ * endpoint because self-hosted nodes serve it at the root of a separate port.
  */
 final class NodeConfiguration
 {
     /** @var array<string, string|null> */
-    private readonly array $baseUris;
+    private readonly array $roleUris;
 
     /** @var array<string, string> */
     private readonly array $defaultHeaders;
@@ -43,7 +44,7 @@ final class NodeConfiguration
      * @param string                    $fullNodeUri FullNode base URI.
      * @param string                    $solidityNodeUri SolidityNode base URI.
      * @param string|null               $indexerUri Optional indexed-data provider base URI.
-     * @param string                    $jsonRpcUri JSON-RPC node base URI.
+     * @param string|null               $jsonRpcUri Complete optional JSON-RPC endpoint URI.
      * @param float                     $connectTimeoutSeconds TCP/TLS connection timeout.
      * @param float                     $requestTimeoutSeconds Complete request timeout.
      * @param int                       $maximumResponseBytes Maximum decoded HTTP response body size.
@@ -56,7 +57,7 @@ final class NodeConfiguration
         string $fullNodeUri,
         string $solidityNodeUri,
         ?string $indexerUri,
-        string $jsonRpcUri,
+        ?string $jsonRpcUri,
         public readonly float $connectTimeoutSeconds,
         public readonly float $requestTimeoutSeconds,
         public readonly int $maximumResponseBytes,
@@ -97,11 +98,11 @@ final class NodeConfiguration
         }
         $this->authenticationHeadersByRole = $checkedAuthenticationHeaders;
 
-        $this->baseUris = [
+        $this->roleUris = [
             NodeRole::FullNode->value => self::validateBaseUri($fullNodeUri),
             NodeRole::SolidityNode->value => self::validateBaseUri($solidityNodeUri),
             NodeRole::Indexer->value => $indexerUri === null ? null : self::validateBaseUri($indexerUri),
-            NodeRole::JsonRpc->value => self::validateBaseUri($jsonRpcUri),
+            NodeRole::JsonRpc->value => $jsonRpcUri === null ? null : self::validateBaseUri($jsonRpcUri),
         ];
     }
 
@@ -148,7 +149,7 @@ final class NodeConfiguration
             $baseUri,
             $baseUri,
             $baseUri,
-            $baseUri,
+            $baseUri . '/jsonrpc',
             $connectTimeoutSeconds,
             $requestTimeoutSeconds,
             $maximumResponseBytes,
@@ -164,7 +165,7 @@ final class NodeConfiguration
      * @param string               $fullNodeUri Required latest-state node URI.
      * @param string|null          $solidityNodeUri Solidified-state URI, or FullNode URI when omitted.
      * @param string|null          $indexerUri Optional indexed-data provider URI.
-     * @param string|null          $jsonRpcUri JSON-RPC URI, or FullNode URI when omitted.
+     * @param string|null          $jsonRpcUri Complete JSON-RPC endpoint URI, or null when unused.
      * @param float                $connectTimeoutSeconds Connection timeout.
      * @param float                $requestTimeoutSeconds Complete request timeout.
      * @param int                  $maximumResponseBytes Maximum HTTP response body size.
@@ -190,7 +191,7 @@ final class NodeConfiguration
             $fullNodeUri,
             $solidityNodeUri ?? $fullNodeUri,
             $indexerUri,
-            $jsonRpcUri ?? $fullNodeUri,
+            $jsonRpcUri,
             $connectTimeoutSeconds,
             $requestTimeoutSeconds,
             $maximumResponseBytes,
@@ -201,11 +202,13 @@ final class NodeConfiguration
     }
 
     /**
-     * Returns the configured base URI for one node role.
+     * Returns the configured URI for one node role.
+     *
+     * JSON-RPC returns its complete endpoint; other roles return a base URI.
      */
     public function baseUri(NodeRole $role): string
     {
-        $uri = $this->baseUris[$role->value];
+        $uri = $this->roleUris[$role->value];
         if ($uri === null) {
             throw new ConfigurationException(sprintf('No %s endpoint is configured.', $role->value));
         }
@@ -214,11 +217,32 @@ final class NodeConfiguration
     }
 
     /**
+     * Resolves a safe relative request path against its configured role URI.
+     *
+     * JSON-RPC uses the configured URI verbatim because TronGrid exposes
+     * `/jsonrpc`, while a self-hosted java-tron node exposes the root of its
+     * dedicated JSON-RPC port.
+     */
+    public function requestUri(NodeRole $role, string $path): string
+    {
+        $uri = $this->baseUri($role);
+        if ($role === NodeRole::JsonRpc) {
+            if ($path !== '/jsonrpc') {
+                throw new ConfigurationException('JSON-RPC requests must use the registered JSON-RPC endpoint.');
+            }
+
+            return $uri;
+        }
+
+        return $uri . $path;
+    }
+
+    /**
      * Returns whether an optional role has a configured endpoint.
      */
     public function hasEndpoint(NodeRole $role): bool
     {
-        return $this->baseUris[$role->value] !== null;
+        return $this->roleUris[$role->value] !== null;
     }
 
     /**
@@ -231,7 +255,7 @@ final class NodeConfiguration
         return [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-            'User-Agent' => 'iexbase-tron-api/6.0.0',
+            'User-Agent' => 'iexbase-tron-api/6.0',
             ...$this->defaultHeaders,
             ...($this->authenticationHeadersByRole[$role->value] ?? []),
         ];
@@ -246,7 +270,7 @@ final class NodeConfiguration
     {
         return [
             'network' => $this->network,
-            'baseUris' => $this->baseUris,
+            'roleUris' => $this->roleUris,
             'connectTimeoutSeconds' => $this->connectTimeoutSeconds,
             'requestTimeoutSeconds' => $this->requestTimeoutSeconds,
             'maximumResponseBytes' => $this->maximumResponseBytes,

@@ -20,6 +20,11 @@ namespace IEXBase\TronAPI\JsonRpc;
 enum BlockTag: string
 {
     case Earliest = 'earliest';
+    case Finalized = 'finalized';
     case Latest = 'latest';
+
+    /**
+     * Retains the 6.0 source contract but is rejected before a TRON request.
+     */
     case Pending = 'pending';
 }

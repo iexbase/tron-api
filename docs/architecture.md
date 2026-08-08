@@ -88,6 +88,10 @@ Every request declares one `NodeRole`:
 `NodeConfiguration` resolves each role independently. Services never concatenate
 base URIs or repeat provider headers. See [Node providers](node-providers.md).
 
+The JSON-RPC role stores a complete endpoint instead of a base URI. This keeps
+the hosted TronGrid `/jsonrpc` path separate from java-tron's self-hosted root
+path on its dedicated JSON-RPC port.
+
 ## Transaction integrity
 
 The node is allowed to construct protocol protobuf JSON, but it is not trusted to
@@ -111,6 +115,13 @@ array, and tuple forms. `AbiCodec` is the single encoder/decoder for calls,
 returns, constructor arguments, errors, and event data. Contract and token
 wrappers compose this codec rather than implementing their own padding or
 selector rules.
+
+The local ABI retains tuple component schemas for selector construction and
+encoding. TRON's on-chain `SmartContract.ABI.Entry.Param` protobuf stores only
+`indexed`, `name`, and `type`, so transaction verification compares that exact
+protocol projection while retaining the richer local schema. Applications that
+need tuple components after loading a deployed contract should keep the
+compiler-produced ABI as their authoritative interface.
 
 ## Extensibility
 

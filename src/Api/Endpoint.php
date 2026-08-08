@@ -73,7 +73,10 @@ enum Endpoint: string
     case GetTransactionCountByBlock = '/wallet/gettransactioncountbyblocknum';
     case GetTransactionReceiptExtension = '/wallet/gettransactionreceiptbyid';
     case ListNodes = '/wallet/listnodes';
+    case ListNodesNetworkAlias = '/net/listnodes';
     case GetNodeInfo = '/wallet/getnodeinfo';
+    case GetMonitorNodeInfo = '/monitor/getnodeinfo';
+    case GetMonitorStatistics = '/monitor/getstatsinfo';
     case GetChainParameters = '/wallet/getchainparameters';
     case GetEnergyPrices = '/wallet/getenergyprices';
     case GetBandwidthPrices = '/wallet/getbandwidthprices';
@@ -201,6 +204,9 @@ enum Endpoint: string
     case GetIndexedAccountInternalTransactions = '/v1/accounts/{address}/internal-transactions';
     case GetIndexedTransactionInternalTransactions = '/v1/transactions/{transactionId}/internal-transactions';
     case GetIndexedAccountTrc20Balances = '/v1/accounts/{address}/trc20/balance';
+    case GetIndexedAssetsByName = '/v1/assets/{name}/list';
+    case GetIndexedContractInternalTransactions = '/v1/contracts/{contractAddress}/internal-transactions';
+    case GetIndexedContractTransactions = '/v1/contracts/{contractAddress}/transactions';
     case GetIndexedTransactionEvents = '/v1/transactions/{transactionId}/events';
     case GetIndexedContractEvents = '/v1/contracts/{address}/events';
     case GetIndexedBlockEvents = '/v1/blocks/{blockNumber}/events';
@@ -238,16 +244,41 @@ enum Endpoint: string
     }
 
     /**
-     * Returns GET for indexed endpoints and POST for native node interfaces.
+     * Returns the documented HTTP method for native and indexed endpoints.
      */
     public function httpMethod(): HttpMethod
     {
         return match ($this) {
             self::ListProposals,
+            self::ListProposalsPaginated,
             self::GetPendingTransactions,
             self::GetPendingTransactionCount,
+            self::GetChainParameters,
+            self::GetEnergyPrices,
+            self::GetBandwidthPrices,
+            self::GetBurnedTrx,
+            self::GetMemoFee,
+            self::GetTotalTransactions,
+            self::ListAssets,
+            self::ListWitnesses,
+            self::ListWitnessesPaginated,
+            self::GetNextMaintenanceTime,
+            self::ListExchangesPaginated,
             self::GetMarketPairs,
-            self::GetConfirmedMarketPairs => HttpMethod::Get,
+            self::GetConfirmedLatestBlock,
+            self::GetConfirmedBurnedTrx,
+            self::GetConfirmedEnergyPrices,
+            self::GetConfirmedBandwidthPrices,
+            self::ListConfirmedAssets,
+            self::ListConfirmedWitnesses,
+            self::ListConfirmedWitnessesPaginated,
+            self::GetConfirmedMarketPairs,
+            self::ListNodes,
+            self::ListNodesNetworkAlias,
+            self::GetNodeInfo,
+            self::GetConfirmedNodeInfo,
+            self::GetMonitorNodeInfo,
+            self::GetMonitorStatistics => HttpMethod::Get,
             default => $this->nodeRole() === NodeRole::Indexer ? HttpMethod::Get : HttpMethod::Post,
         };
     }
@@ -295,6 +326,6 @@ enum Endpoint: string
      */
     public function isRetryableByDefault(): bool
     {
-        return $this !== self::BroadcastTransaction && $this !== self::BroadcastHex;
+        return !in_array($this, [self::BroadcastTransaction, self::BroadcastHex, self::JsonRpc], true);
     }
 }

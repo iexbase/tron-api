@@ -52,7 +52,10 @@ final class Trc721Contract extends OperatorTokenContract
      */
     public function ownerOf(int|string $tokenId): Address
     {
-        return $this->addressOutput($this->read('ownerOf(uint256)', [$this->tokenId($tokenId)]));
+        return $this->addressOutput($this->read(
+            'ownerOf(uint256)',
+            [$this->unsignedDecimal($tokenId, 'token ID')],
+        ));
     }
 
     /**
@@ -76,7 +79,10 @@ final class Trc721Contract extends OperatorTokenContract
      */
     public function tokenUri(int|string $tokenId): string
     {
-        return $this->stringOutput($this->read('tokenURI(uint256)', [$this->tokenId($tokenId)]));
+        return $this->stringOutput($this->read(
+            'tokenURI(uint256)',
+            [$this->unsignedDecimal($tokenId, 'token ID')],
+        ));
     }
 
     /**
@@ -84,7 +90,10 @@ final class Trc721Contract extends OperatorTokenContract
      */
     public function approvedAddress(int|string $tokenId): Address
     {
-        return $this->addressOutput($this->read('getApproved(uint256)', [$this->tokenId($tokenId)]));
+        return $this->addressOutput($this->read(
+            'getApproved(uint256)',
+            [$this->unsignedDecimal($tokenId, 'token ID')],
+        ));
     }
 
     /**
@@ -145,7 +154,7 @@ final class Trc721Contract extends OperatorTokenContract
     ): Transaction {
         return $this->createTransaction(
             $signature,
-            [$owner, $recipient, $this->tokenId($tokenId)],
+            [$owner, $recipient, $this->unsignedDecimal($tokenId, 'token ID')],
             $feeLimit,
             $memo,
             $permissionId,
@@ -166,7 +175,7 @@ final class Trc721Contract extends OperatorTokenContract
     ): Transaction {
         return $this->createTransaction(
             'safeTransferFrom(address,address,uint256,bytes)',
-            [$owner, $recipient, $this->tokenId($tokenId), $data],
+            [$owner, $recipient, $this->unsignedDecimal($tokenId, 'token ID'), $data],
             $feeLimit,
             $memo,
             $permissionId,
@@ -185,7 +194,7 @@ final class Trc721Contract extends OperatorTokenContract
     ): Transaction {
         return $this->createTransaction(
             'approve(address,uint256)',
-            [$approved, $this->tokenId($tokenId)],
+            [$approved, $this->unsignedDecimal($tokenId, 'token ID')],
             $feeLimit,
             $memo,
             $permissionId,

@@ -28,24 +28,36 @@ final readonly class Abi implements JsonSerializable
     private array $entries;
 
     /**
-     * Rejects duplicate canonical entries and stores ABI source order.
+     * Rejects ambiguous duplicates and stores one copy of repeated error declarations.
      *
-     * @param list<AbiEntry> $entries Parsed ABI entries.
+     * @param array<mixed> $entries Parsed ABI entries to validate.
      */
     public function __construct(array $entries)
     {
+        if (!array_is_list($entries)) {
+            throw new ContractException('A contract ABI must be a list of entries.');
+        }
+
         $identities = [];
+        $uniqueEntries = [];
         foreach ($entries as $entry) {
+            if (!$entry instanceof AbiEntry) {
+                throw new ContractException('Every contract ABI entry must be an AbiEntry.');
+            }
             $identity = in_array($entry->type, ['function', 'event', 'error'], true)
                 ? $entry->type . ':' . $entry->signature()
                 : $entry->type;
             if (isset($identities[$identity])) {
+                if ($entry->type === 'error') {
+                    continue;
+                }
                 throw new ContractException(sprintf('The ABI contains duplicate entry `%s`.', $identity));
             }
             $identities[$identity] = true;
+            $uniqueEntries[] = $entry;
         }
 
-        $this->entries = $entries;
+        $this->entries = $uniqueEntries;
     }
 
     /**
@@ -67,13 +79,22 @@ final readonly class Abi implements JsonSerializable
     }
 
     /**
-     * Parses either a standard ABI list or java-tron's `{entrys: [...]}` shape.
+     * Parses a standard list, compiler artifact, or java-tron ABI container.
      *
      * @param array<mixed> $data Decoded ABI data.
      */
     public static function fromArray(array $data): self
     {
-        if (isset($data['entrys'])) {
+        if (array_key_exists('abi', $data) && array_key_exists('entrys', $data)) {
+            throw new ContractException('An ABI container cannot contain both `abi` and `entrys`.');
+        }
+        if (array_key_exists('abi', $data)) {
+            $data = $data['abi'];
+            if (!is_array($data)) {
+                throw new ContractException('A compiler artifact `abi` field must be a list.');
+            }
+        }
+        if (array_key_exists('entrys', $data)) {
             $data = $data['entrys'];
             if (!is_array($data)) {
                 throw new ContractException('The java-tron ABI `entrys` field must be a list.');
@@ -172,6 +193,21 @@ final readonly class Abi implements JsonSerializable
     public function entries(): array
     {
         return $this->entries;
+    }
+
+    /**
+     * Returns the exact field structure represented by TRON's ABI protobuf.
+     *
+     * @return array{entrys: list<array<string, mixed>>}
+     */
+    public function protocolFields(): array
+    {
+        return [
+            'entrys' => array_map(
+                static fn (AbiEntry $entry): array => $entry->protocolFields(),
+                $this->entries,
+            ),
+        ];
     }
 
     /**

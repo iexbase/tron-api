@@ -21,7 +21,12 @@ use IEXBase\TronAPI\Exception\ContractException;
  */
 final readonly class AbiType
 {
-    private const MAX_ARRAY_ELEMENTS = 100_000;
+    /** Maximum values accepted in one array or tuple descriptor. */
+    public const MAX_ARRAY_ELEMENTS = 100_000;
+
+    /** Maximum encoded ABI payload accepted for one operation. */
+    public const MAX_ENCODED_BYTES = 16_777_216;
+
     private const MAX_NESTING_DEPTH = 32;
 
     /** @var list<self> */
@@ -29,6 +34,9 @@ final readonly class AbiType
 
     /** @var list<string> */
     private array $componentNames;
+
+    private bool $dynamic;
+    private ?int $staticBytes;
 
     /**
      * Stores a validated elementary, tuple, or array ABI type.
@@ -52,6 +60,24 @@ final readonly class AbiType
     ) {
         $this->components = $components;
         $this->componentNames = $componentNames;
+        $this->dynamic = match ($kind) {
+            'string', 'bytes' => true,
+            'array' => $arrayLength === null
+                || ($elementType ?? throw new ContractException('An ABI array element type is missing.'))->isDynamic(),
+            'tuple' => array_any($components, static fn (self $component): bool => $component->isDynamic()),
+            default => false,
+        };
+        $this->staticBytes = $this->dynamic
+            ? null
+            : match ($kind) {
+                'array' => self::checkedProduct(
+                    $arrayLength ?? throw new ContractException('A fixed ABI array length is missing.'),
+                    ($elementType ?? throw new ContractException('An ABI array element type is missing.'))
+                        ->staticByteLength(),
+                ),
+                'tuple' => self::tupleByteLength($components),
+                default => 32,
+            };
     }
 
     /**
@@ -67,12 +93,7 @@ final readonly class AbiType
      */
     public function isDynamic(): bool
     {
-        return match ($this->kind) {
-            'string', 'bytes' => true,
-            'array' => $this->arrayLength === null || $this->requiredElementType()->isDynamic(),
-            'tuple' => array_any($this->components, static fn (self $component): bool => $component->isDynamic()),
-            default => false,
-        };
+        return $this->dynamic;
     }
 
     /**
@@ -83,7 +104,7 @@ final readonly class AbiType
      */
     public function isHashedInEventTopic(): bool
     {
-        return $this->isDynamic() || $this->staticByteLength() > 32;
+        return in_array($this->kind, ['array', 'bytes', 'string', 'tuple'], true);
     }
 
     /**
@@ -91,22 +112,46 @@ final readonly class AbiType
      */
     public function staticByteLength(): int
     {
-        if ($this->isDynamic()) {
+        if ($this->staticBytes === null) {
             throw new ContractException('A dynamic ABI type does not have a static byte length.');
         }
 
-        if ($this->kind === 'array') {
-            return $this->requiredArrayLength() * $this->requiredElementType()->staticByteLength();
-        }
+        return $this->staticBytes;
+    }
 
-        if ($this->kind === 'tuple') {
-            return array_sum(array_map(
-                static fn (self $component): int => $component->staticByteLength(),
+    /**
+     * Returns the canonical type used in function, event, and error signatures.
+     */
+    public function canonicalType(): string
+    {
+        return match ($this->kind) {
+            'array' => $this->requiredElementType()->canonicalType()
+                . '[' . ($this->arrayLength === null ? '' : (string) $this->arrayLength) . ']',
+            'tuple' => '(' . implode(',', array_map(
+                static fn (self $component): string => $component->canonicalType(),
                 $this->components,
-            ));
+            )) . ')',
+            'int', 'uint' => $this->kind . (string) $this->requiredSize(),
+            'fixed', 'ufixed' => $this->kind
+                . (string) $this->requiredSize()
+                . 'x'
+                . (string) $this->requiredPrecision(),
+            'fixed_bytes' => 'bytes' . (string) $this->requiredSize(),
+            default => $this->kind,
+        };
+    }
+
+    /**
+     * Returns the canonical type spelling used by Solidity ABI JSON.
+     */
+    public function jsonType(): string
+    {
+        if ($this->kind === 'array') {
+            return $this->requiredElementType()->jsonType()
+                . '[' . ($this->arrayLength === null ? '' : (string) $this->arrayLength) . ']';
         }
 
-        return 32;
+        return $this->kind === 'tuple' ? 'tuple' : $this->canonicalType();
     }
 
     /**
@@ -166,7 +211,7 @@ final readonly class AbiType
 
         if (preg_match('/^(.*)\[([0-9]*)\]$/D', $expression, $matches) === 1) {
             $length = $matches[2] === '' ? null : (int) $matches[2];
-            if ($length !== null && ($length < 1 || $length > self::MAX_ARRAY_ELEMENTS)) {
+            if ($length !== null && $length > self::MAX_ARRAY_ELEMENTS) {
                 throw new ContractException('A fixed ABI array has an invalid or unsafe length.');
             }
 
@@ -178,6 +223,10 @@ final readonly class AbiType
         }
 
         if ($expression === 'tuple') {
+            if (count($tupleComponents) > self::MAX_ARRAY_ELEMENTS) {
+                throw new ContractException('An ABI tuple exceeds the configured component safety limit.');
+            }
+
             $components = array_map(
                 static fn (AbiParameter $component): self => self::parse(
                     $component->type,
@@ -204,9 +253,13 @@ final readonly class AbiType
             return new self($matches[1], $bits);
         }
 
-        if (preg_match('/^(u?fixed)([0-9]*)x?([0-9]*)$/D', $expression, $matches) === 1) {
-            $bits = $matches[2] === '' ? 128 : (int) $matches[2];
-            $precision = $matches[3] === '' ? 18 : (int) $matches[3];
+        if ($expression === 'fixed' || $expression === 'ufixed') {
+            return new self($expression, 128, 18);
+        }
+
+        if (preg_match('/^(u?fixed)([0-9]+)x([0-9]+)$/D', $expression, $matches) === 1) {
+            $bits = (int) $matches[2];
+            $precision = (int) $matches[3];
             self::assertIntegerBits($bits, $expression);
             if ($precision < 1 || $precision > 80) {
                 throw new ContractException(sprintf('ABI type `%s` has an invalid decimal precision.', $expression));
@@ -239,5 +292,71 @@ final readonly class AbiType
         if ($bits < 8 || $bits > 256 || $bits % 8 !== 0) {
             throw new ContractException(sprintf('ABI type `%s` requires bits from 8 to 256 in steps of 8.', $expression));
         }
+    }
+
+    /**
+     * Returns a required size from a validated elementary descriptor.
+     */
+    private function requiredSize(): int
+    {
+        if ($this->size === null) {
+            throw new ContractException(sprintf('ABI type `%s` is missing its size.', $this->kind));
+        }
+
+        return $this->size;
+    }
+
+    /**
+     * Returns a required precision from a validated fixed-point descriptor.
+     */
+    private function requiredPrecision(): int
+    {
+        if ($this->precision === null) {
+            throw new ContractException(sprintf('ABI type `%s` is missing its precision.', $this->kind));
+        }
+
+        return $this->precision;
+    }
+
+    /**
+     * Adds two encoded widths without overflowing or exceeding the ABI safety cap.
+     */
+    private static function checkedSum(int $left, int $right): int
+    {
+        if ($left < 0 || $right < 0 || $right > self::MAX_ENCODED_BYTES - $left) {
+            throw new ContractException('The static ABI value exceeds the configured encoding safety limit.');
+        }
+
+        return $left + $right;
+    }
+
+    /**
+     * Multiplies a fixed-array width without overflowing or exceeding the ABI safety cap.
+     */
+    private static function checkedProduct(int $count, int $elementBytes): int
+    {
+        if ($count < 0
+            || $elementBytes < 0
+            || ($count !== 0 && $elementBytes > intdiv(self::MAX_ENCODED_BYTES, $count))
+        ) {
+            throw new ContractException('The static ABI value exceeds the configured encoding safety limit.');
+        }
+
+        return $count * $elementBytes;
+    }
+
+    /**
+     * Calculates one static tuple width once when its descriptor is created.
+     *
+     * @param list<self> $components Validated tuple components.
+     */
+    private static function tupleByteLength(array $components): int
+    {
+        $length = 0;
+        foreach ($components as $component) {
+            $length = self::checkedSum($length, $component->staticByteLength());
+        }
+
+        return $length;
     }
 }

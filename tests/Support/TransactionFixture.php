@@ -22,7 +22,6 @@ use IEXBase\TronAPI\Transaction\TransactionIntent;
 use IEXBase\TronAPI\Transaction\TransactionWireEncoder;
 use IEXBase\TronAPI\Value\Address;
 use IEXBase\TronAPI\Value\ByteString;
-use JsonException;
 
 /**
  * Builds internally consistent node transaction objects for isolated unit tests.
@@ -34,7 +33,6 @@ final class TransactionFixture
      *
      * @return array<string, mixed>
      *
-     * @throws JsonException When ABI fixture data cannot be encoded.
      */
     public static function data(TransactionIntent $intent): array
     {
@@ -92,7 +90,6 @@ final class TransactionFixture
      * @param array<string, mixed> $values Typed intent values.
      * @return array<string, mixed>
      *
-     * @throws JsonException When ABI fixture data cannot be encoded.
      */
     private static function nodeValues(array $values): array
     {
@@ -107,7 +104,6 @@ final class TransactionFixture
     /**
      * Converts one recursive typed intent value into its node representation.
      *
-     * @throws JsonException When ABI fixture data cannot be encoded.
      */
     private static function nodeValue(mixed $value): mixed
     {
@@ -121,9 +117,7 @@ final class TransactionFixture
             return $value->toNodeData();
         }
         if ($value instanceof Abi) {
-            $encoded = json_encode($value, JSON_THROW_ON_ERROR);
-
-            return json_decode($encoded, true, 512, JSON_THROW_ON_ERROR);
+            return $value->protocolFields();
         }
         if (!is_array($value)) {
             return $value;

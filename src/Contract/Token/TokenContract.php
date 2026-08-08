@@ -130,15 +130,18 @@ abstract class TokenContract
     }
 
     /**
-     * Validates a canonical non-negative integer token identifier.
+     * Validates one semantically named unsigned decimal contract argument.
      */
-    protected function tokenId(int|string $tokenId): string
+    protected function unsignedDecimal(int|string $value, string $label): string
     {
-        $value = (string) $tokenId;
-        if (preg_match('/^(0|[1-9][0-9]*)$/D', $value) !== 1) {
-            throw new ContractException('A token ID must be a canonical non-negative decimal integer.');
+        $decimal = (string) $value;
+        if (preg_match('/^(0|[1-9][0-9]*)$/D', $decimal) !== 1) {
+            throw new ContractException(sprintf(
+                'A %s must be a canonical non-negative decimal integer.',
+                $label,
+            ));
         }
 
-        return $value;
+        return $decimal;
     }
 }

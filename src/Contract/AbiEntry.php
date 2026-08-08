@@ -35,12 +35,12 @@ final readonly class AbiEntry implements JsonSerializable
     /**
      * Validates and stores a complete ABI entry.
      *
-     * @param string             $type ABI entry category.
-     * @param string             $name Function, event, or error name.
-     * @param list<AbiParameter> $inputs Ordered input parameters.
-     * @param list<AbiParameter> $outputs Ordered output parameters.
-     * @param string             $stateMutability Solidity state mutability.
-     * @param bool               $anonymous Whether an event omits its signature topic.
+     * @param string       $type ABI entry category.
+     * @param string       $name Function, event, or error name.
+     * @param array<mixed> $inputs Ordered input parameters to validate.
+     * @param array<mixed> $outputs Ordered output parameters to validate.
+     * @param string       $stateMutability Solidity state mutability.
+     * @param bool         $anonymous Whether an event omits its signature topic.
      */
     public function __construct(
         public string $type,
@@ -50,17 +50,10 @@ final readonly class AbiEntry implements JsonSerializable
         public string $stateMutability,
         public bool $anonymous = false,
     ) {
-        if (!in_array($type, self::TYPES, true)) {
-            throw new ContractException(sprintf('Unsupported ABI entry type `%s`.', $type));
-        }
-
-        if (!in_array($stateMutability, self::MUTABILITIES, true)) {
-            throw new ContractException(sprintf('Unsupported ABI state mutability `%s`.', $stateMutability));
-        }
-
-        if (in_array($type, ['function', 'event', 'error'], true) && $name === '') {
-            throw new ContractException(sprintf('An ABI %s entry requires a name.', $type));
-        }
+        $inputs = self::parameterList($inputs, 'inputs');
+        $outputs = self::parameterList($outputs, 'outputs');
+        self::validateDefinition($type, $name, $stateMutability, $anonymous);
+        self::validateParameterRules($type, $inputs, $outputs, $anonymous);
 
         $this->inputs = $inputs;
         $this->outputs = $outputs;
@@ -173,24 +166,56 @@ final readonly class AbiEntry implements JsonSerializable
     }
 
     /**
+     * Returns fields represented by java-tron's on-chain ABI entry protobuf.
+     *
+     * @return array<string, mixed>
+     */
+    public function protocolFields(): array
+    {
+        $fields = [
+            'anonymous' => $this->anonymous,
+            'name' => $this->name,
+            'inputs' => array_map(
+                static fn (AbiParameter $parameter): array => $parameter->protocolFields(),
+                $this->inputs,
+            ),
+            'outputs' => array_map(
+                static fn (AbiParameter $parameter): array => $parameter->protocolFields(),
+                $this->outputs,
+            ),
+            'type' => $this->type,
+        ];
+        if (in_array($this->type, ['constructor', 'fallback', 'function', 'receive'], true)) {
+            $fields['state_mutability'] = $this->stateMutability;
+        }
+
+        return $fields;
+    }
+
+    /**
      * Serializes this entry in standard Solidity ABI JSON shape.
      *
      * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
-        $data = [
-            'type' => $this->type,
-            'stateMutability' => $this->stateMutability,
-        ];
+        $data = ['type' => $this->type];
         if ($this->name !== '') {
             $data['name'] = $this->name;
         }
-        if ($this->inputs !== []) {
-            $data['inputs'] = $this->inputs;
+        if (!in_array($this->type, ['fallback', 'receive'], true)) {
+            $data['inputs'] = $this->type === 'event'
+                ? array_map(
+                    static fn (AbiParameter $parameter): array => $parameter->toArray(true),
+                    $this->inputs,
+                )
+                : $this->inputs;
         }
-        if ($this->outputs !== []) {
+        if ($this->type === 'function') {
             $data['outputs'] = $this->outputs;
+        }
+        if (in_array($this->type, ['constructor', 'fallback', 'function', 'receive'], true)) {
+            $data['stateMutability'] = $this->stateMutability;
         }
         if ($this->type === 'event') {
             $data['anonymous'] = $this->anonymous;
@@ -226,5 +251,99 @@ final readonly class AbiEntry implements JsonSerializable
         }
 
         return $parameters;
+    }
+
+    /**
+     * Validates category, name, mutability, and anonymous-entry invariants.
+     */
+    private static function validateDefinition(
+        string $type,
+        string $name,
+        string $stateMutability,
+        bool $anonymous,
+    ): void {
+        if (!in_array($type, self::TYPES, true)) {
+            throw new ContractException(sprintf('Unsupported ABI entry type `%s`.', $type));
+        }
+        if (!in_array($stateMutability, self::MUTABILITIES, true)) {
+            throw new ContractException(sprintf('Unsupported ABI state mutability `%s`.', $stateMutability));
+        }
+
+        $isNamed = in_array($type, ['function', 'event', 'error'], true);
+        if ($isNamed && $name === '') {
+            throw new ContractException(sprintf('An ABI %s entry requires a name.', $type));
+        }
+        if (!$isNamed && $name !== '') {
+            throw new ContractException(sprintf('An ABI %s entry cannot have a name.', $type));
+        }
+        if ($anonymous && $type !== 'event') {
+            throw new ContractException('Only an ABI event may be anonymous.');
+        }
+        if ($type === 'receive' && $stateMutability !== 'payable') {
+            throw new ContractException('An ABI receive entry must be payable.');
+        }
+        if ($type === 'constructor' && in_array($stateMutability, ['pure', 'view'], true)) {
+            throw new ContractException('An ABI constructor must be payable or nonpayable.');
+        }
+        if (in_array($type, ['event', 'error'], true) && $stateMutability !== 'nonpayable') {
+            throw new ContractException(sprintf('An ABI %s entry cannot declare state mutability.', $type));
+        }
+    }
+
+    /**
+     * Validates entry-specific input, output, and indexed-topic constraints.
+     *
+     * @param list<AbiParameter> $inputs Validated input parameters.
+     * @param list<AbiParameter> $outputs Validated output parameters.
+     */
+    private static function validateParameterRules(
+        string $type,
+        array $inputs,
+        array $outputs,
+        bool $anonymous,
+    ): void {
+        if ($type !== 'function' && $outputs !== []) {
+            throw new ContractException(sprintf('An ABI %s entry cannot declare outputs.', $type));
+        }
+        if (in_array($type, ['fallback', 'receive'], true) && $inputs !== []) {
+            throw new ContractException(sprintf('An ABI %s entry cannot declare inputs.', $type));
+        }
+
+        $indexedCount = 0;
+        foreach ([...$inputs, ...$outputs] as $parameter) {
+            if (!$parameter->indexed) {
+                continue;
+            }
+            if ($type !== 'event') {
+                throw new ContractException('Only top-level ABI event inputs may be indexed.');
+            }
+            ++$indexedCount;
+        }
+        if ($type === 'event' && $indexedCount > ($anonymous ? 4 : 3)) {
+            throw new ContractException('An ABI event declares more indexed parameters than topic limits permit.');
+        }
+    }
+
+    /**
+     * Validates a constructor-supplied parameter collection as an ordered list.
+     *
+     * @param array<mixed> $parameters Untrusted parameter collection.
+     * @return list<AbiParameter>
+     */
+    private static function parameterList(array $parameters, string $label): array
+    {
+        if (!array_is_list($parameters)) {
+            throw new ContractException(sprintf('ABI entry %s must be a list.', $label));
+        }
+
+        $checked = [];
+        foreach ($parameters as $parameter) {
+            if (!$parameter instanceof AbiParameter) {
+                throw new ContractException('Every ABI entry parameter must be an AbiParameter.');
+            }
+            $checked[] = $parameter;
+        }
+
+        return $checked;
     }
 }

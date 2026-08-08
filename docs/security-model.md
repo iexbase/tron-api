@@ -95,6 +95,10 @@ short expiration, and must be single-use server-side.
 
 - Every state-changing contract call requires an explicit positive fee limit.
 - Addresses and integers are range-checked before ABI encoding.
+- Recursive ABI widths, aggregate value traversal, dynamic offsets, array
+  counts, and byte padding are validated before allocation or decoding.
+- JSON-RPC log filters enforce block-range, address, topic-position, and topic
+  alternative limits before transport.
 - Constant-call failure envelopes and revert data raise typed exceptions.
 - Contract metadata fetched from a node is not assumed to be trusted business
   configuration.
@@ -109,6 +113,11 @@ Timeouts, bounded retries, and streamed response limits constrain remote
 failures; redirects are disabled so provider credentials cannot be forwarded to
 an unexpected origin. Error exceptions may contain response context but cannot
 contain local key material because transport objects never hold it.
+
+Broadcast and JSON-RPC requests are non-retryable by default. Broadcast outcome
+is ambiguous after a lost response, while JSON-RPC filter creation and change
+polling mutate node-side cursor state. Native and indexed reads/builds retain
+bounded retry behavior.
 
 ## Shielded APIs
 

@@ -47,7 +47,7 @@ final class Trc1155Contract extends OperatorTokenContract
     {
         return $this->stringOutput($this->read(
             'balanceOf(address,uint256)',
-            [$account, $this->tokenId($tokenId)],
+            [$account, $this->unsignedDecimal($tokenId, 'token ID')],
         ));
     }
 
@@ -61,7 +61,7 @@ final class Trc1155Contract extends OperatorTokenContract
     public function balanceOfBatch(array $accounts, array $tokenIds): array
     {
         $this->requireParallelLists($accounts, $tokenIds, 'balance');
-        $ids = $this->decimalValues($tokenIds);
+        $ids = $this->decimalValues($tokenIds, 'token ID');
         $value = $this->read('balanceOfBatch(address[],uint256[])', [$accounts, $ids])->value(0);
         if (!is_array($value) || !array_is_list($value)) {
             throw new ContractException('The TRC-1155 batch balance output is not a list.');
@@ -81,7 +81,10 @@ final class Trc1155Contract extends OperatorTokenContract
      */
     public function uri(int|string $tokenId): string
     {
-        return $this->stringOutput($this->read('uri(uint256)', [$this->tokenId($tokenId)]));
+        return $this->stringOutput($this->read(
+            'uri(uint256)',
+            [$this->unsignedDecimal($tokenId, 'token ID')],
+        ));
     }
 
     /**
@@ -99,7 +102,13 @@ final class Trc1155Contract extends OperatorTokenContract
     ): Transaction {
         return $this->createTransaction(
             'safeTransferFrom(address,address,uint256,uint256,bytes)',
-            [$owner, $recipient, $this->tokenId($tokenId), $this->tokenId($amount), $data],
+            [
+                $owner,
+                $recipient,
+                $this->unsignedDecimal($tokenId, 'token ID'),
+                $this->unsignedDecimal($amount, 'token amount'),
+                $data,
+            ],
             $feeLimit,
             $memo,
             $permissionId,
@@ -123,8 +132,8 @@ final class Trc1155Contract extends OperatorTokenContract
         int $permissionId = 0,
     ): Transaction {
         $this->requireParallelLists($tokenIds, $amounts, 'transfer');
-        $ids = $this->decimalValues($tokenIds);
-        $values = $this->decimalValues($amounts);
+        $ids = $this->decimalValues($tokenIds, 'token ID');
+        $values = $this->decimalValues($amounts, 'token amount');
 
         return $this->createTransaction(
             'safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)',
@@ -157,8 +166,11 @@ final class Trc1155Contract extends OperatorTokenContract
      * @param list<int|string> $values Values to validate.
      * @return list<string>
      */
-    private function decimalValues(array $values): array
+    private function decimalValues(array $values, string $label): array
     {
-        return array_map(fn (int|string $value): string => $this->tokenId($value), $values);
+        return array_map(
+            fn (int|string $value): string => $this->unsignedDecimal($value, $label),
+            $values,
+        );
     }
 }

@@ -44,11 +44,16 @@ $configuration = NodeConfiguration::custom(
 );
 ```
 
-Omitted SolidityNode and JSON-RPC URIs fall back to the FullNode URI. The indexer
-is optional and has no fallback because a native java-tron node does not expose a
-generic historical-index schema.
+An omitted SolidityNode URI falls back to the FullNode URI. JSON-RPC and the
+indexer are optional and have no implicit fallback: java-tron's JSON-RPC service
+is disabled by default and normally listens at the root of a separate port,
+while a native node does not expose a generic historical-index schema.
 
-Base URIs must be absolute HTTP(S) addresses without embedded credentials,
+`jsonRpcUri` is always the complete request endpoint. Public network profiles
+configure TronGrid's `/jsonrpc` gateway path; a self-hosted node normally uses a
+value such as `http://10.0.0.10:8545` with no appended path.
+
+Configured URIs must be absolute HTTP(S) addresses without embedded credentials,
 query strings, or fragments. This prevents secret leakage and ambiguous path
 resolution. Authentication headers are assigned to one explicit node role, so
 an indexer credential is not forwarded to a FullNode, SolidityNode, or JSON-RPC

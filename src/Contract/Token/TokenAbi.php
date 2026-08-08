@@ -180,7 +180,6 @@ final class TokenAbi
             'name' => $name,
             'inputs' => $inputs,
             'anonymous' => false,
-            'stateMutability' => 'nonpayable',
         ];
     }
 

@@ -18,12 +18,15 @@ use IEXBase\TronAPI\Contract\Abi;
 use IEXBase\TronAPI\Contract\AbiCodec;
 use IEXBase\TronAPI\Contract\AbiEntry;
 use IEXBase\TronAPI\Contract\AbiParameter;
+use IEXBase\TronAPI\Contract\AbiTraversalBudget;
+use IEXBase\TronAPI\Contract\AbiType;
 use IEXBase\TronAPI\Contract\ContractFailure;
 use IEXBase\TronAPI\Contract\DecodedFunctionCall;
 use IEXBase\TronAPI\Contract\DecodedValues;
 use IEXBase\TronAPI\Contract\EventLog;
 use IEXBase\TronAPI\Exception\ContractException;
 use IEXBase\TronAPI\Value\Address;
+use IEXBase\TronAPI\Value\ByteString;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -34,6 +37,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AbiCodec::class)]
 #[CoversClass(AbiEntry::class)]
 #[CoversClass(AbiParameter::class)]
+#[CoversClass(AbiTraversalBudget::class)]
+#[CoversClass(AbiType::class)]
 #[CoversClass(ContractFailure::class)]
 #[CoversClass(DecodedFunctionCall::class)]
 #[CoversClass(DecodedValues::class)]
@@ -57,6 +62,83 @@ final class AbiCodecTest extends TestCase
         self::assertSame('70a08231', $function->selector());
         self::assertStringStartsWith('70a08231', $encoded);
         self::assertSame(8 + 64, strlen($encoded));
+    }
+
+    /**
+     * Expands every Solidity type alias before hashing a function signature.
+     */
+    public function testCanonicalAliasesProduceOfficialSelector(): void
+    {
+        $function = $this->function('sam', [
+            new AbiParameter('data', 'bytes'),
+            new AbiParameter('enabled', 'bool'),
+            new AbiParameter('values', 'uint[]'),
+        ]);
+        $fixedPoint = $this->function('rates', [
+            new AbiParameter('signed', 'fixed'),
+            new AbiParameter('unsigned', 'ufixed[]'),
+            new AbiParameter('integer', 'int'),
+        ]);
+
+        self::assertSame('sam(bytes,bool,uint256[])', $function->signature());
+        self::assertSame('a5643bf2', $function->selector());
+        self::assertSame('rates(fixed128x18,ufixed128x18[],int256)', $fixedPoint->signature());
+    }
+
+    /**
+     * Matches the Solidity specification's complete sam(bytes,bool,uint[]) vector.
+     */
+    public function testOfficialDynamicEncodingVectorMatchesExactly(): void
+    {
+        $function = $this->function('sam', [
+            new AbiParameter('data', 'bytes'),
+            new AbiParameter('enabled', 'bool'),
+            new AbiParameter('values', 'uint[]'),
+        ]);
+        $word = static fn (int $value): string => str_pad(dechex($value), 64, '0', STR_PAD_LEFT);
+        $expected = 'a5643bf2'
+            . $word(96)
+            . $word(1)
+            . $word(160)
+            . $word(4)
+            . str_pad(bin2hex('dave'), 64, '0')
+            . $word(3)
+            . $word(1)
+            . $word(2)
+            . $word(3);
+
+        self::assertSame(
+            $expected,
+            (new AbiCodec())->encodeFunctionCall($function, ['dave', true, [1, 2, 3]]),
+        );
+    }
+
+    /**
+     * Supports the zero-length fixed array expressible by the ABI specification.
+     */
+    public function testZeroLengthFixedArrayRoundTrips(): void
+    {
+        $parameter = new AbiParameter('values', 'uint[0]');
+        $codec = new AbiCodec();
+
+        self::assertSame('uint256[0]', $parameter->canonicalType());
+        self::assertSame('', $codec->encodeParameters([$parameter], [[]]));
+        self::assertSame([[]], $codec->decodeParameters([$parameter], '')->all());
+    }
+
+    /**
+     * Rejects fixed-point spellings that are outside the Solidity ABI grammar.
+     */
+    public function testIncompleteFixedPointTypesAreRejected(): void
+    {
+        foreach (['fixed128', 'fixedx18', 'fixed128x', 'ufixed256'] as $type) {
+            try {
+                new AbiParameter('value', $type);
+                self::fail(sprintf('Invalid ABI type `%s` was accepted.', $type));
+            } catch (ContractException) {
+                self::addToAssertionCount(1);
+            }
+        }
     }
 
     /**
@@ -171,6 +253,23 @@ final class AbiCodecTest extends TestCase
     }
 
     /**
+     * Keeps every indexed array or tuple as its irreversible event-topic hash.
+     */
+    public function testIndexedComplexStaticValueRemainsHashed(): void
+    {
+        $event = new AbiEntry('event', 'Snapshot', [
+            new AbiParameter('values', 'uint256[1]', indexed: true),
+        ], [], 'nonpayable');
+        $hash = str_repeat('ab', 32);
+
+        $decoded = (new AbiCodec())->decodeEvent($event, [$event->eventTopic(), $hash], '');
+
+        $value = $decoded->value('values');
+        self::assertInstanceOf(ByteString::class, $value);
+        self::assertSame($hash, $value->toHex(false));
+    }
+
+    /**
      * Decodes the standard Solidity Error(string) envelope.
      */
     public function testStandardErrorPayloadIsDecoded(): void
@@ -233,6 +332,131 @@ final class AbiCodecTest extends TestCase
             [new AbiParameter('text', 'string')],
             str_repeat('f', 64),
         );
+    }
+
+    /**
+     * Rejects a dynamic offset that aliases the sequence head.
+     */
+    public function testDynamicOffsetCannotPointIntoHead(): void
+    {
+        $this->expectException(ContractException::class);
+
+        (new AbiCodec())->decodeParameters(
+            [new AbiParameter('text', 'string')],
+            str_repeat('0', 64),
+        );
+    }
+
+    /**
+     * Requires dynamic byte payloads to include canonical zero padding.
+     */
+    public function testTruncatedDynamicPaddingIsRejected(): void
+    {
+        $offset = str_pad(dechex(32), 64, '0', STR_PAD_LEFT);
+        $length = str_pad(dechex(1), 64, '0', STR_PAD_LEFT);
+        $this->expectException(ContractException::class);
+
+        (new AbiCodec())->decodeParameters(
+            [new AbiParameter('data', 'bytes')],
+            $offset . $length . 'ff',
+        );
+    }
+
+    /**
+     * Rejects a fixed type whose encoded width exceeds the allocation ceiling.
+     */
+    public function testOversizedStaticTypeIsRejectedBeforeEncoding(): void
+    {
+        $this->expectException(ContractException::class);
+
+        new AbiParameter('values', 'uint256[100000][6]');
+    }
+
+    /**
+     * Bounds aggregate work when many dynamic offsets reuse one nested payload.
+     */
+    public function testRepeatedNestedOffsetsCannotExpandDecoderWorkWithoutBound(): void
+    {
+        $count = 1_000;
+        $word = static fn (int $value): string => str_pad(dechex($value), 64, '0', STR_PAD_LEFT);
+        $encoded = $word(32)
+            . $word($count)
+            . str_repeat($word($count * 32), $count)
+            . $word($count)
+            . str_repeat($word(0), $count);
+
+        $this->expectException(ContractException::class);
+        $this->expectExceptionMessage('aggregate value limit');
+
+        (new AbiCodec())->decodeParameters(
+            [new AbiParameter('values', 'uint256[][]')],
+            $encoded,
+        );
+    }
+
+    /**
+     * Deduplicates custom errors that Solidity permits multiple sources to declare.
+     */
+    public function testRepeatedCustomErrorDeclarationHasOneLogicalEntry(): void
+    {
+        $first = new AbiEntry('error', 'Failure', [new AbiParameter('code', 'uint')], [], 'nonpayable');
+        $second = new AbiEntry('error', 'Failure', [new AbiParameter('reason', 'uint256')], [], 'nonpayable');
+        $abi = new Abi([$first, $second]);
+
+        self::assertCount(1, $abi->entries());
+        self::assertSame('Failure(uint256)', $abi->error('Failure(uint256)')->signature());
+    }
+
+    /**
+     * Reads a compiler artifact without requiring callers to extract its ABI list.
+     */
+    public function testCompilerArtifactAbiContainerIsAccepted(): void
+    {
+        $abi = Abi::fromArray(['abi' => [[
+            'type' => 'function',
+            'name' => 'value',
+            'inputs' => [],
+            'outputs' => [['name' => '', 'type' => 'uint']],
+            'stateMutability' => 'view',
+        ]]]);
+
+        self::assertSame('value()', $abi->function('value')->signature());
+        self::assertSame('uint256', $abi->function('value')->outputs()[0]->canonicalType());
+    }
+
+    /**
+     * Serializes events and functions using their standard ABI JSON fields.
+     */
+    public function testAbiJsonUsesCanonicalStandardShape(): void
+    {
+        $abi = new Abi([
+            new AbiEntry('event', 'Changed', [
+                new AbiParameter('value', 'uint', indexed: false),
+            ], [], 'nonpayable'),
+            $this->function('read', [], [new AbiParameter('', 'uint')]),
+        ]);
+        $json = json_decode((string) json_encode($abi, JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertIsArray($json);
+        $event = $json[0] ?? null;
+        $function = $json[1] ?? null;
+        self::assertIsArray($event);
+        self::assertIsArray($function);
+        $eventInputs = $event['inputs'] ?? null;
+        $functionOutputs = $function['outputs'] ?? null;
+        self::assertIsArray($eventInputs);
+        self::assertIsArray($functionOutputs);
+        $eventValue = $eventInputs[0] ?? null;
+        $functionValue = $functionOutputs[0] ?? null;
+        self::assertIsArray($eventValue);
+        self::assertIsArray($functionValue);
+
+        self::assertSame('uint256', $eventValue['type'] ?? null);
+        self::assertFalse($eventValue['indexed'] ?? null);
+        self::assertArrayNotHasKey('stateMutability', $event);
+        self::assertSame([], $function['inputs'] ?? null);
+        self::assertSame('uint256', $functionValue['type'] ?? null);
+        self::assertSame('view', $function['stateMutability'] ?? null);
     }
 
     /**

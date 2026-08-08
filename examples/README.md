@@ -148,7 +148,7 @@ php examples/09-send-trc20-transaction.php
 | `11-abi-and-events.php` | Function calldata and confirmed receipt-event decoding |
 | `12-work-with-tokens.php` | Optional TRC-20, TRC-721 and TRC-1155 metadata, ownership and balances |
 | `13-get-transactions.php` | Native, TRC-20 and internal history, cursor pagination, transaction and receipt lookup |
-| `14-json-rpc.php` | TRON JSON-RPC chain, block, balance and code reads |
+| `14-json-rpc.php` | TRON JSON-RPC node accounts, chain, block, balance and code reads |
 | `15-witnesses-and-governance.php` | Super Representatives, proposals and maintenance time |
 | `16-native-exchange-and-market.php` | Native exchange list, market pairs, orders and prices |
 | `17-low-level-endpoints.php` | Typed low-level access and active shielded TRC-20 routes |

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use IEXBase\TronAPI\Examples\ExampleEnvironment;
-use IEXBase\TronAPI\JsonRpc\BlockTag;
 
 require_once __DIR__ . '/ExampleEnvironment.php';
 
@@ -13,8 +12,9 @@ $blockNumber = $rpc->blockNumber();
 
 ExampleEnvironment::output([
     'chain_id' => $rpc->chainId(),
+    'node_accounts' => $rpc->accounts(),
     'block_number' => $blockNumber,
     'balance' => $rpc->balance($address),
-    'code' => $rpc->code($address, BlockTag::Latest),
+    'code' => $rpc->code($address),
     'block' => $rpc->blockByNumber($blockNumber),
 ]);
