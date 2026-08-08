@@ -52,7 +52,7 @@ $account = $tron->accounts()->get(
     Address::fromBase58('T...'),
 );
 
-echo $account?->balance->toDecimal() ?? 'Account is not activated', PHP_EOL;
+echo $account?->balance->decimalValue() ?? 'Account is not activated', PHP_EOL;
 ```
 
 The public-network profiles use TronGrid as the default hosted endpoint and
@@ -93,8 +93,8 @@ use IEXBase\TronAPI\Value\Amount;
 
 $amount = Amount::fromDecimal('12.345678');
 
-echo $amount->atomic();   // 12345678
-echo $amount->toDecimal(); // 12.345678
+echo $amount->atomicValue();  // 12345678
+echo $amount->decimalValue(); // 12.345678
 ```
 
 `Address` accepts checksum-verified Base58Check, 21-byte TRON hex, or explicit

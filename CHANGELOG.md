@@ -2,6 +2,17 @@
 
 All notable changes to TronAPI are documented in this file.
 
+## [6.0.2] - 2026-08-08
+
+### Added
+
+- Dedicated examples for retrieving account transactions and receipts, sending
+  verified TRX and TRC-20 transactions, and querying individual token standards.
+
+### Fixed
+
+- Corrected the public `Amount` method names used by the README quick-start code.
+
 ## [6.0.1] - 2026-08-08
 
 ### Changed
@@ -51,5 +62,6 @@ All notable changes to TronAPI are documented in this file.
   Tronscan/universal trait, bundled ABI JSON, Travis CI, and Jekyll artifacts.
 - All 5.x compatibility aliases.
 
+[6.0.2]: https://github.com/iexbase/tron-api/compare/v6.0.1...v6.0.2
 [6.0.1]: https://github.com/iexbase/tron-api/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/iexbase/tron-api/compare/v5.0.0...v6.0.0

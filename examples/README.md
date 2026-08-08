@@ -48,7 +48,7 @@ Read complete TRC-20 metadata and an account balance:
 ```bash
 TRON_ADDRESS=T... \
 TRON_CONTRACT=T... \
-php examples/08-contract-read.php
+php examples/08-read-trc20-token.php
 ```
 
 Set `TRON_SPENDER` to include the account-to-spender allowance in the same
@@ -63,13 +63,35 @@ TRON_TRC721_CONTRACT=T... \
 TRON_TRC721_TOKEN_ID=1 \
 TRON_TRC1155_CONTRACT=T... \
 TRON_TRC1155_TOKEN_ID=1 \
-php examples/12-token-standards.php
+php examples/12-work-with-tokens.php
 ```
 
+Only the contract variables for the token standards being queried are required.
 TRC-10 metadata, precision-aware balance, and transfer construction are shown
 in example 06.
 
-## Signing and broadcasting
+## Getting transactions
+
+Read confirmed native, TRC-20, and internal transactions for an account through
+the configured provider-neutral history adapter:
+
+```bash
+TRON_ADDRESS=T... php examples/13-get-transactions.php
+```
+
+Set `TRON_PAGE_LIMIT` and the endpoint-specific `TRON_TRANSACTION_CURSOR`,
+`TRON_TRC20_CURSOR`, or `TRON_INTERNAL_CURSOR` values to continue a result set.
+Opaque cursors returned by one endpoint must not be reused for another endpoint.
+
+Set a transaction ID to retrieve the confirmed native transaction, its receipt,
+and its indexed internal transactions in the same result:
+
+```bash
+TRON_TRANSACTION_ID=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+php examples/13-get-transactions.php
+```
+
+## Sending transactions
 
 Transaction examples read private keys only from environment variables. They
 always build and sign locally, but do not broadcast unless
@@ -79,7 +101,7 @@ always build and sign locally, but do not broadcast unless
 TRON_PRIVATE_KEY=... \
 TRON_RECIPIENT=T... \
 TRON_AMOUNT=1.25 \
-php examples/04-build-sign-and-broadcast.php
+php examples/04-send-trx-transaction.php
 ```
 
 To broadcast the same verified transaction:
@@ -89,12 +111,25 @@ TRON_BROADCAST=1 \
 TRON_PRIVATE_KEY=... \
 TRON_RECIPIENT=T... \
 TRON_AMOUNT=1.25 \
-php examples/04-build-sign-and-broadcast.php
+php examples/04-send-trx-transaction.php
 ```
 
 A transport failure during broadcast is intentionally not retried. The printed
 transaction ID can be queried before deciding whether another broadcast is
 required.
+
+Build, sign, and optionally broadcast a TRC-20 token transfer with an exact
+token amount and an explicit TRX fee limit:
+
+```bash
+TRON_BROADCAST=1 \
+TRON_PRIVATE_KEY=... \
+TRON_CONTRACT=T... \
+TRON_RECIPIENT=T... \
+TRON_TOKEN_AMOUNT=25.5 \
+TRON_FEE_LIMIT=100 \
+php examples/09-send-trc20-transaction.php
+```
 
 ## Complete example map
 
@@ -103,16 +138,16 @@ required.
 | `01-addresses-and-amounts.php` | Random local account, private/public keys, Base58/hex addresses, exact TRX/sun |
 | `02-account-block-and-network.php` | TRX/TRC-10 balances, account resources, blocks, node and chain prices |
 | `03-custom-node-topology.php` | Independent FullNode, SolidityNode, indexer, JSON-RPC and role-specific authentication |
-| `04-build-sign-and-broadcast.php` | Verified TRX transfer, memo, Bandwidth estimate, local signature, optional broadcast |
+| `04-send-trx-transaction.php` | Verified TRX transfer, memo, Bandwidth estimate, local signature, optional broadcast |
 | `05-multisignature.php` | Permission-aware multi-signature collection and weight |
 | `06-trc10.php` | TRC-10 metadata, exact balance, amount precision and transfer |
 | `07-stake-2.php` | Stake 2.0 resource queries and Energy staking |
-| `08-contract-read.php` | TRC-20 metadata, total supply, balance and optional allowance |
-| `09-contract-write.php` | TRC-20 transfer with fee limit and memo |
+| `08-read-trc20-token.php` | TRC-20 metadata, total supply, balance and optional allowance |
+| `09-send-trc20-transaction.php` | TRC-20 transfer with exact token amount, fee limit, memo and optional broadcast |
 | `10-contract-deployment.php` | ABI/bytecode deployment and predicted contract address |
 | `11-abi-and-events.php` | Function calldata and confirmed receipt-event decoding |
-| `12-token-standards.php` | TRC-20, TRC-721 and TRC-1155 metadata and balances |
-| `13-indexed-history.php` | Provider-neutral account and TRC-20 history with cursor pagination |
+| `12-work-with-tokens.php` | Optional TRC-20, TRC-721 and TRC-1155 metadata, ownership and balances |
+| `13-get-transactions.php` | Native, TRC-20 and internal history, cursor pagination, transaction and receipt lookup |
 | `14-json-rpc.php` | TRON JSON-RPC chain, block, balance and code reads |
 | `15-witnesses-and-governance.php` | Super Representatives, proposals and maintenance time |
 | `16-native-exchange-and-market.php` | Native exchange list, market pairs, orders and prices |
