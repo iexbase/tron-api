@@ -2,6 +2,12 @@
 
 All notable changes to TronAPI are documented in this file.
 
+## [6.0.1] - 2026-08-08
+
+### Changed
+
+- Finalized the 6.0 release metadata and changelog comparison reference.
+
 ## [6.0.0] - 2026-08-08
 
 ### Added
@@ -45,4 +51,5 @@ All notable changes to TronAPI are documented in this file.
   Tronscan/universal trait, bundled ABI JSON, Travis CI, and Jekyll artifacts.
 - All 5.x compatibility aliases.
 
+[6.0.1]: https://github.com/iexbase/tron-api/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/iexbase/tron-api/compare/v5.0.0...v6.0.0
