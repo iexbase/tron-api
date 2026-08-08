@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -36,7 +36,7 @@ jobs:
         run: composer validate --strict
 
       - name: Install dependencies for the selected Guzzle line
-        run: composer update "guzzlehttp/guzzle:${{ matrix.guzzle }}" --with-all-dependencies --no-interaction --prefer-dist --no-progress
+        run: composer update --with "guzzlehttp/guzzle:${{ matrix.guzzle }}" --with-all-dependencies --no-interaction --prefer-dist --no-progress
 
       - name: Audit dependencies
         run: composer audit
