@@ -2,7 +2,7 @@
 
 All notable changes to TronAPI are documented in this file.
 
-## [6.0.0] - Unreleased
+## [6.0.0] - 2026-08-08
 
 ### Added
 
@@ -44,3 +44,5 @@ All notable changes to TronAPI are documented in this file.
 - Legacy provider, manager, transaction builder, duplicate cryptographic helper,
   Tronscan/universal trait, bundled ABI JSON, Travis CI, and Jekyll artifacts.
 - All 5.x compatibility aliases.
+
+[6.0.0]: https://github.com/iexbase/tron-api/compare/v5.0.0...v6.0.0
